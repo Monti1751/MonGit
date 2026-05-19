@@ -1,5 +1,8 @@
 # 🚀 MonGit
 
+[![Versión](https://img.shields.io/badge/Versi%C3%B3n-1.0.0-emerald.svg?style=flat-square)](https://github.com/Monti1751/MonGit)
+[![Licencia: MIT](https://img.shields.io/badge/Licencia-MIT-indigo.svg?style=flat-square)](LICENSE)
+
 > **MonGit** es un cliente Git de escritorio premium, ultrarrápido y moderno diseñado para desarrolladores que buscan simplificar y embellecer sus flujos de trabajo diarios de Git. Con una interfaz oscura futurista con efectos de **glassmorphism**, animaciones suaves y micro-interacciones interactivas, MonGit combina la potencia de Git real en local con una experiencia visual incomparable.
 
 ---
@@ -92,8 +95,14 @@ Este comando:
 2. Llama a `electron-builder` para empaquetar todo el código y dependencias en un ejecutable único portable de 64 bits.
 
 ### 📁 Ejecutable Final Generado
-* **Ruta de Salida**: `D:\GitHub\MonGit\dist-package\MonGit 0.0.0.exe`
+* **Ruta de Salida**: `D:\GitHub\MonGit\dist-package\MonGit 1.0.0.exe`
 * **Tamaño**: ~93 MB (Autónomo, listo para copiar a un pendrive o compartir).
+
+---
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia **MIT**. Consulta el archivo [LICENSE](LICENSE) para obtener más detalles.
 
 ---
 
