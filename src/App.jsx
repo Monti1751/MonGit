@@ -714,27 +714,26 @@ export default function App() {
                       <Avatar initials={commit.initials} color={branchColor} size="sm" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          {commit.isMerge && (
-                            <span
-                              className="text-xs px-2 py-0.5 rounded-md font-mono font-semibold bg-purple-500/20 text-purple-400 border border-purple-500/30 flex items-center gap-1 animate-pulse-slow"
-                            >
-                              <GitMerge size={10} />
-                              Merge
-                            </span>
-                          )}
-                          {commit.tags?.map(tag => (
-                            <span
-                              key={tag}
-                              className="text-xs px-2 py-0.5 rounded-md font-mono font-semibold"
-                              style={{
-                                backgroundColor: tag === 'HEAD' ? '#14b8a625' : '#818cf825',
-                                color: tag === 'HEAD' ? '#14b8a6' : '#818cf8',
-                                border: `1px solid ${tag === 'HEAD' ? '#14b8a6' : '#818cf8'}40`,
-                              }}
-                            >
-                              {tag}
-                            </span>
-                          ))}
+                          {commit.tags?.map(tag => {
+                            let bg = 'bg-brand-500/10 border-brand-500/30 text-brand-400';
+                            if (tag === 'HEAD') {
+                              bg = 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 font-bold';
+                            } else if (tag.startsWith('tag:') || tag.startsWith('tag: ')) {
+                              bg = 'bg-amber-500/15 border-amber-500/40 text-amber-400';
+                            } else if (tag.startsWith('origin/')) {
+                              bg = 'bg-rose-500/15 border-rose-500/40 text-rose-400';
+                            } else {
+                              bg = 'bg-indigo-500/15 border-indigo-500/40 text-indigo-400';
+                            }
+                            return (
+                              <span
+                                key={tag}
+                                className={`text-[10px] px-1.5 py-0.5 rounded border font-mono font-bold tracking-wide ${bg}`}
+                              >
+                                {tag}
+                              </span>
+                            );
+                          })}
                         </div>
                         <p className={`text-sm font-medium mt-0.5 truncate transition-colors ${isSelected ? 'text-white' : 'text-slate-200 group-hover:text-white'}`}>
                           {commit.message || '(Sin mensaje)'}

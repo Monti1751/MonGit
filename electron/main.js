@@ -53,25 +53,40 @@ ipcMain.handle('get-branches', async (event, folderPath) => {
 
 ipcMain.handle('get-commits', async (event, folderPath, branchName) => {
   try {
-    const { stdout } = await execAsync(`git log "${branchName}" --pretty=format:"%H|%s|%an|%ar" -n 50`, { cwd: folderPath })
+    const { stdout } = await execAsync(`git log "${branchName}" --pretty=format:"%H|%s|%an|%ar|%d" -n 50`, { cwd: folderPath })
     const commits = stdout.split('\n').filter(l => l.trim()).map(line => {
       const parts = line.split('|')
       const msg = parts[1] || ''
-      const isMerge = msg.toLowerCase().startsWith('merge ') || msg.toLowerCase().includes('merge branch') || msg.toLowerCase().includes('merge pull request')
+      const isMerge = msg.toLowerCase().startsWith('merge ') || msg.toLowerCase().includes('merge branch') || msg.toLowerCase().includes('merge pull request')      
+      const deco = parts[4] ? parts[4].trim() : ''
+      let tags = []
+      if (deco) {
+        const cleanDeco = deco.replace(/^\((.*)\)$/, '$1')
+        cleanDeco.split(',').forEach(t => {
+          const name = t.trim()
+          if (name.includes('->')) {
+            name.split('->').forEach(part => {
+              const p = part.trim()
+              if (p && !tags.includes(p)) tags.push(p)
+            })
+          } else {
+            if (name && !tags.includes(name)) tags.push(name)
+          }
+        })
+      }
+
       return {
         id: parts[0],
         message: msg,
         author: parts[2],
         time: parts[3],
         branch: branchName,
-        tags: [],
+        tags: tags,
         initials: parts[2].substring(0, 2).toUpperCase(),
         color: isMerge ? '#a855f7' : '#14b8a6',
         isMerge: isMerge
       }
     })
-    // Tag first as HEAD
-    if (commits.length > 0) commits[0].tags = ['HEAD']
     return commits
   } catch (err) {
     console.error('get-commits error:', err)
