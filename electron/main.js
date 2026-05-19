@@ -32,6 +32,68 @@ ipcMain.handle('get-git-status', async (event, folderPath) => {
   }
 })
 
+ipcMain.handle('get-branches', async (event, folderPath) => {
+  try {
+    const { stdout } = await execAsync('git branch', { cwd: folderPath })
+    const branches = []
+    let activeBranch = 'main'
+    stdout.split('\n').forEach(line => {
+      if (line.trim() === '') return
+      const isCurrent = line.startsWith('*')
+      const name = line.replace('*', '').trim()
+      branches.push(name)
+      if (isCurrent) activeBranch = name
+    })
+    return { branches, activeBranch }
+  } catch (err) {
+    console.error('get-branches error:', err)
+    return { branches: [], activeBranch: '' }
+  }
+})
+
+ipcMain.handle('get-commits', async (event, folderPath, branchName) => {
+  try {
+    const { stdout } = await execAsync(`git log "${branchName}" --pretty=format:"%H|%s|%an|%ar" -n 50`, { cwd: folderPath })
+    const commits = stdout.split('\n').filter(l => l.trim()).map(line => {
+      const parts = line.split('|')
+      return {
+        id: parts[0],
+        message: parts[1],
+        author: parts[2],
+        time: parts[3],
+        branch: branchName,
+        tags: [],
+        initials: parts[2].substring(0, 2).toUpperCase(),
+        color: '#14b8a6'
+      }
+    })
+    // Tag first as HEAD
+    if (commits.length > 0) commits[0].tags = ['HEAD']
+    return commits
+  } catch (err) {
+    console.error('get-commits error:', err)
+    return []
+  }
+})
+
+ipcMain.handle('create-branch', async (event, folderPath, branchName) => {
+  try {
+    await execAsync(`git checkout -b "${branchName}"`, { cwd: folderPath })
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('checkout-branch', async (event, folderPath, branchName) => {
+  try {
+    await execAsync(`git checkout "${branchName}"`, { cwd: folderPath })
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
 ipcMain.handle('commit-changes', async (event, folderPath, files, message) => {
   try {
     for (const file of files) {
@@ -48,6 +110,15 @@ ipcMain.handle('commit-changes', async (event, folderPath, files, message) => {
 ipcMain.handle('push-changes', async (event, folderPath) => {
   try {
     await execAsync('git push', { cwd: folderPath })
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('pull-changes', async (event, folderPath) => {
+  try {
+    await execAsync('git pull', { cwd: folderPath })
     return { success: true }
   } catch (err) {
     return { success: false, error: err.message }

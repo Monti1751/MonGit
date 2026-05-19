@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Folder, RefreshCw, Check, CheckSquare, Square, UploadCloud, AlertCircle } from 'lucide-react'
 
-export default function LocalRepoPanel() {
-  const [folderPath, setFolderPath] = useState(null)
+export default function LocalRepoPanel({ folderPath, refreshTrigger, onRefreshDone, onCommitSuccess }) {
   const [files, setFiles] = useState([])
   const [selectedFiles, setSelectedFiles] = useState(new Set())
   const [loading, setLoading] = useState(false)
@@ -31,17 +30,18 @@ export default function LocalRepoPanel() {
       setError(e.message)
     } finally {
       setLoading(false)
+      if (onRefreshDone) onRefreshDone()
     }
   }
 
-  const handleSelectFolder = async () => {
-    if (!isElectron) return
-    const path = await window.electronAPI.selectFolder()
-    if (path) {
-      setFolderPath(path)
-      loadStatus(path)
+  useEffect(() => {
+    if (folderPath) {
+      loadStatus(folderPath)
+    } else {
+      setFiles([])
+      setSelectedFiles(new Set())
     }
-  }
+  }, [folderPath, refreshTrigger])
 
   const toggleFile = (path) => {
     const newSelected = new Set(selectedFiles)
@@ -68,6 +68,7 @@ export default function LocalRepoPanel() {
         setMessage('')
         setSuccess('Commit realizado con éxito')
         loadStatus(folderPath)
+        if (onCommitSuccess) onCommitSuccess()
       } else {
         setError('Error al hacer commit: ' + result.error)
       }
@@ -85,6 +86,7 @@ export default function LocalRepoPanel() {
       const result = await window.electronAPI.pushChanges(folderPath)
       if (result.success) {
         setSuccess('Cambios subidos (push) con éxito')
+        if (onCommitSuccess) onCommitSuccess()
       } else {
         setError('Error al hacer push: ' + result.error)
       }
@@ -104,25 +106,15 @@ export default function LocalRepoPanel() {
           <Folder size={16} className="text-brand-400" />
           Repositorio Local
         </h2>
-        <button onClick={handleSelectFolder} className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-medium text-slate-200 transition-colors">
-          {folderPath ? 'Cambiar Carpeta' : 'Abrir Carpeta...'}
-        </button>
       </div>
 
       {!folderPath ? (
         <div className="flex-1 flex flex-col items-center justify-center text-slate-500 p-8 text-center">
           <Folder size={48} className="mb-4 opacity-50" />
-          <p className="text-sm">Selecciona una carpeta local para gestionar sus cambios</p>
+          <p className="text-sm">Selecciona una carpeta arriba para empezar</p>
         </div>
       ) : (
         <div className="flex-1 flex flex-col min-h-0">
-          <div className="p-3 bg-slate-900/50 border-b border-slate-700/50 text-xs text-slate-400 truncate">
-            {folderPath}
-            <button onClick={() => loadStatus(folderPath)} className="ml-2 text-brand-400 hover:text-brand-300" title="Refrescar">
-              <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
-            </button>
-          </div>
-
           <div className="flex-1 overflow-y-auto p-4">
             {error && <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-xs flex gap-2"><AlertCircle size={14} className="flex-shrink-0" />{error}</div>}
             {success && <div className="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 text-xs flex gap-2"><Check size={14} className="flex-shrink-0" />{success}</div>}

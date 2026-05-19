@@ -225,9 +225,11 @@ export default function App() {
   } = useProviders()
 
   const [activeRepo, setActiveRepo] = useState(null)
+  const [localFolderPath, setLocalFolderPath] = useState(null)
   const [activeBranch, setActiveBranch] = useState('main')
-  const [localBranches, setLocalBranches] = useState(['main'])
-  const [commits, setCommits] = useState(INITIAL_COMMITS)
+  const [localBranches, setLocalBranches] = useState([])
+  const [commits, setCommits] = useState({})
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
   
   const [loadingData, setLoadingData] = useState(false)
   
@@ -254,33 +256,34 @@ export default function App() {
     setTimeout(() => setToast(null), 4000)
   }, [])
 
-  // Auto-select first repo when repos load
+  // Auto-select first repo when repos load (disabled for local first)
   useEffect(() => {
-    if (hasProviders && allRepos.length > 0 && !activeRepo) {
-      handleRepoSelect(allRepos[0])
-    }
-  }, [allRepos, hasProviders])
+    // We start empty, user needs to select folder
+  }, [])
 
-  const handleRepoSelect = async (repo) => {
-    setActiveRepo(repo)
-    setShowRepoDropdown(false)
+  const handleSelectFolder = async () => {
+    if (!window.electronAPI) return
+    const path = await window.electronAPI.selectFolder()
+    if (path) {
+      setLocalFolderPath(path)
+      setShowRepoDropdown(false)
+      loadLocalRepoData(path)
+    }
+  }
+
+  const loadLocalRepoData = async (path, specificBranch = null) => {
     setLoadingData(true)
     try {
-      const branchesData = await loadBranches(repo)
-      const branchNames = branchesData.map(b => b.name)
-      setLocalBranches(branchNames.length > 0 ? branchNames : ['main'])
+      const { branches, activeBranch: currentBranch } = await window.electronAPI.getBranches(path)
+      setLocalBranches(branches)
+      const branchToLoad = specificBranch || currentBranch || 'main'
+      setActiveBranch(branchToLoad)
       
-      const defaultB = repo.defaultBranch || (branchNames.includes('main') ? 'main' : branchNames.includes('master') ? 'master' : branchNames[0])
-      setActiveBranch(defaultB)
-      
-      if (defaultB) {
-        const commitsData = await loadCommits(repo, defaultB)
-        setCommits({ [defaultB]: commitsData })
-      }
-      showToast(`Repositorio "${repo.name}" cargado`, 'success')
+      const commitsData = await window.electronAPI.getCommits(path, branchToLoad)
+      setCommits(prev => ({ ...prev, [branchToLoad]: commitsData }))
+      setRefreshTrigger(prev => prev + 1)
     } catch (err) {
-      showToast(`Error cargando repositorio: ${err.message}`, 'error')
-      setCommits({})
+      showToast('Error cargando repositorio local', 'error')
     } finally {
       setLoadingData(false)
     }
@@ -288,23 +291,18 @@ export default function App() {
 
   const handleBranchSwitch = async (branch) => {
     if (branch === activeBranch) return
-    setActiveBranch(branch)
+    if (!localFolderPath) return
+    
     setSelectedCommit(null)
     setSelectedFile(null)
-    
-    if (activeRepo && !commits[branch]) {
-        setLoadingData(true)
-        try {
-            const commitsData = await loadCommits(activeRepo, branch)
-            setCommits(prev => ({ ...prev, [branch]: commitsData }))
-            showToast(`Ramas actualizadas: "${branch}"`, 'info')
-        } catch (err) {
-             showToast(`Error cargando commits: ${err.message}`, 'error')
-        } finally {
-            setLoadingData(false)
-        }
+    setLoadingData(true)
+    const result = await window.electronAPI.checkoutBranch(localFolderPath, branch)
+    if (result.success) {
+      loadLocalRepoData(localFolderPath, branch)
+      showToast(`Cambiado a la rama "${branch}"`, 'info')
     } else {
-        showToast(`Cambiado a la rama "${branch}"`, 'info')
+      showToast(`Error al cambiar de rama: ${result.error}`, 'error')
+      setLoadingData(false)
     }
   }
 
@@ -323,18 +321,29 @@ export default function App() {
   // ── Handlers ──────────────────────────────────────────────────────────────
 
   const handleSync = async () => {
+    if (!localFolderPath) return
     setSyncLoading(true)
-    await new Promise(r => setTimeout(r, 1500))
-    setSyncLoading(false)
-    if (syncState === 'push') {
-      setSyncState('synced')
-      showToast('¡Cambios subidos correctamente a origin!', 'success')
-    } else if (syncState === 'pull') {
-      setSyncState('synced')
-      showToast('¡Repositorio actualizado con los últimos cambios!', 'success')
-    } else {
-      setSyncState('pull')
-      showToast('Se detectaron cambios remotos nuevos', 'info')
+    try {
+      const pullResult = await window.electronAPI.pullChanges(localFolderPath)
+      if (!pullResult.success) {
+        showToast(`Error al hacer pull: ${pullResult.error}`, 'error')
+        setSyncLoading(false)
+        return
+      }
+
+      const pushResult = await window.electronAPI.pushChanges(localFolderPath)
+      if (!pushResult.success) {
+        showToast(`Error al hacer push: ${pushResult.error}`, 'error')
+        setSyncLoading(false)
+        return
+      }
+
+      showToast('Sincronizado correctamente con origen (Pull & Push)', 'success')
+      loadLocalRepoData(localFolderPath, activeBranch)
+    } catch (err) {
+      showToast(`Error de sincronización: ${err.message}`, 'error')
+    } finally {
+      setSyncLoading(false)
     }
   }
 
@@ -396,23 +405,26 @@ export default function App() {
     }
   }
 
-  const handleCreateBranch = () => {
+  const handleCreateBranch = async () => {
     const trimmed = newBranchName.trim().replace(/\s+/g, '-').toLowerCase()
     if (!trimmed) { setNewBranchError('El nombre no puede estar vacío'); return }
     if (localBranches.includes(trimmed)) { setNewBranchError('Ya existe una rama con ese nombre'); return }
     if (!/^[a-z0-9._/-]+$/.test(trimmed)) { setNewBranchError('Solo letras, números, guiones y puntos'); return }
 
-    const baseBranchCommits = commits[activeBranch] || []
-    setLocalBranches(prev => [trimmed, ...prev])
-    setCommits(prev => ({
-      ...prev,
-      [trimmed]: baseBranchCommits.map((c, i) => i === 0 ? { ...c, branch: trimmed, tags: ['HEAD'] } : { ...c, tags: c.tags.filter(t => t !== 'HEAD') }),
-    }))
-    setActiveBranch(trimmed)
-    setShowNewBranchModal(false)
-    setNewBranchName('')
-    setNewBranchError('')
-    showToast(`Rama "${trimmed}" creada y activada`, 'success')
+    if (!localFolderPath) return
+    
+    setLoadingData(true)
+    const result = await window.electronAPI.createBranch(localFolderPath, trimmed)
+    if (result.success) {
+      setShowNewBranchModal(false)
+      setNewBranchName('')
+      setNewBranchError('')
+      loadLocalRepoData(localFolderPath, trimmed)
+      showToast(`Rama "${trimmed}" creada y activada`, 'success')
+    } else {
+      setNewBranchError(`Error de Git: ${result.error}`)
+      setLoadingData(false)
+    }
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -428,74 +440,22 @@ export default function App() {
           <span className="font-bold text-sm tracking-wide text-gradient hidden sm:inline">MonGit</span>
         </div>
 
-        {/* Repo selector */}
-        <div className="relative">
+        {/* Local Folder Selector */}
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => setShowRepoDropdown(p => !p)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/70 border border-slate-700/60 hover:border-slate-600 transition-all text-sm text-slate-200 font-medium max-w-64"
+            onClick={handleSelectFolder}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/70 border border-slate-700/60 hover:border-slate-600 hover:bg-slate-700/80 transition-all text-sm text-slate-200 font-medium"
+            title={localFolderPath || "Abrir carpeta del proyecto local"}
           >
-            {activeRepo ? (
-              <>
-                 <span className="text-sm" title={activeRepo.providerLabel}>{activeRepo.providerIcon}</span>
-                 <span className="truncate">{activeRepo.name}</span>
-              </>
-            ) : (
-              <>
-                <Folder size={14} className="text-brand-400" />
-                <span>Seleccionar Repositorio</span>
-              </>
-            )}
-            <ChevronDown size={13} className={`text-slate-400 transition-transform flex-shrink-0 ${showRepoDropdown ? 'rotate-180' : ''}`} />
+            <Folder size={14} className="text-brand-400" />
+            <span>{localFolderPath ? 'Abrir Otra Carpeta...' : 'Abrir Carpeta Local...'}</span>
           </button>
-          
-          {showRepoDropdown && (
-            <div className="absolute top-full left-0 mt-1.5 w-80 rounded-xl border border-slate-700/60 bg-slate-900/95 shadow-xl z-50 py-1.5 backdrop-blur flex flex-col max-h-[60vh]">
-              <div className="px-3 pb-2 pt-1">
-                 <input 
-                   type="text" 
-                   autoFocus
-                   placeholder="Buscar repositorio..." 
-                   value={repoSearch}
-                   onChange={e => setRepoSearch(e.target.value)}
-                   className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500"
-                 />
-              </div>
-              <div className="overflow-y-auto flex-1">
-                {filteredRepos.length > 0 ? (
-                  filteredRepos.map(r => (
-                    <button
-                      key={r.id}
-                      onClick={() => handleRepoSelect(r)}
-                      className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-700/50 transition-colors flex items-center gap-2 ${r.id === activeRepo?.id ? 'text-brand-400 font-medium' : 'text-slate-300'}`}
-                    >
-                      <span className="text-xs" title={r.providerLabel} style={{color: r.providerColor}}>{r.providerIcon}</span>
-                      <div className="flex-1 min-w-0">
-                         <div className="truncate">{r.name}</div>
-                         <div className="text-[10px] text-slate-500 truncate">{r.owner}</div>
-                      </div>
-                      {r.id === activeRepo?.id && <Check size={13} className="flex-shrink-0 text-brand-400" />}
-                    </button>
-                  ))
-                ) : (
-                  <div className="px-4 py-3 text-xs text-slate-500 text-center">No se encontraron repositorios</div>
-                )}
-              </div>
-              <div className="border-t border-slate-700/50 mt-1 pt-1">
-                <button 
-                  onClick={() => { setShowRepoDropdown(false); setShowCreateRepoModal(true) }}
-                  className="w-full text-left px-4 py-2 text-sm text-brand-400 hover:bg-slate-700/50 transition-colors flex items-center gap-2"
-                >
-                  <Plus size={13} />
-                  Crear nuevo repositorio...
-                </button>
-                <button 
-                  onClick={() => { setShowRepoDropdown(false); setShowProviderSetup(true) }}
-                  className="w-full text-left px-4 py-2 text-sm text-slate-400 hover:bg-slate-700/50 hover:text-slate-200 transition-colors flex items-center gap-2"
-                >
-                  <UserPlus size={13} />
-                  Gestionar cuentas...
-                </button>
-              </div>
+          {localFolderPath && (
+            <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-800/30 border border-slate-700/30 text-xs">
+              <span className="font-semibold text-slate-200">{localFolderPath.split(/[/\\]/).pop()}</span>
+              <span className="text-slate-500 font-mono hidden lg:inline max-w-sm truncate" title={localFolderPath}>
+                {localFolderPath}
+              </span>
             </div>
           )}
         </div>
@@ -503,10 +463,12 @@ export default function App() {
         <div className="h-5 w-px bg-slate-700/60 mx-1" />
 
         {/* Branch indicator */}
-        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/40 border border-slate-700/40 text-sm">
-          <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: BRANCH_COLORS[activeBranch] || '#14b8a6' }} />
-          <span className="font-mono text-xs text-slate-300 truncate max-w-32">{activeBranch}</span>
-        </div>
+        {localFolderPath && (
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/40 border border-slate-700/40 text-sm">
+            <div className="w-2 h-2 rounded-full bg-brand-400 animate-pulse" />
+            <span className="font-mono text-xs text-slate-300 truncate max-w-32">{activeBranch}</span>
+          </div>
+        )}
 
         <div className="flex-1" />
 
@@ -517,16 +479,18 @@ export default function App() {
           </div>
         )}
 
-        <button
-          onClick={handleSync}
-          disabled={syncLoading || !activeRepo}
-          className={`flex items-center gap-2 px-4 py-1.5 sm:py-2 rounded-xl text-white font-semibold text-xs sm:text-sm transition-all shadow-lg ${currentSync.color} ${currentSync.glow} disabled:opacity-60`}
-        >
-          {syncLoading
-            ? <RefreshCw size={15} className="animate-spin" />
-            : currentSync.icon}
-          <span className="hidden sm:inline">{currentSync.label}</span>
-        </button>
+        {localFolderPath && (
+          <button
+            onClick={handleSync}
+            disabled={syncLoading}
+            className="flex items-center gap-2 px-4 py-1.5 sm:py-2 rounded-xl text-white font-semibold text-xs sm:text-sm transition-all shadow-lg bg-brand-500 hover:bg-brand-400 shadow-brand-500/20 disabled:opacity-60"
+          >
+            {syncLoading
+              ? <RefreshCw size={15} className="animate-spin" />
+              : <Upload size={15} />}
+            <span>Sincronizar (Pull & Push)</span>
+          </button>
+        )}
         
         <button 
           onClick={() => setShowProviderSetup(true)}
@@ -547,7 +511,7 @@ export default function App() {
           <div className="p-3 space-y-5">
             <button
               onClick={() => setShowNewBranchModal(true)}
-              disabled={!activeRepo}
+              disabled={!localFolderPath}
               className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-dashed border-brand-500/50 text-brand-400 hover:bg-brand-500/10 hover:border-brand-400 transition-all text-sm font-semibold group disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Plus size={15} className="group-hover:rotate-90 transition-transform duration-200" />
@@ -591,7 +555,7 @@ export default function App() {
               )}
             </div>
             
-            {activeRepo?.defaultBranch && (
+            {localFolderPath && (
               <div>
                 <div className="flex items-center gap-2 px-1 mb-2 mt-4">
                   <GitMerge size={13} className="text-slate-500" />
@@ -600,7 +564,7 @@ export default function App() {
                 <div className="space-y-1">
                   <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left hover:bg-slate-800/60 border border-transparent transition-all group opacity-70 cursor-not-allowed">
                      <div className="w-2 h-2 rounded-full bg-slate-600 flex-shrink-0" />
-                     <span className="text-sm font-mono text-slate-500 truncate">origin/{activeRepo.defaultBranch}</span>
+                     <span className="text-sm font-mono text-slate-500 truncate">origin/{activeBranch}</span>
                   </button>
                 </div>
               </div>
@@ -619,21 +583,39 @@ export default function App() {
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-0">
-            {!hasProviders && !activeRepo && (
-                <div className="flex flex-col items-center justify-center h-full text-center p-6">
-                   <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mb-4">
-                      <UserPlus size={24} className="text-brand-400" />
-                   </div>
-                   <h2 className="text-xl font-bold text-white mb-2">Bienvenido a MonGit</h2>
-                   <p className="text-sm text-slate-400 max-w-sm mb-6">Para empezar, conecta tu cuenta de GitHub, GitLab, Bitbucket, Codeberg o Gitea.</p>
-                   <button 
-                     onClick={() => setShowProviderSetup(true)}
-                     className="px-6 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-400 text-white font-semibold transition-all shadow-lg shadow-brand-500/25 glow-teal text-sm"
-                   >
-                     Conectar cuenta Git
-                   </button>
+            {!localFolderPath ? (
+              <div className="flex flex-col items-center justify-center h-full text-center p-8">
+                <div className="w-20 h-20 bg-gradient-to-br from-brand-400 to-indigo-500 rounded-2xl flex items-center justify-center mb-6 shadow-2xl shadow-brand-500/10">
+                  <GitBranch size={40} className="text-white animate-pulse" />
                 </div>
-            )}
+                <h2 className="text-2xl font-bold text-white mb-3">Bienvenido a MonGit</h2>
+                <p className="text-sm text-slate-400 max-w-md mb-8">
+                  Un cliente Git de escritorio ultrarrápido y premium para gestionar tus repositorios locales con facilidad.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <button 
+                    onClick={handleSelectFolder}
+                    className="px-6 py-3 rounded-xl bg-brand-500 hover:bg-brand-400 text-white font-semibold transition-all shadow-lg shadow-brand-500/20 text-sm flex items-center gap-2 justify-center"
+                  >
+                    <Folder size={16} />
+                    Abrir Carpeta Local...
+                  </button>
+                  <button 
+                    onClick={() => setShowProviderSetup(true)}
+                    className="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold transition-all text-sm flex items-center gap-2 justify-center"
+                  >
+                    <UserPlus size={16} />
+                    Conectar Cuenta Cloud...
+                  </button>
+                </div>
+              </div>
+            ) : activeCommits.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center p-8 text-slate-500">
+                <Clock size={48} className="mb-4 opacity-50 text-brand-400" />
+                <p className="text-sm">No se encontraron commits en la rama "{activeBranch}".</p>
+                <p className="text-xs text-slate-600 mt-1">Prepara cambios y realiza tu primer commit en el panel derecho.</p>
+              </div>
+            ) : null}
             
             {loadingData && (
                 <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-10">
@@ -746,7 +728,11 @@ export default function App() {
 
         {/* ── RIGHT PANEL (30%) — Staging Area ─────────────────────────────── */}
         <aside className="w-96 flex-shrink-0 flex flex-col bg-[#090e1b] overflow-hidden p-3 border-l border-slate-700/50">
-          <LocalRepoPanel />
+          <LocalRepoPanel 
+            folderPath={localFolderPath} 
+            refreshTrigger={refreshTrigger}
+            onCommitSuccess={() => loadLocalRepoData(localFolderPath, activeBranch)}
+          />
         </aside>
       </div>
 
@@ -755,18 +741,13 @@ export default function App() {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 text-slate-400">
             <Terminal size={12} className="text-brand-400" />
-            <span>{checkedFiles.length} cambios preparados</span>
+            <span>
+              {localFolderPath ? `Carpeta abierta: ${localFolderPath}` : 'No hay carpeta abierta'}
+            </span>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={handleUndo}
-            disabled={undoStack.length === 0}
-            className="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-slate-700/50 text-slate-400 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed group"
-          >
-            <RotateCcw size={11} className="group-hover:-rotate-45 transition-transform" />
-            <span>Deshacer</span>
-          </button>
+          <span className="text-slate-500 font-mono">MonGit Desktop v1.0.0</span>
         </div>
       </footer>
 
