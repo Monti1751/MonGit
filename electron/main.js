@@ -109,7 +109,21 @@ ipcMain.handle('commit-changes', async (event, folderPath, files, message) => {
 
 ipcMain.handle('push-changes', async (event, folderPath) => {
   try {
-    await execAsync('git push', { cwd: folderPath })
+    const { stdout: branchStdout } = await execAsync('git branch --show-current', { cwd: folderPath })
+    const activeBranch = branchStdout.trim()
+
+    let hasUpstream = true
+    try {
+      await execAsync('git rev-parse --abbrev-ref --symbolic-full-name @{u}', { cwd: folderPath })
+    } catch (e) {
+      hasUpstream = false
+    }
+
+    if (hasUpstream) {
+      await execAsync('git -c credential.helper= -c core.askpass= push', { cwd: folderPath })
+    } else {
+      await execAsync(`git -c credential.helper= -c core.askpass= push -u origin "${activeBranch}"`, { cwd: folderPath })
+    }
     return { success: true }
   } catch (err) {
     return { success: false, error: err.message }
@@ -118,7 +132,16 @@ ipcMain.handle('push-changes', async (event, folderPath) => {
 
 ipcMain.handle('pull-changes', async (event, folderPath) => {
   try {
-    await execAsync('git pull', { cwd: folderPath })
+    let hasUpstream = true
+    try {
+      await execAsync('git rev-parse --abbrev-ref --symbolic-full-name @{u}', { cwd: folderPath })
+    } catch (e) {
+      hasUpstream = false
+    }
+
+    if (hasUpstream) {
+      await execAsync('git pull', { cwd: folderPath })
+    }
     return { success: true }
   } catch (err) {
     return { success: false, error: err.message }
