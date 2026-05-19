@@ -57,7 +57,7 @@ ipcMain.handle('get-commits', async (event, folderPath, branchName) => {
     const commits = stdout.split('\n').filter(l => l.trim()).map(line => {
       const parts = line.split('|')
       const msg = parts[1] || ''
-      const isMerge = msg.toLowerCase().startsWith('merge ') || msg.toLowerCase().includes('merge branch') || msg.toLowerCase().includes('merge pull request')      
+      const isMerge = msg.toLowerCase().startsWith('merge ') || msg.toLowerCase().includes('merge branch') || msg.toLowerCase().includes('merge pull request')
       const deco = parts[4] ? parts[4].trim() : ''
       let tags = []
       if (deco) {

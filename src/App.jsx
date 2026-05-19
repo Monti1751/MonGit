@@ -714,6 +714,14 @@ export default function App() {
                       <Avatar initials={commit.initials} color={branchColor} size="sm" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
+                          {commit.isMerge && (
+                            <span
+                              className="text-[10px] px-1.5 py-0.5 rounded border font-mono font-bold tracking-wide bg-purple-500/15 border-purple-500/40 text-purple-400 flex items-center gap-1 animate-pulse-slow"
+                            >
+                              <GitMerge size={10} />
+                              Merge
+                            </span>
+                          )}
                           {commit.tags?.map(tag => {
                             let bg = 'bg-brand-500/10 border-brand-500/30 text-brand-400';
                             if (tag === 'HEAD') {
