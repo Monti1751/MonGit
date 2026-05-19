@@ -243,6 +243,7 @@ export default function App() {
   const [newBranchName, setNewBranchName] = useState('')
   const [newBranchError, setNewBranchError] = useState('')
   const [branchToDelete, setBranchToDelete] = useState(null)
+  const [deleteRemoteBranch, setDeleteRemoteBranch] = useState(false)
   const [showRepoDropdown, setShowRepoDropdown] = useState(false)
   const [showProviderSetup, setShowProviderSetup] = useState(false)
   const [showCreateRepoModal, setShowCreateRepoModal] = useState(false)
@@ -433,10 +434,15 @@ export default function App() {
     
     setLoadingData(true)
     try {
-      const result = await window.electronAPI.deleteBranch(localFolderPath, branchToDelete)
+      const result = await window.electronAPI.deleteBranch(localFolderPath, branchToDelete, deleteRemoteBranch)
       if (result.success) {
-        showToast(`Rama "${branchToDelete}" eliminada correctamente`, 'success')
+        if (result.remoteError) {
+          showToast(`Rama "${branchToDelete}" eliminada localmente, pero falló en GitHub: ${result.remoteError}`, 'error')
+        } else {
+          showToast(`Rama "${branchToDelete}" eliminada correctamente ${deleteRemoteBranch ? '(local y de GitHub)' : '(local)'}`, 'success')
+        }
         setBranchToDelete(null)
+        setDeleteRemoteBranch(false)
         loadLocalRepoData(localFolderPath, activeBranch)
       } else {
         showToast(`Error al eliminar la rama: ${result.error}`, 'error')
@@ -833,7 +839,7 @@ export default function App() {
         <Modal
           title="¿Eliminar rama?"
           subtitle={`Esta acción es irreversible.`}
-          onClose={() => setBranchToDelete(null)}
+          onClose={() => { setBranchToDelete(null); setDeleteRemoteBranch(false) }}
           onConfirm={handleDeleteBranch}
         >
           <div className="space-y-3 py-1 text-left">
@@ -845,6 +851,18 @@ export default function App() {
               <span>
                 <strong>Atención:</strong> Si esta rama tiene cambios o commits locales que no han sido fusionados con la rama principal (<code>main</code>), se perderán definitivamente.
               </span>
+            </div>
+            <div className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800/60 transition-all cursor-pointer">
+              <input
+                type="checkbox"
+                id="delete-remote-chk"
+                checked={deleteRemoteBranch}
+                onChange={e => setDeleteRemoteBranch(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-brand-500 focus:ring-brand-500 focus:ring-offset-slate-900 cursor-pointer accent-brand-500"
+              />
+              <label htmlFor="delete-remote-chk" className="text-xs font-semibold text-slate-300 select-none cursor-pointer hover:text-white transition-colors flex-1">
+                Eliminar también de GitHub (remoto)
+              </label>
             </div>
           </div>
         </Modal>

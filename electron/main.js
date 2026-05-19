@@ -97,10 +97,19 @@ ipcMain.handle('checkout-branch', async (event, folderPath, branchName) => {
   }
 })
 
-ipcMain.handle('delete-branch', async (event, folderPath, branchName) => {
+ipcMain.handle('delete-branch', async (event, folderPath, branchName, deleteRemote = false) => {
   try {
     // -D forces deletion even if branch has unmerged changes
     await execAsync(`git branch -D "${branchName}"`, { cwd: folderPath })
+    
+    if (deleteRemote) {
+      try {
+        await execAsync(`git push origin --delete "${branchName}"`, { cwd: folderPath })
+      } catch (remoteErr) {
+        console.error('delete-branch remote error:', remoteErr)
+        return { success: true, remoteError: remoteErr.message }
+      }
+    }
     return { success: true }
   } catch (err) {
     return { success: false, error: err.message }
