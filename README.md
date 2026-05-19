@@ -95,7 +95,7 @@ Este comando:
 2. Llama a `electron-builder` para empaquetar todo el código y dependencias en un ejecutable único portable de 64 bits.
 
 ### 📁 Ejecutable Final Generado
-* **Ruta de Salida**: `D:\GitHub\MonGit\dist-package\MonGit 1.0.0.exe`
+* **Ruta de Salida**: `\MonGit\dist-package\MonGit 1.0.0.exe`
 * **Tamaño**: ~93 MB (Autónomo, listo para copiar a un pendrive o compartir).
 
 ---
