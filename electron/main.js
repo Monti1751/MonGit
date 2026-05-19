@@ -57,8 +57,7 @@ ipcMain.handle('get-commits', async (event, folderPath, branchName) => {
     const commits = stdout.split('\n').filter(l => l.trim()).map(line => {
       const parts = line.split('|')
       const msg = parts[1] || ''
-      const isMerge = msg.toLowerCase().startsWith('merge ') || msg.toLowerCase().includes('merge branch') || msg.toLowerCase().includes('merge pull request')
-      
+      const isMerge = msg.toLowerCase().startsWith('merge ') || msg.toLowerCase().includes('merge branch') || msg.toLowerCase().includes('merge pull request')      
       const deco = parts[4] ? parts[4].trim() : ''
       let tags = []
       if (deco) {
@@ -113,6 +112,25 @@ ipcMain.handle('checkout-branch', async (event, folderPath, branchName) => {
   }
 })
 
+ipcMain.handle('delete-branch', async (event, folderPath, branchName, deleteRemote = false) => {
+  try {
+    // -D forces deletion even if branch has unmerged changes
+    await execAsync(`git branch -D "${branchName}"`, { cwd: folderPath })
+    
+    if (deleteRemote) {
+      try {
+        await execAsync(`git push origin --delete "${branchName}"`, { cwd: folderPath })
+      } catch (remoteErr) {
+        console.error('delete-branch remote error:', remoteErr)
+        return { success: true, remoteError: remoteErr.message }
+      }
+    }
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
 ipcMain.handle('commit-changes', async (event, folderPath, files, message) => {
   try {
     for (const file of files) {
@@ -128,7 +146,21 @@ ipcMain.handle('commit-changes', async (event, folderPath, files, message) => {
 
 ipcMain.handle('push-changes', async (event, folderPath) => {
   try {
-    await execAsync('git push', { cwd: folderPath })
+    const { stdout: branchStdout } = await execAsync('git branch --show-current', { cwd: folderPath })
+    const activeBranch = branchStdout.trim()
+
+    let hasUpstream = true
+    try {
+      await execAsync('git rev-parse --abbrev-ref --symbolic-full-name @{u}', { cwd: folderPath })
+    } catch (e) {
+      hasUpstream = false
+    }
+
+    if (hasUpstream) {
+      await execAsync('git -c credential.helper= -c core.askpass= push', { cwd: folderPath })
+    } else {
+      await execAsync(`git -c credential.helper= -c core.askpass= push -u origin "${activeBranch}"`, { cwd: folderPath })
+    }
     return { success: true }
   } catch (err) {
     return { success: false, error: err.message }
@@ -137,7 +169,16 @@ ipcMain.handle('push-changes', async (event, folderPath) => {
 
 ipcMain.handle('pull-changes', async (event, folderPath) => {
   try {
-    await execAsync('git pull', { cwd: folderPath })
+    let hasUpstream = true
+    try {
+      await execAsync('git rev-parse --abbrev-ref --symbolic-full-name @{u}', { cwd: folderPath })
+    } catch (e) {
+      hasUpstream = false
+    }
+
+    if (hasUpstream) {
+      await execAsync('git pull', { cwd: folderPath })
+    }
     return { success: true }
   } catch (err) {
     return { success: false, error: err.message }
