@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   createBranch: (folderPath, branch) => ipcRenderer.invoke('create-branch', folderPath, branch),
   checkoutBranch: (folderPath, branch) => ipcRenderer.invoke('checkout-branch', folderPath, branch),
   commitChanges: (folderPath, files, message) => ipcRenderer.invoke('commit-changes', folderPath, files, message),
+  deleteBranch: (folderPath, branch) => ipcRenderer.invoke('delete-branch', folderPath, branch),
   pushChanges: (folderPath) => ipcRenderer.invoke('push-changes', folderPath),
   pullChanges: (folderPath) => ipcRenderer.invoke('pull-changes', folderPath)
 })

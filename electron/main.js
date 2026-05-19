@@ -56,15 +56,18 @@ ipcMain.handle('get-commits', async (event, folderPath, branchName) => {
     const { stdout } = await execAsync(`git log "${branchName}" --pretty=format:"%H|%s|%an|%ar" -n 50`, { cwd: folderPath })
     const commits = stdout.split('\n').filter(l => l.trim()).map(line => {
       const parts = line.split('|')
+      const msg = parts[1] || ''
+      const isMerge = msg.toLowerCase().startsWith('merge ') || msg.toLowerCase().includes('merge branch') || msg.toLowerCase().includes('merge pull request')
       return {
         id: parts[0],
-        message: parts[1],
+        message: msg,
         author: parts[2],
         time: parts[3],
         branch: branchName,
         tags: [],
         initials: parts[2].substring(0, 2).toUpperCase(),
-        color: '#14b8a6'
+        color: isMerge ? '#a855f7' : '#14b8a6',
+        isMerge: isMerge
       }
     })
     // Tag first as HEAD
@@ -88,6 +91,16 @@ ipcMain.handle('create-branch', async (event, folderPath, branchName) => {
 ipcMain.handle('checkout-branch', async (event, folderPath, branchName) => {
   try {
     await execAsync(`git checkout "${branchName}"`, { cwd: folderPath })
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('delete-branch', async (event, folderPath, branchName) => {
+  try {
+    // -D forces deletion even if branch has unmerged changes
+    await execAsync(`git branch -D "${branchName}"`, { cwd: folderPath })
     return { success: true }
   } catch (err) {
     return { success: false, error: err.message }
