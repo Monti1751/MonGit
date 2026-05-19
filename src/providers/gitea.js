@@ -70,11 +70,12 @@ export function createGiteaClient(baseUrl) {
     }))
   }
 
-  async function getCommits(token, owner, repo, branch, perPage = 20) {
+  async function getCommits(token, owner, repo, branch = 'main', perPage = 20) {
     const res = await fetch(
       `${BASE}/repos/${owner}/${repo}/commits?sha=${encodeURIComponent(branch)}&limit=${perPage}`,
       { headers: headers(token) }
     )
+    if (res.status === 409 || res.status === 404) return [] // Empty repository or branch not found
     if (!res.ok) throw new Error(`Error cargando commits (${res.status})`)
     const data = await res.json()
     const commits = Array.isArray(data) ? data : (data.commits || [])
@@ -97,7 +98,7 @@ export function createGiteaClient(baseUrl) {
       name: details.name,
       description: details.description || '',
       private: details.private,
-      auto_init: true,
+      auto_init: details.autoInit !== false,
     }
     const res = await fetch(`${BASE}/user/repos`, {
       method: 'POST',

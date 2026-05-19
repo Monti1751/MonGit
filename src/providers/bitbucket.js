@@ -60,11 +60,12 @@ export async function getBranches(username, appPassword, workspace, repoSlug) {
   }))
 }
 
-export async function getCommits(username, appPassword, workspace, repoSlug, branch, perPage = 20) {
+export async function getCommits(username, appPassword, workspace, repo, branch = 'main', perPage = 20) {
   const res = await fetch(
-    `${BASE}/repositories/${workspace}/${repoSlug}/commits/${branch}?pagelen=${perPage}`,
+    `${BASE}/repositories/${workspace}/${repo}/commits/${encodeURIComponent(branch)}?pagelen=${perPage}`,
     { headers: headers(username, appPassword) }
   )
+  if (res.status === 409 || res.status === 404) return [] // Empty repository or branch not found
   if (!res.ok) throw new Error(`Error cargando commits (${res.status})`)
   const data = await res.json()
   return (data.values || []).map(c => ({
@@ -97,7 +98,7 @@ function formatRelativeTime(isoDate) {
 }
 
 export async function createRepo(username, appPassword, workspace, details) {
-  const repoSlug = details.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+  const repoSlug = details.name.replace(/[^a-zA-Z0-9_-]+/g, '-')
   const payload = {
     scm: 'git',
     is_private: details.private,
@@ -117,20 +118,22 @@ export async function createRepo(username, appPassword, workspace, details) {
   }
   
   // Create an initial commit (README.md) since auto_init doesn't exist in API payload
-  try {
-    const formData = new URLSearchParams()
-    formData.append('message', 'Initial commit')
-    formData.append('README.md', '# ' + details.name)
-    await fetch(`${BASE}/repositories/${workspace}/${repoSlug}/src`, {
-      method: 'POST',
-      headers: {
-        Authorization: headers(username, appPassword).Authorization,
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: formData.toString()
-    })
-  } catch (e) {
-    // Ignore
+  if (details.autoInit !== false) {
+    try {
+      const formData = new URLSearchParams()
+      formData.append('message', 'Initial commit')
+      formData.append('README.md', '# ' + details.name)
+      await fetch(`${BASE}/repositories/${workspace}/${repoSlug}/src`, {
+        method: 'POST',
+        headers: {
+          Authorization: headers(username, appPassword).Authorization,
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: formData.toString()
+      })
+    } catch (e) {
+      // Ignore
+    }
   }
 
   return res.json()

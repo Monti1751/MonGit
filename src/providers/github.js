@@ -68,11 +68,11 @@ export async function getBranches(token, owner, repo) {
   }))
 }
 
-export async function getCommits(token, owner, repo, branch, perPage = 20) {
-  const res = await fetch(
-    `${BASE}/repos/${owner}/${repo}/commits?sha=${branch}&per_page=${perPage}`,
-    { headers: headers(token) }
-  )
+export async function getCommits(token, owner, repo, branch = 'main', perPage = 20) {
+  const res = await fetch(`${BASE}/repos/${owner}/${repo}/commits?sha=${encodeURIComponent(branch)}&per_page=${perPage}`, {
+    headers: headers(token)
+  })
+  if (res.status === 409) return [] // Empty repository
   if (!res.ok) throw new Error(`Error cargando commits (${res.status})`)
   const data = await res.json()
   return data.map(c => ({
@@ -109,7 +109,7 @@ export async function createRepo(token, details) {
     name: details.name,
     description: details.description || '',
     private: details.private,
-    auto_init: true,
+    auto_init: details.autoInit !== false,
   }
   const res = await fetch(`${BASE}/user/repos`, {
     method: 'POST',

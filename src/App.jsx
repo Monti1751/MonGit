@@ -7,8 +7,9 @@ import {
   AlertCircle, Clock, Layers,
   RefreshCw, Terminal, Eye, Info, UserPlus
 } from 'lucide-react'
-import ProviderSetup from './components/ProviderSetup'
 import { useProviders } from './hooks/useProviders'
+import ProviderSetup from './components/ProviderSetup'
+import LocalRepoPanel from './components/LocalRepoPanel'
 
 // ─── Initial mock data (Fallback) ─────────────────────────────────────────────
 
@@ -134,7 +135,11 @@ function CreateRepoModal({ providers, onClose, onCreate }) {
     setLoading(true)
     setError('')
     try {
-      await onCreate(accountId, { name: name.trim().toLowerCase().replace(/\s+/g, '-'), description, private: isPrivate })
+      await onCreate(accountId, { 
+        name: name.trim().replace(/\s+/g, '-'), 
+        description, 
+        private: isPrivate
+      })
       onClose()
     } catch (err) {
       setError(err.message)
@@ -194,7 +199,10 @@ function CreateRepoModal({ providers, onClose, onCreate }) {
             </button>
           </div>
         </div>
-        {error && <p className="text-xs text-rose-400 flex items-center gap-1"><AlertCircle size={11} />{error}</p>}
+        {error && <p className="text-xs text-rose-400 flex items-center gap-1">
+          <AlertCircle size={11} className="flex-shrink-0" />
+          <span>{error} — <button onClick={handleSubmit} className="underline hover:text-rose-300 font-medium ml-1">Inténtelo de nuevo</button></span>
+        </p>}
         {loading && <p className="text-xs text-brand-400 flex items-center gap-1"><RefreshCw size={11} className="animate-spin" /> Creando repositorio e inicializando con README...</p>}
       </div>
     </Modal>
@@ -737,103 +745,8 @@ export default function App() {
         </main>
 
         {/* ── RIGHT PANEL (30%) — Staging Area ─────────────────────────────── */}
-        <aside className="w-80 flex-shrink-0 flex flex-col bg-[#090e1b] overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700/30 flex-shrink-0">
-            <div className="flex items-center gap-2">
-              <GitCommit size={15} className="text-brand-400" />
-              <span className="font-semibold text-sm text-white">Área de cambios locales</span>
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto flex flex-col">
-            <div className="p-3 space-y-1">
-              {files.map(file => {
-                  const status = STATUS_LABELS[file.status]
-                  const isSelectedFile = selectedFile?.id === file.id
-                  return (
-                    <div
-                      key={file.id}
-                      className={`flex items-center gap-2.5 px-2.5 py-2 rounded-xl border transition-all cursor-pointer group ${
-                        isSelectedFile
-                          ? 'bg-slate-700/50 border-slate-600/60'
-                          : 'border-transparent hover:bg-slate-800/50 hover:border-slate-700/40'
-                      }`}
-                      onClick={() => setSelectedFile(isSelectedFile ? null : file)}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={file.checked}
-                        onChange={() => handleToggleFile(file.id)}
-                        onClick={e => e.stopPropagation()}
-                        className="w-4 h-4 rounded accent-teal-500 flex-shrink-0 cursor-pointer"
-                      />
-                      <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 text-xs font-bold ${status.bg} ${status.color}`}>
-                        {status.icon}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-slate-200 truncate font-mono">{file.name.split('/').pop()}</p>
-                        <p className="text-[10px] text-slate-500 truncate">{file.name.split('/').slice(0, -1).join('/')}/</p>
-                      </div>
-                    </div>
-                  )
-              })}
-            </div>
-
-            {selectedFile && DIFF_CONTENT[selectedFile.name] && (
-              <div className="mx-3 mb-3 rounded-xl border border-slate-700/50 bg-slate-950/60 overflow-hidden flex-shrink-0">
-                <div className="flex items-center justify-between px-3 py-2 border-b border-slate-700/30 bg-slate-800/30">
-                  <div className="flex items-center gap-2">
-                    <Code2 size={12} className="text-slate-400" />
-                    <span className="text-[11px] font-mono text-slate-400 truncate">{selectedFile.name.split('/').pop()}</span>
-                  </div>
-                  <button onClick={() => setSelectedFile(null)} className="text-slate-600 hover:text-slate-400">
-                    <X size={12} />
-                  </button>
-                </div>
-                <div className="overflow-auto max-h-48 p-2 space-y-0.5">
-                  {DIFF_CONTENT[selectedFile.name].map((line, i) => (
-                    <div
-                      key={i}
-                      className={`flex items-start gap-2 px-2 py-0.5 rounded text-[11px] font-mono ${
-                        line.type === 'added' ? 'bg-emerald-500/10 text-emerald-300' :
-                        line.type === 'removed' ? 'bg-rose-500/10 text-rose-300' :
-                        'text-slate-500'
-                      }`}
-                    >
-                      <span className="flex-shrink-0 w-3 opacity-60">
-                        {line.type === 'added' ? '+' : line.type === 'removed' ? '−' : ' '}
-                      </span>
-                      <span className="break-all">{line.line || ' '}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="mt-auto p-3 pt-0 space-y-3 flex-shrink-0">
-              <div className="border-t border-slate-700/30 pt-3">
-                <textarea
-                  value={commitMessage}
-                  onChange={e => setCommitMessage(e.target.value)}
-                  placeholder="Mensaje del commit..."
-                  rows={2}
-                  className="w-full bg-slate-800/60 border border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-200 placeholder-slate-500 resize-none focus:outline-none focus:border-brand-500/60 focus:ring-1 focus:ring-brand-500/30 transition-all font-mono"
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleCommit()
-                  }}
-                />
-              </div>
-
-              <button
-                onClick={handleCommit}
-                disabled={commitLoading || !commitMessage.trim() || checkedFiles.length === 0}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-400 text-white font-bold text-sm transition-all shadow-lg shadow-brand-500/25 disabled:opacity-40 disabled:cursor-not-allowed glow-teal"
-              >
-                {commitLoading ? <RefreshCw size={15} className="animate-spin" /> : <GitCommit size={15} />}
-                Guardar localmente
-              </button>
-            </div>
-          </div>
+        <aside className="w-96 flex-shrink-0 flex flex-col bg-[#090e1b] overflow-hidden p-3 border-l border-slate-700/50">
+          <LocalRepoPanel />
         </aside>
       </div>
 
@@ -897,8 +810,6 @@ export default function App() {
           onCreate={async (accountId, details) => {
             await createNewRepo(accountId, details)
             showToast(`Repositorio "${details.name}" creado con éxito`, 'success')
-            // Refresh logic triggers useProviders to update allRepos,
-            // we could also auto-select it here, but user can easily pick it from dropdown now.
           }}
         />
       )}
