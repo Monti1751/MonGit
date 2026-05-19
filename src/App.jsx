@@ -5,7 +5,7 @@ import {
   Plus, ChevronDown, RotateCcw,
   Code2, Folder, X, Check,
   AlertCircle, Clock, Layers,
-  RefreshCw, Terminal, Eye, Info, UserPlus
+  RefreshCw, Terminal, Eye, Info, UserPlus, Trash2
 } from 'lucide-react'
 import { useProviders } from './hooks/useProviders'
 import ProviderSetup from './components/ProviderSetup'
@@ -242,6 +242,7 @@ export default function App() {
   const [showNewBranchModal, setShowNewBranchModal] = useState(false)
   const [newBranchName, setNewBranchName] = useState('')
   const [newBranchError, setNewBranchError] = useState('')
+  const [branchToDelete, setBranchToDelete] = useState(null)
   const [showRepoDropdown, setShowRepoDropdown] = useState(false)
   const [showProviderSetup, setShowProviderSetup] = useState(false)
   const [showCreateRepoModal, setShowCreateRepoModal] = useState(false)
@@ -427,6 +428,26 @@ export default function App() {
     }
   }
 
+  const handleDeleteBranch = async () => {
+    if (!branchToDelete || !localFolderPath) return
+    
+    setLoadingData(true)
+    try {
+      const result = await window.electronAPI.deleteBranch(localFolderPath, branchToDelete)
+      if (result.success) {
+        showToast(`Rama "${branchToDelete}" eliminada correctamente`, 'success')
+        setBranchToDelete(null)
+        loadLocalRepoData(localFolderPath, activeBranch)
+      } else {
+        showToast(`Error al eliminar la rama: ${result.error}`, 'error')
+      }
+    } catch (err) {
+      showToast(`Error: ${err.message}`, 'error')
+    } finally {
+      setLoadingData(false)
+    }
+  }
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
@@ -531,14 +552,15 @@ export default function App() {
                     const isActive = branch === activeBranch
                     const color = BRANCH_COLORS[branch] || '#94a3b8'
                     return (
-                      <button
+                      <div
                         key={branch}
                         onClick={() => handleBranchSwitch(branch)}
-                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all group relative overflow-hidden ${
+                        className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all group relative overflow-hidden cursor-pointer ${
                           isActive
                             ? 'bg-slate-700/60 border border-slate-600/60'
                             : 'hover:bg-slate-800/60 border border-transparent'
                         }`}
+                        role="button"
                       >
                         {isActive && (
                           <div className="absolute inset-0 rounded-xl opacity-10" style={{ background: `linear-gradient(90deg, ${color}, transparent)` }} />
@@ -547,8 +569,23 @@ export default function App() {
                         <span className={`text-sm font-mono truncate ${isActive ? 'text-white font-medium' : 'text-slate-400 group-hover:text-slate-200'}`}>
                           {branch}
                         </span>
-                        {isActive && <CheckCircle2 size={13} className="ml-auto flex-shrink-0" style={{ color }} />}
-                      </button>
+                        {isActive ? (
+                          <CheckCircle2 size={13} className="ml-auto flex-shrink-0" style={{ color }} />
+                        ) : (
+                          branch !== 'main' && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setBranchToDelete(branch)
+                              }}
+                              className="ml-auto p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all opacity-0 group-hover:opacity-100 z-20"
+                              title={`Eliminar rama ${branch}`}
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          )
+                        )}
+                      </div>
                     )
                   })}
                 </div>
@@ -580,6 +617,16 @@ export default function App() {
               <span className="font-semibold text-sm text-white">Historial de cambios</span>
               <span className="text-xs text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full font-mono">{activeCommits.length}</span>
             </div>
+            {localFolderPath && (
+              <button
+                onClick={() => loadLocalRepoData(localFolderPath, activeBranch)}
+                disabled={loadingData}
+                className="p-1.5 rounded-lg bg-slate-800/40 border border-slate-700/60 text-slate-400 hover:text-white hover:border-slate-500 hover:bg-slate-700/40 transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed group"
+                title="Actualizar historial"
+              >
+                <RefreshCw size={14} className={`transition-transform duration-500 ${loadingData ? 'animate-spin' : 'group-hover:rotate-180'}`} />
+              </button>
+            )}
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-0">
@@ -661,6 +708,14 @@ export default function App() {
                       <Avatar initials={commit.initials} color={branchColor} size="sm" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
+                          {commit.isMerge && (
+                            <span
+                              className="text-xs px-2 py-0.5 rounded-md font-mono font-semibold bg-purple-500/20 text-purple-400 border border-purple-500/30 flex items-center gap-1 animate-pulse-slow"
+                            >
+                              <GitMerge size={10} />
+                              Merge
+                            </span>
+                          )}
                           {commit.tags?.map(tag => (
                             <span
                               key={tag}
@@ -770,6 +825,27 @@ export default function App() {
                 className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-brand-500 focus:outline-none"
              />
              {newBranchError && <p className="text-xs text-rose-400">{newBranchError}</p>}
+          </div>
+        </Modal>
+      )}
+
+      {branchToDelete && (
+        <Modal
+          title="¿Eliminar rama?"
+          subtitle={`Esta acción es irreversible.`}
+          onClose={() => setBranchToDelete(null)}
+          onConfirm={handleDeleteBranch}
+        >
+          <div className="space-y-3 py-1 text-left">
+            <p className="text-sm text-slate-300">
+              ¿Estás seguro de que deseas eliminar la rama local <span className="font-mono text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded text-xs">{branchToDelete}</span>?
+            </p>
+            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs">
+              <AlertCircle size={15} className="flex-shrink-0 mt-0.5 text-amber-400" />
+              <span>
+                <strong>Atención:</strong> Si esta rama tiene cambios o commits locales que no han sido fusionados con la rama principal (<code>main</code>), se perderán definitivamente.
+              </span>
+            </div>
           </div>
         </Modal>
       )}
