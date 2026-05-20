@@ -8,14 +8,15 @@ export default function LocalRepoPanel({ folderPath, refreshTrigger, onRefreshDo
   const [message, setMessage] = useState('')
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
+  const [hasUnpushed, setHasUnpushed] = useState(false)
 
   const isElectron = !!window.electronAPI
 
-  const loadStatus = async (path) => {
+  const loadStatus = async (path, clearSuccess = true) => {
     if (!isElectron) return
     setLoading(true)
     setError(null)
-    setSuccess(null)
+    if (clearSuccess) setSuccess(null)
     try {
       const status = await window.electronAPI.getGitStatus(path)
       if (status === null) {
@@ -26,6 +27,10 @@ export default function LocalRepoPanel({ folderPath, refreshTrigger, onRefreshDo
         // Auto-select all by default when loaded
         setSelectedFiles(new Set(status.map(f => f.path)))
       }
+
+      // Check for unpushed commits
+      const unpushed = await window.electronAPI.checkUnpushedCommits(path)
+      setHasUnpushed(unpushed)
     } catch (e) {
       setError(e.message)
     } finally {
@@ -66,8 +71,8 @@ export default function LocalRepoPanel({ folderPath, refreshTrigger, onRefreshDo
       const result = await window.electronAPI.commitChanges(folderPath, Array.from(selectedFiles), message)
       if (result.success) {
         setMessage('')
-        setSuccess('Commit realizado con éxito')
-        loadStatus(folderPath)
+        setSuccess('¡Commit realizado con éxito! Ya puedes hacer push.')
+        await loadStatus(folderPath, false)
         if (onCommitSuccess) onCommitSuccess()
       } else {
         setError('Error al hacer commit: ' + result.error)
@@ -86,6 +91,7 @@ export default function LocalRepoPanel({ folderPath, refreshTrigger, onRefreshDo
       const result = await window.electronAPI.pushChanges(folderPath)
       if (result.success) {
         setSuccess('Cambios subidos (push) con éxito')
+        await loadStatus(folderPath, false)
         if (onCommitSuccess) onCommitSuccess()
       } else {
         setError('Error al hacer push: ' + result.error)
@@ -169,9 +175,9 @@ export default function LocalRepoPanel({ folderPath, refreshTrigger, onRefreshDo
               </button>
               <button 
                 onClick={handlePush}
-                disabled={loading}
+                disabled={loading || !hasUnpushed}
                 className="px-4 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                title="Hacer Push de los commits locales"
+                title={!hasUnpushed ? "No hay commits locales pendientes de push" : "Hacer Push de los commits locales"}
               >
                 <UploadCloud size={16} /> Push
               </button>
