@@ -167,6 +167,24 @@ ipcMain.handle('push-changes', async (event, folderPath) => {
   }
 })
 
+ipcMain.handle('check-unpushed-commits', async (event, folderPath) => {
+  try {
+    // Check if there is an upstream tracking branch
+    await execAsync('git rev-parse --abbrev-ref --symbolic-full-name @{u}', { cwd: folderPath })
+    // If yes, count commits ahead of remote
+    const { stdout } = await execAsync('git rev-list --count @{u}..HEAD', { cwd: folderPath })
+    return parseInt(stdout.trim(), 10) > 0
+  } catch (e) {
+    // If no upstream tracking branch, check if there are any commits at all in HEAD
+    try {
+      const { stdout } = await execAsync('git rev-list --count HEAD', { cwd: folderPath })
+      return parseInt(stdout.trim(), 10) > 0
+    } catch (err) {
+      return false
+    }
+  }
+})
+
 ipcMain.handle('pull-changes', async (event, folderPath) => {
   try {
     let hasUpstream = true

@@ -8,6 +8,7 @@ export default function LocalRepoPanel({ folderPath, refreshTrigger, onRefreshDo
   const [message, setMessage] = useState('')
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
+  const [hasUnpushed, setHasUnpushed] = useState(false)
 
   const isElectron = !!window.electronAPI
 
@@ -15,7 +16,6 @@ export default function LocalRepoPanel({ folderPath, refreshTrigger, onRefreshDo
     if (!isElectron) return
     setLoading(true)
     setError(null)
-    setSuccess(null)
     try {
       const status = await window.electronAPI.getGitStatus(path)
       if (status === null) {
@@ -26,6 +26,10 @@ export default function LocalRepoPanel({ folderPath, refreshTrigger, onRefreshDo
         // Auto-select all by default when loaded
         setSelectedFiles(new Set(status.map(f => f.path)))
       }
+
+      // Check for unpushed commits
+      const unpushed = await window.electronAPI.checkUnpushedCommits(path)
+      setHasUnpushed(unpushed)
     } catch (e) {
       setError(e.message)
     } finally {
@@ -34,14 +38,24 @@ export default function LocalRepoPanel({ folderPath, refreshTrigger, onRefreshDo
     }
   }
 
+  // Handle repository switches
   useEffect(() => {
+    setError(null)
+    setSuccess(null)
     if (folderPath) {
       loadStatus(folderPath)
     } else {
       setFiles([])
       setSelectedFiles(new Set())
     }
-  }, [folderPath, refreshTrigger])
+  }, [folderPath])
+
+  // Handle refresh triggers (e.g. from parent component actions)
+  useEffect(() => {
+    if (folderPath && refreshTrigger > 0) {
+      loadStatus(folderPath)
+    }
+  }, [refreshTrigger])
 
   const toggleFile = (path) => {
     const newSelected = new Set(selectedFiles)
@@ -58,6 +72,13 @@ export default function LocalRepoPanel({ folderPath, refreshTrigger, onRefreshDo
     }
   }
 
+  const triggerSuccess = (msg) => {
+    setSuccess(msg)
+    setTimeout(() => {
+      setSuccess(prev => prev === msg ? null : prev)
+    }, 1000)
+  }
+
   const handleCommit = async () => {
     if (!message.trim() || selectedFiles.size === 0) return
     setLoading(true)
@@ -66,8 +87,8 @@ export default function LocalRepoPanel({ folderPath, refreshTrigger, onRefreshDo
       const result = await window.electronAPI.commitChanges(folderPath, Array.from(selectedFiles), message)
       if (result.success) {
         setMessage('')
-        setSuccess('Commit realizado con éxito')
-        loadStatus(folderPath)
+        triggerSuccess('¡Commit realizado con éxito! Ya puedes hacer push.')
+        await loadStatus(folderPath)
         if (onCommitSuccess) onCommitSuccess()
       } else {
         setError('Error al hacer commit: ' + result.error)
@@ -85,7 +106,8 @@ export default function LocalRepoPanel({ folderPath, refreshTrigger, onRefreshDo
     try {
       const result = await window.electronAPI.pushChanges(folderPath)
       if (result.success) {
-        setSuccess('Cambios subidos (push) con éxito')
+        triggerSuccess('Cambios subidos (push) con éxito')
+        await loadStatus(folderPath)
         if (onCommitSuccess) onCommitSuccess()
       } else {
         setError('Error al hacer push: ' + result.error)
@@ -151,12 +173,12 @@ export default function LocalRepoPanel({ folderPath, refreshTrigger, onRefreshDo
           </div>
 
           <div className="p-4 border-t border-slate-700/50 bg-slate-800/50">
-            <input
-              type="text"
+            <textarea
               value={message}
               onChange={e => setMessage(e.target.value)}
               placeholder="Mensaje del commit..."
-              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-200 mb-3 focus:ring-1 focus:ring-brand-500 outline-none"
+              rows={3}
+              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-200 mb-3 focus:ring-1 focus:ring-brand-500 outline-none resize-none overflow-y-auto"
               disabled={files.length === 0 || loading}
             />
             <div className="flex gap-2">
@@ -169,9 +191,9 @@ export default function LocalRepoPanel({ folderPath, refreshTrigger, onRefreshDo
               </button>
               <button 
                 onClick={handlePush}
-                disabled={loading}
+                disabled={loading || !hasUnpushed}
                 className="px-4 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                title="Hacer Push de los commits locales"
+                title={!hasUnpushed ? "No hay commits locales pendientes de push" : "Hacer Push de los commits locales"}
               >
                 <UploadCloud size={16} /> Push
               </button>
