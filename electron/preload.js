@@ -11,5 +11,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   deleteBranch: (folderPath, branch, deleteRemote) => ipcRenderer.invoke('delete-branch', folderPath, branch, deleteRemote),
   pushChanges: (folderPath) => ipcRenderer.invoke('push-changes', folderPath),
   pullChanges: (folderPath) => ipcRenderer.invoke('pull-changes', folderPath),
-  checkUnpushedCommits: (folderPath) => ipcRenderer.invoke('check-unpushed-commits', folderPath)
+  checkUnpushedCommits: (folderPath) => ipcRenderer.invoke('check-unpushed-commits', folderPath),
+  getMergeStatus: (folderPath) => ipcRenderer.invoke('get-merge-status', folderPath),
+  gitMerge: (folderPath, fromBranch) => ipcRenderer.invoke('git-merge', folderPath, fromBranch),
+  gitAbortMerge: (folderPath) => ipcRenderer.invoke('git-abort-merge', folderPath),
+  readFileContent: (folderPath, filePath) => ipcRenderer.invoke('read-file-content', folderPath, filePath),
+  writeFileContent: (folderPath, filePath, content) => ipcRenderer.invoke('write-file-content', folderPath, filePath, content),
+  gitStageFile: (folderPath, filePath) => ipcRenderer.invoke('git-stage-file', folderPath, filePath),
+  gitCommitMerge: (folderPath, message) => ipcRenderer.invoke('git-commit-merge', folderPath, message)
 })

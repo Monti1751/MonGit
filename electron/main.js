@@ -3,6 +3,7 @@ import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { exec } from 'child_process'
 import { promisify } from 'util'
+import fs from 'fs/promises'
 
 const execAsync = promisify(exec)
 
@@ -197,6 +198,96 @@ ipcMain.handle('pull-changes', async (event, folderPath) => {
     if (hasUpstream) {
       await execAsync('git pull', { cwd: folderPath })
     }
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('get-merge-status', async (event, folderPath) => {
+  try {
+    let inMerge = false
+    try {
+      await fs.stat(join(folderPath, '.git', 'MERGE_HEAD'))
+      inMerge = true
+    } catch (e) {
+      inMerge = false
+    }
+
+    const { stdout } = await execAsync('git diff --name-only --diff-filter=U', { cwd: folderPath })
+    const conflicts = stdout.split('\n').map(s => s.trim()).filter(Boolean)
+
+    if (conflicts.length > 0) {
+      inMerge = true
+    }
+
+    return { inMerge, conflicts }
+  } catch (err) {
+    console.error('get-merge-status error:', err)
+    return { inMerge: false, conflicts: [] }
+  }
+})
+
+ipcMain.handle('git-merge', async (event, folderPath, fromBranch) => {
+  try {
+    await execAsync(`git merge "${fromBranch}"`, { cwd: folderPath })
+    return { success: true }
+  } catch (err) {
+    try {
+      const { stdout } = await execAsync('git diff --name-only --diff-filter=U', { cwd: folderPath })
+      const conflicts = stdout.split('\n').map(s => s.trim()).filter(Boolean)
+      if (conflicts.length > 0) {
+        return { success: false, conflict: true, error: 'Existen conflictos de fusión. Por favor, resuélvelos.' }
+      }
+    } catch (diffErr) {
+      // ignore
+    }
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('git-abort-merge', async (event, folderPath) => {
+  try {
+    await execAsync('git merge --abort', { cwd: folderPath })
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('read-file-content', async (event, folderPath, filePath) => {
+  try {
+    const fullPath = join(folderPath, filePath)
+    const content = await fs.readFile(fullPath, 'utf-8')
+    return { success: true, content }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('write-file-content', async (event, folderPath, filePath, content) => {
+  try {
+    const fullPath = join(folderPath, filePath)
+    await fs.writeFile(fullPath, content, 'utf-8')
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('git-stage-file', async (event, folderPath, filePath) => {
+  try {
+    await execAsync(`git add "${filePath}"`, { cwd: folderPath })
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('git-commit-merge', async (event, folderPath, message) => {
+  try {
+    const cleanMessage = message.replace(/"/g, '\\"')
+    await execAsync(`git commit -m "${cleanMessage}"`, { cwd: folderPath })
     return { success: true }
   } catch (err) {
     return { success: false, error: err.message }
