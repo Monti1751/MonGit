@@ -232,6 +232,18 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
       return
     }
 
+    // Check for uncommitted changes before merging
+    try {
+      const statusResult = await window.electronAPI.getGitStatus(folderPath)
+      if (statusResult && statusResult.length > 0) {
+        setErrorMsg('Hay cambios sin commitear. Por favor realiza un commit o descarta los cambios antes de fusionar.')
+        setLoading(false)
+        return
+      }
+    } catch (statusErr) {
+      console.error('Error checking git status:', statusErr)
+    }
+
     setLoading(true)
     setErrorMsg('')
     setMergeState('merging')
