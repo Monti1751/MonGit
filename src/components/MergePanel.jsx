@@ -377,6 +377,17 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
       const result = await window.electronAPI.gitCommitMerge(folderPath, msg)
       if (result.success) {
         setMergeState('success')
+        // After committing merge, push to remote
+        try {
+          const pushResult = await window.electronAPI.pushChanges(folderPath)
+          if (!pushResult.success) {
+            console.error('Push after merge commit failed:', pushResult.error)
+            setErrorMsg('Merge commit succeeded, but push failed: ' + (pushResult.error || 'unknown error'))
+          }
+        } catch (pushErr) {
+          console.error('Push after merge commit exception:', pushErr)
+          setErrorMsg('Merge commit succeeded, but push error: ' + (pushErr.message || pushErr))
+        }
         setTimeout(() => {
           if (onMergeComplete) onMergeComplete()
           setMergeState('idle')
@@ -385,7 +396,7 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
           setResolvedFiles(new Set())
         }, 2500)
       } else {
-        setErrorMsg(result.error)
+        setErrorMsg(result.error || 'Error desconocido en commit merge')
       }
     } finally {
       setLoading(false)
