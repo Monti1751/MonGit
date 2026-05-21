@@ -238,6 +238,15 @@ ipcMain.handle('get-remote-url', async (event, folderPath) => {
   }
 })
 
+ipcMain.handle('git-diff-branches', async (event, folderPath, branch1, branch2) => {
+  try {
+    const { stdout } = await execAsync(`git diff ${branch1}...${branch2}`, { cwd: folderPath })
+    return { success: true, diff: stdout }
+  } catch (err) {
+    return { success: false, diff: '', error: err.message }
+  }
+})
+
 ipcMain.handle('git-merge', async (event, folderPath, fromBranch) => {
   try {
     await execAsync(`git merge "${fromBranch}"`, { cwd: folderPath })

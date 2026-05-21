@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   checkUnpushedCommits: (folderPath) => ipcRenderer.invoke('check-unpushed-commits', folderPath),
   getMergeStatus: (folderPath) => ipcRenderer.invoke('get-merge-status', folderPath),
   getRemoteUrl: (folderPath) => ipcRenderer.invoke('get-remote-url', folderPath),
+  gitDiffBranches: (folderPath, branch1, branch2) => ipcRenderer.invoke('git-diff-branches', folderPath, branch1, branch2),
   gitMerge: (folderPath, fromBranch) => ipcRenderer.invoke('git-merge', folderPath, fromBranch),
   gitAbortMerge: (folderPath) => ipcRenderer.invoke('git-abort-merge', folderPath),
   readFileContent: (folderPath, filePath) => ipcRenderer.invoke('read-file-content', folderPath, filePath),
