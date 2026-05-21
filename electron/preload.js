@@ -9,7 +9,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   checkoutBranch: (folderPath, branch) => ipcRenderer.invoke('checkout-branch', folderPath, branch),
   commitChanges: (folderPath, files, message) => ipcRenderer.invoke('commit-changes', folderPath, files, message),
   deleteBranch: (folderPath, branch, deleteRemote) => ipcRenderer.invoke('delete-branch', folderPath, branch, deleteRemote),
-  pushChanges: (folderPath) => ipcRenderer.invoke('push-changes', folderPath),
+  pushChanges: (folderPath, branchName) => ipcRenderer.invoke('push-changes', folderPath, branchName),
   packageApp: () => ipcRenderer.invoke('package-app'),
   pullChanges: (folderPath) => ipcRenderer.invoke('pull-changes', folderPath),
   checkUnpushedCommits: (folderPath) => ipcRenderer.invoke('check-unpushed-commits', folderPath),
