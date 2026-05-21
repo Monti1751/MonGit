@@ -234,16 +234,17 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
       return
     }
 
-    // Check for uncommitted changes before merging
+    // Check for uncommitted changes before merging (ignore untracked files)
     try {
-      const statusResult = await window.electronAPI.getGitStatus(folderPath)
-      if (statusResult && statusResult.length > 0) {
-        setErrorMsg('Hay cambios sin commitear. Por favor realiza un commit o descarta los cambios antes de fusionar.')
-        setLoading(false)
-        return
+      const statusResult = await window.electronAPI.getGitStatus(folderPath);
+      const pending = (statusResult || []).filter(f => f.status && !f.status.startsWith('??'));
+      if (pending.length > 0) {
+        setErrorMsg('Hay cambios sin commitear. Por favor realiza un commit o descarta los cambios antes de fusionar.');
+        setLoading(false);
+        return;
       }
     } catch (statusErr) {
-      console.error('Error checking git status:', statusErr)
+      console.error('Error checking git status:', statusErr);
     }
 
     setLoading(true)
