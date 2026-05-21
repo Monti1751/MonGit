@@ -181,6 +181,7 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
   const [resolvedFiles, setResolvedFiles] = useState(new Set())
+  const [remoteUrl, setRemoteUrl] = useState(null)
 
   const isElectron = !!window.electronAPI
   const availableBranches = branches.filter(b => b !== activeBranch)
@@ -189,7 +190,15 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
   useEffect(() => {
     if (!folderPath || !isElectron) return
     checkMergeStatus()
+    fetchRemoteUrl()
   }, [folderPath])
+
+  const fetchRemoteUrl = async () => {
+    const result = await window.electronAPI.getRemoteUrl(folderPath)
+    if (result.success) {
+      setRemoteUrl(result.url)
+    }
+  }
 
   const checkMergeStatus = async () => {
     const status = await window.electronAPI.getMergeStatus(folderPath)
@@ -338,6 +347,21 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
   const allBlocksResolved = conflictBlocks.length > 0 && conflictBlocks.every(b => b.resolved)
   const allFilesResolved = conflictFiles.length === 0 && mergeState === 'conflict'
 
+  // ── Get GitHub PR URL ──────────────────────────────────────────────────────
+  const getGitHubPrUrl = () => {
+    if (!remoteUrl) return null
+    
+    // Convert git URL to GitHub URL
+    let repoUrl = remoteUrl
+    if (repoUrl.startsWith('git@github.com:')) {
+      repoUrl = repoUrl.replace('git@github.com:', 'https://github.com/').replace('.git', '')
+    } else if (repoUrl.endsWith('.git')) {
+      repoUrl = repoUrl.slice(0, -4)
+    }
+    
+    return `${repoUrl}/compare/${activeBranch}...${fromBranch}`
+  }
+
   if (!isElectron) return null
 
   // ── RENDER ─────────────────────────────────────────────────────────────────
@@ -415,6 +439,18 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
                     <span>{errorMsg}</span>
                   </div>
                 )}
+
+                {/* Compare & Pull Request button */}
+                <button
+                  onClick={() => {
+                    const prUrl = getGitHubPrUrl()
+                    if (prUrl) window.open(prUrl, '_blank')
+                  }}
+                  disabled={!fromBranch || !remoteUrl}
+                  className="w-full py-3 rounded-xl bg-slate-700/50 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 font-bold text-sm transition-all shadow-lg flex items-center justify-center gap-2 group mb-3 border border-slate-600"
+                >
+                  <GitMerge size={16} /> Comparar & Pull Request
+                </button>
 
                 {/* Merge button */}
                 <button
