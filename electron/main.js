@@ -260,7 +260,7 @@ ipcMain.handle('git-diff-branches', async (event, folderPath, branch1, branch2) 
 ipcMain.handle('git-merge', async (event, folderPath, fromBranch) => {
   try {
     console.log(`[git-merge] Iniciando merge de ${fromBranch} en ${folderPath}`)
-    const { stdout, stderr } = await execAsync(`git merge "${fromBranch}"`, { cwd: folderPath })
+    const { stdout, stderr } = await execAsync(`git merge --no-ff "${fromBranch}"`, { cwd: folderPath })
     console.log(`[git-merge] Merge exitoso. stdout:`, stdout)
     return { success: true, conflict: false, error: null }
   } catch (err) {
