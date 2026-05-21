@@ -259,21 +259,15 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
         // Merge sin conflictos completado
         console.log('Merge successful without conflicts')
         setMergeState('success')
-        // Check if there are commits to push after the merge
+        // After merge, push changes to remote
         try {
-          const hasUnpushed = await window.electronAPI.checkUnpushedCommits(folderPath)
-          if (hasUnpushed) {
-            const pushResult = await window.electronAPI.pushChanges(folderPath)
-            console.log('Push result:', pushResult)
-            if (!pushResult.success) {
-              console.error('Push after merge failed:', pushResult.error)
-              setErrorMsg('Merge succeeded, but push failed: ' + (pushResult.error || 'unknown error'))
-            } else {
-              setPushStatusMsg('Cambios enviados al remoto')
-            }
+          const pushResult = await window.electronAPI.pushChanges(folderPath)
+          console.log('Push result:', pushResult)
+          if (!pushResult.success) {
+            console.error('Push after merge failed:', pushResult.error)
+            setErrorMsg('Merge succeeded, but push failed: ' + (pushResult.error || 'unknown error'))
           } else {
-            console.log('No unpushed commits after merge – branches up‑to‑date')
-            setPushStatusMsg('No había cambios pendientes de subir')
+            setPushStatusMsg('Cambios enviados al remoto')
           }
         } catch (pushErr) {
           console.error('Push after merge exception:', pushErr)
