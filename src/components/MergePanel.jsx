@@ -223,13 +223,24 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
 
   // ── Initiate merge ───────────────────────────────────────────────────────
   const handleMerge = async () => {
-    if (!fromBranch) return
+    if (!fromBranch) {
+      setErrorMsg('Por favor selecciona una rama de origen')
+      return
+    }
+    if (!folderPath) {
+      setErrorMsg('No hay carpeta abierta')
+      return
+    }
+
     setLoading(true)
     setErrorMsg('')
     setMergeState('merging')
 
     try {
+      console.log(`Iniciando merge: ${folderPath} <- ${fromBranch}`)
       const result = await window.electronAPI.gitMerge(folderPath, fromBranch)
+      console.log('Merge result:', result)
+      
       if (result.success) {
         setMergeState('success')
         setTimeout(() => {
@@ -242,11 +253,12 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
         await checkMergeStatus()
       } else {
         setMergeState('error')
-        setErrorMsg(result.error)
+        setErrorMsg(result.error || 'Error desconocido en merge')
       }
     } catch (err) {
+      console.error('Merge error:', err)
       setMergeState('error')
-      setErrorMsg(err.message)
+      setErrorMsg('Error: ' + (err.message || err))
     } finally {
       setLoading(false)
     }
@@ -493,9 +505,9 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
                     <select
                       value={fromBranch}
                       onChange={e => setFromBranch(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-center text-sm text-indigo-300 font-mono font-semibold focus:outline-none focus:border-indigo-400 transition-all appearance-none cursor-pointer hover:bg-indigo-500/15"
+                      className={`w-full px-4 py-3 rounded-xl border border-indigo-500/30 text-center text-sm font-mono font-semibold focus:outline-none focus:border-indigo-400 transition-all appearance-none cursor-pointer ${fromBranch ? 'bg-indigo-500/30 text-indigo-200 border-indigo-400' : 'bg-indigo-500/10 text-slate-400'}`}
                     >
-                      <option value="" className="bg-slate-900 text-slate-400">Seleccionar rama...</option>
+                      <option value="" className="bg-slate-900 text-slate-400">Selecciona rama...</option>
                       {availableBranches.map(b => (
                         <option key={b} value={b} className="bg-slate-900 text-indigo-300">{b}</option>
                       ))}
@@ -540,10 +552,17 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
                 <button
                   onClick={handleMerge}
                   disabled={!fromBranch || loading}
-                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-sm transition-all shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30 flex items-center justify-center gap-2 group"
+                  title={!fromBranch ? 'Selecciona una rama de origen primero' : 'Iniciar fusión git merge'}
+                  className={`w-full py-3.5 rounded-xl font-bold text-sm transition-all shadow-lg flex items-center justify-center gap-2 group ${
+                    !fromBranch || loading
+                      ? 'bg-slate-600 text-slate-400 cursor-not-allowed opacity-40'
+                      : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-purple-500/20 hover:shadow-purple-500/30'
+                  }`}
                 >
                   {loading ? (
                     <><RefreshCw size={16} className="animate-spin" /> Fusionando...</>
+                  ) : !fromBranch ? (
+                    <><AlertTriangle size={16} /> Selecciona rama</> 
                   ) : (
                     <><Zap size={16} className="group-hover:animate-pulse" /> Iniciar Fusión (Git Merge)</>
                   )}
