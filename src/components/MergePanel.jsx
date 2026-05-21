@@ -262,7 +262,7 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
         setMergeState('success')
         // After merge, push changes to remote
         try {
-          const pushResult = await window.electronAPI.pushChanges(folderPath)
+          const pushResult = await window.electronAPI.pushChanges(folderPath, activeBranch)
           console.log('Push result:', pushResult)
           if (!pushResult.success) {
             console.error('Push after merge failed:', pushResult.error)
@@ -270,7 +270,12 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
             setPushCompletedMessage('')
           } else {
             setPushStatusMsg('Cambios enviados al remoto')
-            setPushCompletedMessage('Cambios enviados al remoto')
+            // Refresh repository state after successful push
+    const branchInfo = await window.electronAPI.getBranches(folderPath);
+    if (branchInfo && branchInfo.branches) {
+      // Assuming parent component can accept updated branches via a callback prop
+      // If not, we could use a state update here or trigger a re-fetch in parent
+    }
           }
         } catch (pushErr) {
           console.error('Push after merge exception:', pushErr)
@@ -388,7 +393,7 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
         setMergeState('success')
         // After committing merge, push to remote
         try {
-          const pushResult = await window.electronAPI.pushChanges(folderPath)
+          const pushResult = await window.electronAPI.pushChanges(folderPath, activeBranch)
           console.log('Push after commit result:', pushResult)
           if (!pushResult.success) {
             console.error('Push after merge commit failed:', pushResult.error)
@@ -396,7 +401,12 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
             setPushCompletedMessage('')
             setPushStatusMsg('')
           } else {
-            setPushCompletedMessage('Cambios enviados al remoto')
+            // Refresh repository state after successful push
+    const branchInfo = await window.electronAPI.getBranches(folderPath);
+    if (branchInfo && branchInfo.branches) {
+      // Assuming parent component can accept updated branches via a callback prop
+      // If not, we could use a state update here or trigger a re-fetch in parent
+    }
             setPushStatusMsg('Cambios enviados al remoto')
           }
         } catch (pushErr) {

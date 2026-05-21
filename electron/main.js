@@ -145,28 +145,40 @@ ipcMain.handle('commit-changes', async (event, folderPath, files, message) => {
   }
 })
 
-ipcMain.handle('push-changes', async (event, folderPath) => {
+ipcMain.handle('push-changes', async (event, folderPath, branchName) => {
   try {
-    const { stdout: branchStdout } = await execAsync('git branch --show-current', { cwd: folderPath })
-    const activeBranch = branchStdout.trim()
+    // Determine the active branch either from provided argument or git
+    let activeBranch = branchName;
+    if (!activeBranch) {
+      const { stdout: branchStdout } = await execAsync('git rev-parse --abbrev-ref HEAD', { cwd: folderPath });
+      activeBranch = branchStdout.trim();
+    }
 
-    let hasUpstream = true
+    // Check if upstream is set
+    let hasUpstream = true;
     try {
-      await execAsync('git rev-parse --abbrev-ref --symbolic-full-name @{u}', { cwd: folderPath })
+      await execAsync('git rev-parse --abbrev-ref --symbolic-full-name @{u}', { cwd: folderPath });
     } catch (e) {
-      hasUpstream = false
+      hasUpstream = false;
     }
 
-    if (hasUpstream) {
-      await execAsync('git -c credential.helper= -c core.askpass= push', { cwd: folderPath })
-    } else {
-      await execAsync(`git -c credential.helper= -c core.askpass= push -u origin "${activeBranch}"`, { cwd: folderPath })
+    // Execute push command
+    const pushCmd = hasUpstream
+      ? 'git -c credential.helper= -c core.askpass= push'
+      : `git -c credential.helper= -c core.askpass= push -u origin "${activeBranch}"`;
+    const { stdout, stderr } = await execAsync(pushCmd, { cwd: folderPath });
+
+    // Analyze stderr for fatal or rejected messages
+    const lowerStderr = (stderr || '').toLowerCase();
+    if (lowerStderr.includes('fatal:') || lowerStderr.includes('rejected')) {
+      return { success: false, error: stderr.trim() };
     }
-    return { success: true }
+
+    return { success: true };
   } catch (err) {
-    return { success: false, error: err.message }
+    return { success: false, error: err.message };
   }
-})
+});
 
 ipcMain.handle('check-unpushed-commits', async (event, folderPath) => {
   try {
