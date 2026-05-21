@@ -645,7 +645,12 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
               <CheckCircle2 size={40} className="text-emerald-400" />
             </div>
             <h3 className="text-xl font-bold text-emerald-400 mb-2">¡Fusión completada!</h3>
-            <p className="text-sm text-slate-400">Los cambios se han fusionado correctamente en <span className="font-mono text-emerald-400">{activeBranch}</span>.</p>
+            <p className="text-sm text-slate-400">
+               Los cambios se han fusionado correctamente en <span className="font-mono text-emerald-400">{activeBranch}</span>.
+             </p>
+             {pushStatusMsg && (
+               <p className="mt-2 text-sm text-emerald-300">{pushStatusMsg}</p>
+             )}
           </div>
         </div>
       )}
