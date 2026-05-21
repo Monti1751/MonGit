@@ -257,6 +257,17 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
         // Merge sin conflictos completado
         console.log('Merge successful without conflicts')
         setMergeState('success')
+        // Attempt to push changes to remote
+        try {
+          const pushResult = await window.electronAPI.pushChanges(folderPath)
+          if (!pushResult.success) {
+            console.error('Push after merge failed:', pushResult.error)
+            setErrorMsg('Merge succeeded, but push failed: ' + (pushResult.error || 'unknown error'))
+          }
+        } catch (pushErr) {
+          console.error('Push after merge exception:', pushErr)
+          setErrorMsg('Merge succeeded, but push error: ' + (pushErr.message || pushErr))
+        }
         setTimeout(() => {
           if (onMergeComplete) onMergeComplete()
           setMergeState('idle')
