@@ -340,6 +340,17 @@ ipcMain.handle('git-commit-merge', async (event, folderPath, message) => {
   }
 })
 
+ipcMain.handle('package-app', async () => {
+  try {
+    const cwd = join(__dirname, '..')
+    await execAsync('npm run dist', { cwd })
+    return { success: true }
+  } catch (err) {
+    console.error('Package app error:', err)
+    return { success: false, error: err.message }
+  }
+})
+
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 // Set application name for Windows to correctly display in taskbar
