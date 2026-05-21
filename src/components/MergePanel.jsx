@@ -175,6 +175,7 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
   const [fromBranch, setFromBranch] = useState('')
   const [mergeState, setMergeState] = useState('idle') // idle | merging | conflict | success | error
   const [pushStatusMsg, setPushStatusMsg] = useState('')
+  const [pushCompletedMessage, setPushCompletedMessage] = useState('')
   const [conflictFiles, setConflictFiles] = useState([])
   const [selectedFile, setSelectedFile] = useState(null)
   const [fileContent, setFileContent] = useState('')
@@ -266,12 +267,15 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
           if (!pushResult.success) {
             console.error('Push after merge failed:', pushResult.error)
             setErrorMsg('Merge succeeded, but push failed: ' + (pushResult.error || 'unknown error'))
+            setPushCompletedMessage('')
           } else {
             setPushStatusMsg('Cambios enviados al remoto')
+            setPushCompletedMessage('Cambios enviados al remoto')
           }
         } catch (pushErr) {
           console.error('Push after merge exception:', pushErr)
           setErrorMsg('Merge succeeded, but push error: ' + (pushErr.message || pushErr))
+          setPushCompletedMessage('')
         }
         setTimeout(() => {
           if (onMergeComplete) onMergeComplete()
@@ -385,13 +389,20 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
         // After committing merge, push to remote
         try {
           const pushResult = await window.electronAPI.pushChanges(folderPath)
+          console.log('Push after commit result:', pushResult)
           if (!pushResult.success) {
             console.error('Push after merge commit failed:', pushResult.error)
             setErrorMsg('Merge commit succeeded, but push failed: ' + (pushResult.error || 'unknown error'))
+            setPushCompletedMessage('')
+            setPushStatusMsg('')
+          } else {
+            setPushCompletedMessage('Cambios enviados al remoto')
+            setPushStatusMsg('Cambios enviados al remoto')
           }
         } catch (pushErr) {
           console.error('Push after merge commit exception:', pushErr)
           setErrorMsg('Merge commit succeeded, but push error: ' + (pushErr.message || pushErr))
+          setPushCompletedMessage('')
         }
         setTimeout(() => {
           if (onMergeComplete) onMergeComplete()
@@ -527,6 +538,12 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
                   <h2 className="text-xl font-bold text-white mb-1">Centro de Fusión</h2>
                   <p className="text-sm text-slate-400">Fusiona los cambios de otra rama en tu rama actual</p>
                 </div>
+                {/* Optional push status when idle */}
+                {pushCompletedMessage && (
+                  <div className="mb-4 text-sm text-emerald-300 font-medium text-center">
+                    {pushCompletedMessage}
+                  </div>
+                )}
 
                 {/* Merge Diagram */}
                 <div className="flex items-center justify-center gap-4 mb-8">
