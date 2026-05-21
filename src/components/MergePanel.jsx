@@ -182,6 +182,9 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
   const [errorMsg, setErrorMsg] = useState('')
   const [resolvedFiles, setResolvedFiles] = useState(new Set())
   const [remoteUrl, setRemoteUrl] = useState(null)
+  const [showDiff, setShowDiff] = useState(false)
+  const [diffContent, setDiffContent] = useState('')
+  const [loadingDiff, setLoadingDiff] = useState(false)
 
   const isElectron = !!window.electronAPI
   const availableBranches = branches.filter(b => b !== activeBranch)
@@ -362,12 +365,80 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
     return `${repoUrl}/compare/${activeBranch}...${fromBranch}`
   }
 
+  const handleCompareDiff = async () => {
+    if (!fromBranch || !folderPath) return
+    
+    setLoadingDiff(true)
+    try {
+      const result = await window.electronAPI.gitDiffBranches(folderPath, activeBranch, fromBranch)
+      if (result.success) {
+        setDiffContent(result.diff || 'No hay diferencias entre las ramas')
+        setShowDiff(true)
+      } else {
+        setErrorMsg('Error al obtener el diff: ' + (result.error || 'Desconocido'))
+      }
+    } catch (err) {
+      setErrorMsg('Error: ' + err.message)
+    } finally {
+      setLoadingDiff(false)
+    }
+  }
+
   if (!isElectron) return null
 
   // ── RENDER ─────────────────────────────────────────────────────────────────
 
   return (
     <div className="flex flex-col h-full">
+
+      {/* ── DIFF MODAL ────────────────────────────────────────────────────────── */}
+      {showDiff && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-900 rounded-xl border border-slate-700 max-w-4xl w-full max-h-[80vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-slate-700">
+              <h3 className="text-lg font-bold text-slate-200">Diferencias: {activeBranch} → {fromBranch}</h3>
+              <button
+                onClick={() => setShowDiff(false)}
+                className="p-1 hover:bg-slate-800 rounded transition-colors"
+              >
+                <X size={20} className="text-slate-400" />
+              </button>
+            </div>
+            
+            {/* Diff Content */}
+            <div className="flex-1 overflow-auto p-4">
+              {diffContent ? (
+                <pre className="text-xs text-slate-300 font-mono whitespace-pre-wrap break-words bg-slate-800/50 p-3 rounded border border-slate-700">
+                  {diffContent}
+                </pre>
+              ) : (
+                <div className="text-center text-slate-400 py-8">No hay diferencias</div>
+              )}
+            </div>
+            
+            {/* Modal Footer */}
+            <div className="flex gap-2 p-4 border-t border-slate-700">
+              <button
+                onClick={() => setShowDiff(false)}
+                className="flex-1 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold transition-colors"
+              >
+                Cerrar
+              </button>
+              <button
+                onClick={() => {
+                  const prUrl = getGitHubPrUrl()
+                  if (prUrl) window.open(prUrl, '_blank')
+                }}
+                disabled={!remoteUrl}
+                className="flex-1 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 font-bold transition-colors"
+              >
+                Abrir en GitHub
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── IDLE STATE: Merge configurator ──────────────────────────────────── */}
       {mergeState === 'idle' && (
@@ -439,6 +510,19 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
                     <span>{errorMsg}</span>
                   </div>
                 )}
+
+                {/* Compare Locally button */}
+                <button
+                  onClick={handleCompareDiff}
+                  disabled={!fromBranch || loadingDiff}
+                  className="w-full py-3 rounded-xl bg-slate-700/50 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 font-bold text-sm transition-all shadow-lg flex items-center justify-center gap-2 group mb-3 border border-slate-600"
+                >
+                  {loadingDiff ? (
+                    <><RefreshCw size={16} className="animate-spin" /> Comparando...</>
+                  ) : (
+                    <><GitBranch size={16} /> Comparar Localmente</>  
+                  )}
+                </button>
 
                 {/* Compare & Pull Request button */}
                 <button
