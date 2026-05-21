@@ -250,6 +250,7 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
 
     try {
       console.log(`Iniciando merge: ${folderPath} <- ${fromBranch}`)
+      
       const result = await window.electronAPI.gitMerge(folderPath, fromBranch)
       console.log('Merge result:', result)
       
@@ -260,6 +261,7 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
         // Attempt to push changes to remote
         try {
           const pushResult = await window.electronAPI.pushChanges(folderPath)
+          console.log('Push result:', pushResult)
           if (!pushResult.success) {
             console.error('Push after merge failed:', pushResult.error)
             setErrorMsg('Merge succeeded, but push failed: ' + (pushResult.error || 'unknown error'))
