@@ -228,6 +228,16 @@ ipcMain.handle('get-merge-status', async (event, folderPath) => {
   }
 })
 
+ipcMain.handle('get-remote-url', async (event, folderPath) => {
+  try {
+    const { stdout } = await execAsync('git config --get remote.origin.url', { cwd: folderPath })
+    const url = stdout.trim()
+    return { success: true, url }
+  } catch (err) {
+    return { success: false, url: null }
+  }
+})
+
 ipcMain.handle('git-merge', async (event, folderPath, fromBranch) => {
   try {
     await execAsync(`git merge "${fromBranch}"`, { cwd: folderPath })
