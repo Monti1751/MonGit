@@ -206,24 +206,34 @@ ipcMain.handle('pull-changes', async (event, folderPath) => {
 
 ipcMain.handle('get-merge-status', async (event, folderPath) => {
   try {
+    console.log(`[get-merge-status] Verificando estado de merge en ${folderPath}`)
+    
     let inMerge = false
     try {
       await fs.stat(join(folderPath, '.git', 'MERGE_HEAD'))
       inMerge = true
+      console.log(`[get-merge-status] MERGE_HEAD encontrado - merge en progreso`)
     } catch (e) {
       inMerge = false
+      console.log(`[get-merge-status] No hay MERGE_HEAD`)
     }
 
-    const { stdout } = await execAsync('git diff --name-only --diff-filter=U', { cwd: folderPath })
-    const conflicts = stdout.split('\n').map(s => s.trim()).filter(Boolean)
-
-    if (conflicts.length > 0) {
-      inMerge = true
+    let conflicts = []
+    try {
+      const { stdout: conflictOutput } = await execAsync('git diff --name-only --diff-filter=U', { cwd: folderPath })
+      conflicts = conflictOutput.split('\n').map(s => s.trim()).filter(Boolean)
+      if (conflicts.length > 0) {
+        console.log(`[get-merge-status] Conflictos encontrados:`, conflicts)
+        inMerge = true
+      }
+    } catch (err) {
+      console.log(`[get-merge-status] Error al obtener conflictos:`, err.message)
     }
 
+    console.log(`[get-merge-status] Resultado: inMerge=${inMerge}, conflicts=${conflicts.length}`)
     return { inMerge, conflicts }
   } catch (err) {
-    console.error('get-merge-status error:', err)
+    console.error('[get-merge-status] Error:', err)
     return { inMerge: false, conflicts: [] }
   }
 })
@@ -249,19 +259,36 @@ ipcMain.handle('git-diff-branches', async (event, folderPath, branch1, branch2) 
 
 ipcMain.handle('git-merge', async (event, folderPath, fromBranch) => {
   try {
-    await execAsync(`git merge "${fromBranch}"`, { cwd: folderPath })
-    return { success: true }
+    console.log(`[git-merge] Iniciando merge de ${fromBranch} en ${folderPath}`)
+    const { stdout, stderr } = await execAsync(`git merge "${fromBranch}"`, { cwd: folderPath })
+    console.log(`[git-merge] Merge exitoso. stdout:`, stdout)
+    return { success: true, conflict: false, error: null }
   } catch (err) {
+    console.log(`[git-merge] Error en merge. Verificando conflictos...`)
+    // Check if there are conflicts
     try {
-      const { stdout } = await execAsync('git diff --name-only --diff-filter=U', { cwd: folderPath })
-      const conflicts = stdout.split('\n').map(s => s.trim()).filter(Boolean)
+      const { stdout: conflictOutput } = await execAsync('git diff --name-only --diff-filter=U', { cwd: folderPath })
+      const conflicts = conflictOutput.split('\n').map(s => s.trim()).filter(Boolean)
+      
       if (conflicts.length > 0) {
-        return { success: false, conflict: true, error: 'Existen conflictos de fusión. Por favor, resuélvelos.' }
+        console.log(`[git-merge] Conflictos encontrados:`, conflicts)
+        return { 
+          success: false, 
+          conflict: true, 
+          error: 'Existen conflictos de fusión. Por favor, resuélvelos.' 
+        }
       }
     } catch (diffErr) {
-      // ignore
+      console.log(`[git-merge] Error al verificar conflictos:`, diffErr.message)
     }
-    return { success: false, error: err.message }
+    
+    // If no conflicts detected, it's a real error
+    console.log(`[git-merge] Error real:`, err.message)
+    return { 
+      success: false, 
+      conflict: false, 
+      error: err.message || 'Error desconocido en git merge' 
+    }
   }
 })
 
