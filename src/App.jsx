@@ -10,6 +10,7 @@ import {
 import { useProviders } from './hooks/useProviders'
 import ProviderSetup from './components/ProviderSetup'
 import LocalRepoPanel from './components/LocalRepoPanel'
+import MergePanel from './components/MergePanel'
 
 // ─── Initial mock data (Fallback) ─────────────────────────────────────────────
 
@@ -247,9 +248,11 @@ export default function App() {
   const [showRepoDropdown, setShowRepoDropdown] = useState(false)
   const [showProviderSetup, setShowProviderSetup] = useState(false)
   const [showCreateRepoModal, setShowCreateRepoModal] = useState(false)
-  const [undoStack, setUndoStack] = useState([])
+  const [undoStack, setUndoStack] = useState([]);
+  const [showMergePanel, setShowMergePanel] = useState(false);
   const [commitLoading, setCommitLoading] = useState(false)
   const [syncLoading, setSyncLoading] = useState(false)
+  const [activeTab, setActiveTab] = useState('history')
   
   const [repoSearch, setRepoSearch] = useState('')
 
@@ -598,11 +601,27 @@ export default function App() {
               )}
             </div>
             
+            {/* Remote Repositories */}
+            <div>
+              <div className="flex items-center gap-2 px-1 mb-2 mt-4">
+                <GitMerge size={13} className="text-slate-500" />
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Repositorios</span>
+              </div>
+              <button
+                onClick={() => setShowCreateRepoModal(true)}
+                disabled={!hasProviders}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-dashed border-indigo-500/50 text-indigo-400 hover:bg-indigo-500/10 hover:border-indigo-400 transition-all text-sm font-semibold group disabled:opacity-40 disabled:cursor-not-allowed mb-3"
+              >
+                <Plus size={15} className="group-hover:rotate-90 transition-transform duration-200" />
+                Crear Repositorio
+              </button>
+            </div>
+            
             {localFolderPath && (
               <div>
                 <div className="flex items-center gap-2 px-1 mb-2 mt-4">
-                  <GitMerge size={13} className="text-slate-500" />
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Remotas</span>
+                  <Code2 size={13} className="text-slate-500" />
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Rama Remota</span>
                 </div>
                 <div className="space-y-1">
                   <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left hover:bg-slate-800/60 border border-transparent transition-all group opacity-70 cursor-not-allowed">
@@ -618,12 +637,39 @@ export default function App() {
         {/* ── CENTER PANEL (50%) — Commit Graph ────────────────────────────── */}
         <main className="flex-1 flex flex-col overflow-hidden border-r border-slate-700/50 relative">
           <div className="flex items-center justify-between px-5 py-3 border-b border-slate-700/30 flex-shrink-0">
+            {/* Tab Selector */}
             <div className="flex items-center gap-2">
-              <Layers size={15} className="text-brand-400" />
-              <span className="font-semibold text-sm text-white">Historial de cambios</span>
-              <span className="text-xs text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full font-mono">{activeCommits.length}</span>
+              <div className="inline-flex items-center p-0.5 rounded-lg bg-slate-800/60 border border-slate-700/50">
+                <button
+                  onClick={() => setActiveTab('history')}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${
+                    activeTab === 'history'
+                      ? 'bg-slate-700 text-white shadow-lg'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Layers size={15} />
+                  Historial
+                </button>
+                <button
+                  onClick={() => setActiveTab('merge')}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${
+                    activeTab === 'merge'
+                      ? 'bg-slate-700 text-white shadow-lg'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <GitMerge size={15} />
+                  Fusión y Conflictos
+                </button>
+              </div>
+              
+              {activeTab === 'history' && (
+                <span className="text-xs text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full font-mono">{activeCommits.length}</span>
+              )}
             </div>
-            {localFolderPath && (
+            
+            {localFolderPath && activeTab === 'history' && (
               <button
                 onClick={() => loadLocalRepoData(localFolderPath, activeBranch)}
                 disabled={loadingData}
@@ -636,161 +682,180 @@ export default function App() {
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-0">
-            {!localFolderPath ? (
-              <div className="flex flex-col items-center justify-center h-full text-center p-8">
-                <div className="w-20 h-20 bg-gradient-to-br from-brand-400 to-indigo-500 rounded-2xl flex items-center justify-center mb-6 shadow-2xl shadow-brand-500/10">
-                  <GitBranch size={40} className="text-white animate-pulse" />
-                </div>
-                <h2 className="text-2xl font-bold text-white mb-3">Bienvenido a MonGit</h2>
-                <p className="text-sm text-slate-400 max-w-md mb-8">
-                  Un cliente Git de escritorio ultrarrápido y premium para gestionar tus repositorios locales con facilidad.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <button 
-                    onClick={handleSelectFolder}
-                    className="px-6 py-3 rounded-xl bg-brand-500 hover:bg-brand-400 text-white font-semibold transition-all shadow-lg shadow-brand-500/20 text-sm flex items-center gap-2 justify-center"
-                  >
-                    <Folder size={16} />
-                    Abrir Carpeta Local...
-                  </button>
-                  <button 
-                    onClick={() => setShowProviderSetup(true)}
-                    className="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold transition-all text-sm flex items-center gap-2 justify-center"
-                  >
-                    <UserPlus size={16} />
-                    Conectar Cuenta Cloud...
-                  </button>
-                </div>
-              </div>
-            ) : activeCommits.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center p-8 text-slate-500">
-                <Clock size={48} className="mb-4 opacity-50 text-brand-400" />
-                <p className="text-sm">No se encontraron commits en la rama "{activeBranch}".</p>
-                <p className="text-xs text-slate-600 mt-1">Prepara cambios y realiza tu primer commit en el panel derecho.</p>
-              </div>
-            ) : null}
-            
-            {loadingData && (
-                <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-10">
-                   <div className="bg-slate-800 border border-slate-700 px-6 py-4 rounded-xl flex items-center gap-3 shadow-xl">
-                      <RefreshCw size={18} className="animate-spin text-brand-400" />
-                      <span className="text-sm font-medium text-slate-200">Cargando datos...</span>
-                   </div>
-                </div>
-            )}
-            
-            {activeCommits.map((commit, index) => {
-              const isSelected = selectedCommit?.id === commit.id
-              const branchColor = commit.color || BRANCH_COLORS[commit.branch] || BRANCH_COLORS[activeBranch] || '#14b8a6'
-              const isFirst = index === 0
-              const isLast = index === activeCommits.length - 1
-              return (
-                <div key={`${commit.id}-${index}`} className="flex gap-0">
-                  <div className="flex flex-col items-center w-10 flex-shrink-0">
-                    <div className={`w-0.5 flex-1 min-h-3 ${isFirst ? 'opacity-0' : 'opacity-100'}`} style={{ backgroundColor: branchColor + '60' }} />
-                    <div
-                      className={`w-4 h-4 rounded-full border-2 flex-shrink-0 z-10 transition-all duration-200 cursor-pointer ${
-                        isSelected ? 'scale-125' : 'hover:scale-110'
-                      }`}
-                      style={{
-                        borderColor: branchColor,
-                        backgroundColor: isSelected ? branchColor : '#0a0f1c',
-                        boxShadow: isSelected ? `0 0 12px ${branchColor}80` : `0 0 6px ${branchColor}40`,
-                      }}
-                      onClick={() => setSelectedCommit(isSelected ? null : commit)}
-                    />
-                    <div className={`w-0.5 flex-1 min-h-3 ${isLast ? 'opacity-0' : 'opacity-100'}`} style={{ backgroundColor: branchColor + '60' }} />
+            {/* ── HISTORY TAB ──────────────────────────────────────────── */}
+            {activeTab === 'history' && (
+              <>
+                {!localFolderPath ? (
+                  <div className="flex flex-col items-center justify-center h-full text-center p-8">
+                    <div className="w-20 h-20 bg-gradient-to-br from-brand-400 to-indigo-500 rounded-2xl flex items-center justify-center mb-6 shadow-2xl shadow-brand-500/10">
+                      <GitBranch size={40} className="text-white animate-pulse" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-white mb-3">Bienvenido a MonGit</h2>
+                    <p className="text-sm text-slate-400 max-w-md mb-8">
+                      Un cliente Git de escritorio ultrarrápido y premium para gestionar tus repositorios locales con facilidad.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                      <button 
+                        onClick={handleSelectFolder}
+                        className="px-6 py-3 rounded-xl bg-brand-500 hover:bg-brand-400 text-white font-semibold transition-all shadow-lg shadow-brand-500/20 text-sm flex items-center gap-2 justify-center"
+                      >
+                        <Folder size={16} />
+                        Abrir Carpeta Local...
+                      </button>
+                      <button 
+                        onClick={() => setShowProviderSetup(true)}
+                        className="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold transition-all text-sm flex items-center gap-2 justify-center"
+                      >
+                        <UserPlus size={16} />
+                        Conectar Cuenta Cloud...
+                      </button>
+                    </div>
                   </div>
+                ) : activeCommits.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-center p-8 text-slate-500">
+                    <Clock size={48} className="mb-4 opacity-50 text-brand-400" />
+                    <p className="text-sm">No se encontraron commits en la rama "{activeBranch}".</p>
+                    <p className="text-xs text-slate-600 mt-1">Prepara cambios y realiza tu primer commit en el panel derecho.</p>
+                  </div>
+                ) : null}
+                
+                {loadingData && (
+                    <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-10">
+                       <div className="bg-slate-800 border border-slate-700 px-6 py-4 rounded-xl flex items-center gap-3 shadow-xl">
+                          <RefreshCw size={18} className="animate-spin text-brand-400" />
+                          <span className="text-sm font-medium text-slate-200">Cargando datos...</span>
+                       </div>
+                    </div>
+                )}
+                
+                {activeCommits.map((commit, index) => {
+                  const isSelected = selectedCommit?.id === commit.id
+                  const branchColor = commit.color || BRANCH_COLORS[commit.branch] || BRANCH_COLORS[activeBranch] || '#14b8a6'
+                  const isFirst = index === 0
+                  const isLast = index === activeCommits.length - 1
+                  return (
+                    <div key={`${commit.id}-${index}`} className="flex gap-0">
+                      <div className="flex flex-col items-center w-10 flex-shrink-0">
+                        <div className={`w-0.5 flex-1 min-h-3 ${isFirst ? 'opacity-0' : 'opacity-100'}`} style={{ backgroundColor: branchColor + '60' }} />
+                        <div
+                          className={`w-4 h-4 rounded-full border-2 flex-shrink-0 z-10 transition-all duration-200 cursor-pointer ${
+                            isSelected ? 'scale-125' : 'hover:scale-110'
+                          }`}
+                          style={{
+                            borderColor: branchColor,
+                            backgroundColor: isSelected ? branchColor : '#0a0f1c',
+                            boxShadow: isSelected ? `0 0 12px ${branchColor}80` : `0 0 6px ${branchColor}40`,
+                          }}
+                          onClick={() => setSelectedCommit(isSelected ? null : commit)}
+                        />
+                        <div className={`w-0.5 flex-1 min-h-3 ${isLast ? 'opacity-0' : 'opacity-100'}`} style={{ backgroundColor: branchColor + '60' }} />
+                      </div>
 
-                  <div
-                    className={`flex-1 ml-2 my-1 rounded-xl border cursor-pointer transition-all duration-200 p-3 group ${
-                      isSelected
-                        ? 'bg-slate-800/80 border-slate-600/80 shadow-lg'
-                        : 'bg-slate-900/30 border-slate-800/50 hover:bg-slate-800/40 hover:border-slate-700/60'
-                    }`}
-                    onClick={() => setSelectedCommit(isSelected ? null : commit)}
-                  >
-                    <div className="flex items-start gap-3">
-                      <Avatar initials={commit.initials} color={branchColor} size="sm" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {commit.isMerge && (
-                            <span
-                              className="text-[10px] px-1.5 py-0.5 rounded border font-mono font-bold tracking-wide bg-purple-500/15 border-purple-500/40 text-purple-400 flex items-center gap-1 animate-pulse-slow"
-                            >
-                              <GitMerge size={10} />
-                              Merge
-                            </span>
-                          )}
-                          {commit.tags?.map(tag => {
-                            let bg = 'bg-brand-500/10 border-brand-500/30 text-brand-400';
-                            if (tag === 'HEAD') {
-                              bg = 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 font-bold';
-                            } else if (tag.startsWith('tag:') || tag.startsWith('tag: ')) {
-                              bg = 'bg-amber-500/15 border-amber-500/40 text-amber-400';
-                            } else if (tag.startsWith('origin/')) {
-                              bg = 'bg-rose-500/15 border-rose-500/40 text-rose-400';
-                            } else {
-                              bg = 'bg-indigo-500/15 border-indigo-500/40 text-indigo-400';
-                            }
-                            return (
-                              <span
-                                key={tag}
-                                className={`text-[10px] px-1.5 py-0.5 rounded border font-mono font-bold tracking-wide ${bg}`}
-                              >
-                                {tag}
+                      <div
+                        className={`flex-1 ml-2 my-1 rounded-xl border cursor-pointer transition-all duration-200 p-3 group ${
+                          isSelected
+                            ? 'bg-slate-800/80 border-slate-600/80 shadow-lg'
+                            : 'bg-slate-900/30 border-slate-800/50 hover:bg-slate-800/40 hover:border-slate-700/60'
+                        }`}
+                        onClick={() => setSelectedCommit(isSelected ? null : commit)}
+                      >
+                        <div className="flex items-start gap-3">
+                          <Avatar initials={commit.initials} color={branchColor} size="sm" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {commit.isMerge && (
+                                <span
+                                  className="text-[10px] px-1.5 py-0.5 rounded border font-mono font-bold tracking-wide bg-purple-500/15 border-purple-500/40 text-purple-400 flex items-center gap-1 animate-pulse-slow"
+                                >
+                                  <GitMerge size={10} />
+                                  Merge
+                                </span>
+                              )}
+                              {commit.tags?.map(tag => {
+                                let bg = 'bg-brand-500/10 border-brand-500/30 text-brand-400';
+                                if (tag === 'HEAD') {
+                                  bg = 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 font-bold';
+                                } else if (tag.startsWith('tag:') || tag.startsWith('tag: ')) {
+                                  bg = 'bg-amber-500/15 border-amber-500/40 text-amber-400';
+                                } else if (tag.startsWith('origin/')) {
+                                  bg = 'bg-rose-500/15 border-rose-500/40 text-rose-400';
+                                } else {
+                                  bg = 'bg-indigo-500/15 border-indigo-500/40 text-indigo-400';
+                                }
+                                return (
+                                  <span
+                                    key={tag}
+                                    className={`text-[10px] px-1.5 py-0.5 rounded border font-mono font-bold tracking-wide ${bg}`}
+                                  >
+                                    {tag}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                            <p className={`text-sm font-medium mt-0.5 truncate transition-colors ${isSelected ? 'text-white' : 'text-slate-200 group-hover:text-white'}`}>
+                              {commit.message || '(Sin mensaje)'}
+                            </p>
+                            <div className="flex items-center gap-3 mt-1">
+                              <span className="text-xs text-slate-500 truncate max-w-[120px]">{commit.author}</span>
+                              <span className="text-xs text-slate-600">•</span>
+                              <span className="flex items-center gap-1 text-xs text-slate-500">
+                                <Clock size={11} />
+                                {commit.time}
                               </span>
-                            );
-                          })}
+                              <span className="font-mono text-xs text-slate-700 ml-auto flex-shrink-0">
+                                {commit.id.slice(0, 7)}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <p className={`text-sm font-medium mt-0.5 truncate transition-colors ${isSelected ? 'text-white' : 'text-slate-200 group-hover:text-white'}`}>
-                          {commit.message || '(Sin mensaje)'}
-                        </p>
-                        <div className="flex items-center gap-3 mt-1">
-                          <span className="text-xs text-slate-500 truncate max-w-[120px]">{commit.author}</span>
-                          <span className="text-xs text-slate-600">•</span>
-                          <span className="flex items-center gap-1 text-xs text-slate-500">
-                            <Clock size={11} />
-                            {commit.time}
-                          </span>
-                          <span className="font-mono text-xs text-slate-700 ml-auto flex-shrink-0">
-                            {commit.id.slice(0, 7)}
-                          </span>
-                        </div>
+                        {isSelected && (
+                          <div className="mt-3 pt-3 border-t border-slate-700/50 grid grid-cols-2 gap-2">
+                             {commit.url ? (
+                                <a 
+                                  href={commit.url} target="_blank" rel="noreferrer"
+                                  onClick={e => e.stopPropagation()}
+                                  className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-slate-700/40 hover:bg-slate-600/50 text-slate-300 text-xs transition-all col-span-2"
+                                >
+                                  Ver en {activeRepo?.providerLabel?.split(' ')[0]}
+                                </a>
+                             ) : (
+                               <>
+                                  <button
+                                    onClick={e => { e.stopPropagation(); showToast(`Función próximamente`, 'info') }}
+                                    className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-slate-700/40 hover:bg-slate-600/50 text-slate-400 text-xs transition-all"
+                                  >
+                                    <Code2 size={12} /> Ver diff completo
+                                  </button>
+                                  <button
+                                    onClick={e => { e.stopPropagation(); showToast(`Función próximamente`, 'info') }}
+                                    className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-slate-700/40 hover:bg-slate-600/50 text-slate-400 text-xs transition-all"
+                                  >
+                                    <RotateCcw size={12} /> Revertir
+                                  </button>
+                               </>
+                             )}
+                          </div>
+                        )}
                       </div>
                     </div>
-                    {isSelected && (
-                      <div className="mt-3 pt-3 border-t border-slate-700/50 grid grid-cols-2 gap-2">
-                         {commit.url ? (
-                            <a 
-                              href={commit.url} target="_blank" rel="noreferrer"
-                              onClick={e => e.stopPropagation()}
-                              className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-slate-700/40 hover:bg-slate-600/50 text-slate-300 text-xs transition-all col-span-2"
-                            >
-                              Ver en {activeRepo?.providerLabel?.split(' ')[0]}
-                            </a>
-                         ) : (
-                           <>
-                              <button
-                                onClick={e => { e.stopPropagation(); showToast(`Función próximamente`, 'info') }}
-                                className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-slate-700/40 hover:bg-slate-600/50 text-slate-400 text-xs transition-all"
-                              >
-                                <Code2 size={12} /> Ver diff completo
-                              </button>
-                              <button
-                                onClick={e => { e.stopPropagation(); showToast(`Función próximamente`, 'info') }}
-                                className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-slate-700/40 hover:bg-slate-600/50 text-slate-400 text-xs transition-all"
-                              >
-                                <RotateCcw size={12} /> Revertir
-                              </button>
-                           </>
-                         )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
+                  )
+                })}
+              </>
+            )}
+            
+            {/* ── MERGE TAB ──────────────────────────────────────────── */}
+            {activeTab === 'merge' && (
+              <div className="h-full">
+                <MergePanel
+                  folderPath={localFolderPath}
+                  branches={localBranches}
+                  activeBranch={activeBranch}
+                  onMergeComplete={() => {
+                    loadLocalRepoData(localFolderPath, activeBranch)
+                  }}
+                />
+              </div>
+            )}
           </div>
         </main>
 
