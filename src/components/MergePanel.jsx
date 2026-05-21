@@ -242,6 +242,8 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
       console.log('Merge result:', result)
       
       if (result.success) {
+        // Merge sin conflictos completado
+        console.log('Merge successful without conflicts')
         setMergeState('success')
         setTimeout(() => {
           if (onMergeComplete) onMergeComplete()
@@ -249,9 +251,17 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
           setFromBranch('')
         }, 2500)
       } else if (result.conflict) {
+        // Merge con conflictos - necesitamos resolver
+        console.log('Merge resulted in conflicts, checking status...')
         setMergeState('conflict')
+        setErrorMsg('') // Limpiar error previo
+        
+        // Esperar un poco y luego obtener el estado actual
+        await new Promise(resolve => setTimeout(resolve, 500))
         await checkMergeStatus()
       } else {
+        // Error real en el merge
+        console.log('Merge failed with error:', result.error)
         setMergeState('error')
         setErrorMsg(result.error || 'Error desconocido en merge')
       }
@@ -630,7 +640,9 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
               <div>
                 <p className="text-sm font-bold text-amber-300">Fusión pausada — Conflictos detectados</p>
                 <p className="text-xs text-amber-400/60">
-                  {conflictFiles.length > 0
+                  {loading ? (
+                    'Cargando información de conflictos...'
+                  ) : conflictFiles.length > 0
                     ? `${conflictFiles.length} archivo${conflictFiles.length > 1 ? 's' : ''} con conflictos pendientes`
                     : 'Todos los conflictos resueltos — lista para concluir'
                   }
@@ -646,122 +658,139 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
             </button>
           </div>
 
-          <div className="flex flex-1 min-h-0">
-            {/* ── File list ──────────────────────────────────────────────────── */}
-            <div className="w-64 flex-shrink-0 border-r border-slate-700/50 flex flex-col min-h-0 bg-slate-900/30">
-              <div className="px-4 py-3 border-b border-slate-700/30 flex-shrink-0">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Archivos en conflicto</h3>
+          {loading && !selectedFile ? (
+            // Loading state - show spinner
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <RefreshCw size={32} className="animate-spin text-amber-400 mx-auto mb-3" />
+                <p className="text-sm text-slate-300">Cargando conflictos...</p>
               </div>
-              <div className="flex-1 overflow-y-auto p-2 space-y-1">
-                {conflictFiles.length === 0 && resolvedFiles.size > 0 && (
-                  <div className="text-center py-6 px-3">
-                    <CheckCircle2 size={24} className="text-emerald-400 mx-auto mb-2" />
-                    <p className="text-xs text-emerald-400 font-semibold">¡Todos resueltos!</p>
-                    <p className="text-[10px] text-slate-500 mt-1">Puedes concluir la fusión.</p>
-                  </div>
-                )}
-                {conflictFiles.map(file => (
+            </div>
+          ) : (
+            <div className="flex flex-1 min-h-0">
+              {/* ── File list ──────────────────────────────────────────────────── */}
+              <div className="w-64 flex-shrink-0 border-r border-slate-700/50 flex flex-col min-h-0 bg-slate-900/30">
+                <div className="px-4 py-3 border-b border-slate-700/30 flex-shrink-0">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Archivos en conflicto</h3>
+                </div>
+                <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                  {conflictFiles.length === 0 && resolvedFiles.size > 0 && (
+                    <div className="text-center py-6 px-3">
+                      <CheckCircle2 size={24} className="text-emerald-400 mx-auto mb-2" />
+                      <p className="text-xs text-emerald-400 font-semibold">¡Todos resueltos!</p>
+                      <p className="text-[10px] text-slate-500 mt-1">Puedes concluir la fusión.</p>
+                    </div>
+                  )}
+                  {conflictFiles.length === 0 && resolvedFiles.size === 0 && (
+                    <div className="text-center py-6 px-3">
+                      <AlertTriangle size={24} className="text-amber-400 mx-auto mb-2" />
+                      <p className="text-xs text-amber-300 font-semibold">Analizando conflictos...</p>
+                      <p className="text-[10px] text-slate-500 mt-1">Por favor espera.</p>
+                    </div>
+                  )}
+                  {conflictFiles.map(file => (
+                    <button
+                      key={file}
+                      onClick={() => handleSelectFile(file)}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all text-xs group ${
+                        selectedFile === file
+                          ? 'bg-amber-500/15 border border-amber-500/30 text-amber-300'
+                          : 'hover:bg-slate-800/60 border border-transparent text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      <FileWarning size={14} className={selectedFile === file ? 'text-amber-400' : 'text-slate-500 group-hover:text-amber-400'} />
+                      <span className="font-mono truncate flex-1">{file}</span>
+                      <ChevronRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </button>
+                  ))}
+                  {/* Resolved files */}
+                  {resolvedFiles.size > 0 && (
+                    <>
+                      <div className="px-2 pt-3 pb-1">
+                        <span className="text-[10px] font-bold text-emerald-500/60 uppercase tracking-widest">Resueltos</span>
+                      </div>
+                      {[...resolvedFiles].map(file => (
+                        <div
+                          key={file}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-emerald-400/50"
+                        >
+                          <CheckCircle2 size={14} />
+                          <span className="font-mono truncate flex-1">{file}</span>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </div>
+
+                {/* Finish merge button */}
+                <div className="p-3 border-t border-slate-700/30 flex-shrink-0">
                   <button
-                    key={file}
-                    onClick={() => handleSelectFile(file)}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all text-xs group ${
-                      selectedFile === file
-                        ? 'bg-amber-500/15 border border-amber-500/30 text-amber-300'
-                        : 'hover:bg-slate-800/60 border border-transparent text-slate-300 hover:text-white'
+                    onClick={handleFinishMerge}
+                    disabled={!allFilesResolved || loading}
+                    className={`w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all ${
+                      allFilesResolved
+                        ? 'bg-gradient-to-r from-emerald-600 to-brand-600 hover:from-emerald-500 hover:to-brand-500 text-white shadow-lg shadow-emerald-500/20 animate-pulse'
+                        : 'bg-slate-800 border border-slate-700 text-slate-500 cursor-not-allowed'
                     }`}
                   >
-                    <FileWarning size={14} className={selectedFile === file ? 'text-amber-400' : 'text-slate-500 group-hover:text-amber-400'} />
-                    <span className="font-mono truncate flex-1">{file}</span>
-                    <ChevronRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                    {loading
+                      ? <><RefreshCw size={12} className="animate-spin" /> Finalizando...</>
+                      : <><GitMerge size={12} /> Concluir Fusión</>
+                    }
                   </button>
-                ))}
-                {/* Resolved files */}
-                {resolvedFiles.size > 0 && (
-                  <>
-                    <div className="px-2 pt-3 pb-1">
-                      <span className="text-[10px] font-bold text-emerald-500/60 uppercase tracking-widest">Resueltos</span>
+                </div>
+              </div>
+
+              {/* ── Conflict editor ─────────────────────────────────────────────── */}
+              <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                {!selectedFile ? (
+                  <div className="flex-1 flex items-center justify-center text-center p-8">
+                    <div>
+                      <FileWarning size={40} className="text-slate-600 mx-auto mb-3" />
+                      <p className="text-sm text-slate-400">Selecciona un archivo con conflictos</p>
+                      <p className="text-xs text-slate-600 mt-1">para ver y resolver las diferencias</p>
                     </div>
-                    {[...resolvedFiles].map(file => (
-                      <div
-                        key={file}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-emerald-400/50"
-                      >
-                        <CheckCircle2 size={14} />
-                        <span className="font-mono truncate flex-1">{file}</span>
+                  </div>
+                ) : loading ? (
+                  <div className="flex-1 flex items-center justify-center">
+                    <RefreshCw size={24} className="animate-spin text-slate-500" />
+                  </div>
+                ) : (
+                  <>
+                    {/* File header */}
+                    <div className="px-5 py-3 border-b border-slate-700/30 flex items-center justify-between flex-shrink-0 bg-slate-900/50">
+                      <div className="flex items-center gap-2">
+                        <FileWarning size={14} className="text-amber-400" />
+                        <span className="text-sm font-mono text-white font-semibold">{selectedFile}</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 font-bold">
+                          {conflictBlocks.filter(b => !b.resolved).length} pendiente{conflictBlocks.filter(b => !b.resolved).length !== 1 ? 's' : ''}
+                        </span>
                       </div>
-                    ))}
+                      {allBlocksResolved && (
+                        <button
+                          onClick={handleSaveFile}
+                          className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/30 transition-all text-xs font-bold animate-pulse"
+                        >
+                          <Check size={12} /> Guardar y marcar como resuelto
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Conflict blocks */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                      {conflictBlocks.map(block => (
+                        <ConflictBlock
+                          key={block.id}
+                          block={block}
+                          onResolve={handleResolveBlock}
+                        />
+                      ))}
+                    </div>
                   </>
                 )}
               </div>
-
-              {/* Finish merge button */}
-              <div className="p-3 border-t border-slate-700/30 flex-shrink-0">
-                <button
-                  onClick={handleFinishMerge}
-                  disabled={!allFilesResolved || loading}
-                  className={`w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all ${
-                    allFilesResolved
-                      ? 'bg-gradient-to-r from-emerald-600 to-brand-600 hover:from-emerald-500 hover:to-brand-500 text-white shadow-lg shadow-emerald-500/20 animate-pulse'
-                      : 'bg-slate-800 border border-slate-700 text-slate-500 cursor-not-allowed'
-                  }`}
-                >
-                  {loading
-                    ? <><RefreshCw size={12} className="animate-spin" /> Finalizando...</>
-                    : <><GitMerge size={12} /> Concluir Fusión</>
-                  }
-                </button>
-              </div>
             </div>
-
-            {/* ── Conflict editor ─────────────────────────────────────────────── */}
-            <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-              {!selectedFile ? (
-                <div className="flex-1 flex items-center justify-center text-center p-8">
-                  <div>
-                    <FileWarning size={40} className="text-slate-600 mx-auto mb-3" />
-                    <p className="text-sm text-slate-400">Selecciona un archivo con conflictos</p>
-                    <p className="text-xs text-slate-600 mt-1">para ver y resolver las diferencias</p>
-                  </div>
-                </div>
-              ) : loading ? (
-                <div className="flex-1 flex items-center justify-center">
-                  <RefreshCw size={24} className="animate-spin text-slate-500" />
-                </div>
-              ) : (
-                <>
-                  {/* File header */}
-                  <div className="px-5 py-3 border-b border-slate-700/30 flex items-center justify-between flex-shrink-0 bg-slate-900/50">
-                    <div className="flex items-center gap-2">
-                      <FileWarning size={14} className="text-amber-400" />
-                      <span className="text-sm font-mono text-white font-semibold">{selectedFile}</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 font-bold">
-                        {conflictBlocks.filter(b => !b.resolved).length} pendiente{conflictBlocks.filter(b => !b.resolved).length !== 1 ? 's' : ''}
-                      </span>
-                    </div>
-                    {allBlocksResolved && (
-                      <button
-                        onClick={handleSaveFile}
-                        className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/30 transition-all text-xs font-bold animate-pulse"
-                      >
-                        <Check size={12} /> Guardar y marcar como resuelto
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Conflict blocks */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    {conflictBlocks.map(block => (
-                      <ConflictBlock
-                        key={block.id}
-                        block={block}
-                        onResolve={handleResolveBlock}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
+          )}
         </div>
       )}
     </div>
