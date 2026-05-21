@@ -3,7 +3,7 @@ import {
   GitBranch, GitCommit, GitMerge,
   Upload, Download, CheckCircle2, Settings,
   Plus, ChevronDown, RotateCcw,
-  Code2, Folder, X, Check,
+  Code2, Folder, FolderPlus, X, Check,
   AlertCircle, Clock, Layers,
   RefreshCw, Terminal, Eye, Info, UserPlus, Trash2
 } from 'lucide-react'
@@ -273,6 +273,15 @@ export default function App() {
     }
   }
 
+  const handleCreateRepoClick = () => {
+    if (providers.length === 0) {
+      showToast('Por favor, conecta una cuenta en la nube (como GitHub) primero.', 'info')
+      setShowProviderSetup(true)
+    } else {
+      setShowCreateRepoModal(true)
+    }
+  }
+
   const loadLocalRepoData = async (path, specificBranch = null) => {
     setLoadingData(true)
     try {
@@ -477,6 +486,16 @@ export default function App() {
             <Folder size={14} className="text-brand-400" />
             <span>{localFolderPath ? 'Abrir Otra Carpeta...' : 'Abrir Carpeta Local...'}</span>
           </button>
+          
+          <button
+            onClick={handleCreateRepoClick}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/40 border border-slate-700/40 hover:border-brand-500/50 hover:bg-brand-500/10 hover:text-brand-400 transition-all text-sm text-slate-300 font-medium cursor-pointer"
+            title="Crear un nuevo repositorio en la nube"
+          >
+            <FolderPlus size={14} className="text-brand-400" />
+            <span>Nuevo Repo...</span>
+          </button>
+
           {localFolderPath && (
             <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-800/30 border border-slate-700/30 text-xs">
               <span className="font-semibold text-slate-200">{localFolderPath.split(/[/\\]/).pop()}</span>
