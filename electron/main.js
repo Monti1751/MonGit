@@ -164,13 +164,19 @@ ipcMain.handle('push-changes', async (event, folderPath, branchName) => {
 
     // Execute push command
     const pushCmd = hasUpstream
-      ? 'git -c credential.helper= -c core.askpass= push'
-      : `git -c credential.helper= -c core.askpass= push -u origin "${activeBranch}"`;
+      ? 'git push'
+      : `git push -u origin "${activeBranch}"`;
     const { stdout, stderr } = await execAsync(pushCmd, { cwd: folderPath });
 
-    // Analyze stderr for fatal or rejected messages
+    // Analyze stderr for fatal, rejected or auth error messages
     const lowerStderr = (stderr || '').toLowerCase();
-    if (lowerStderr.includes('fatal:') || lowerStderr.includes('rejected')) {
+    if (
+      lowerStderr.includes('fatal:') ||
+      lowerStderr.includes('rejected') ||
+      lowerStderr.includes('error:') ||
+      lowerStderr.includes('permission denied') ||
+      lowerStderr.includes('authentication failed')
+    ) {
       return { success: false, error: stderr.trim() };
     }
 
