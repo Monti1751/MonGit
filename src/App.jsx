@@ -11,6 +11,7 @@ import { useProviders } from './hooks/useProviders'
 import ProviderSetup from './components/ProviderSetup'
 import LocalRepoPanel from './components/LocalRepoPanel'
 import MergePanel from './components/MergePanel'
+import CloneRepoModal from './components/CloneRepoModal'
 
 // ─── Initial mock data (Fallback) ─────────────────────────────────────────────
 
@@ -248,6 +249,7 @@ export default function App() {
   const [showRepoDropdown, setShowRepoDropdown] = useState(false)
   const [showProviderSetup, setShowProviderSetup] = useState(false)
   const [showCreateRepoModal, setShowCreateRepoModal] = useState(false)
+  const [showCloneRepoModal, setShowCloneRepoModal] = useState(false)
   const [undoStack, setUndoStack] = useState([]);
   const [showMergePanel, setShowMergePanel] = useState(false);
   const [commitLoading, setCommitLoading] = useState(false)
@@ -282,6 +284,15 @@ export default function App() {
       setShowProviderSetup(true)
     } else {
       setShowCreateRepoModal(true)
+    }
+  }
+
+  const handleCloneRepoClick = () => {
+    if (providers.length === 0) {
+      showToast('Por favor, conecta una cuenta en la nube (como GitHub) primero.', 'info')
+      setShowProviderSetup(true)
+    } else {
+      setShowCloneRepoModal(true)
     }
   }
 
@@ -499,6 +510,15 @@ export default function App() {
             <span>Nuevo Repo...</span>
           </button>
 
+          <button
+            onClick={handleCloneRepoClick}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/40 border border-slate-700/40 hover:border-indigo-500/50 hover:bg-indigo-500/10 hover:text-indigo-400 transition-all text-sm text-slate-300 font-medium cursor-pointer"
+            title="Clonar un repositorio remoto de tu cuenta"
+          >
+            <Download size={14} className="text-indigo-400" />
+            <span>Clonar Repo...</span>
+          </button>
+
           {localFolderPath && (
             <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-800/30 border border-slate-700/30 text-xs">
               <span className="font-semibold text-slate-200">{localFolderPath.split(/[/\\]/).pop()}</span>
@@ -629,10 +649,19 @@ export default function App() {
               <button
                 onClick={() => setShowCreateRepoModal(true)}
                 disabled={!hasProviders}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-dashed border-indigo-500/50 text-indigo-400 hover:bg-indigo-500/10 hover:border-indigo-400 transition-all text-sm font-semibold group disabled:opacity-40 disabled:cursor-not-allowed mb-3"
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-dashed border-indigo-500/50 text-indigo-400 hover:bg-indigo-500/10 hover:border-indigo-400 transition-all text-sm font-semibold group disabled:opacity-40 disabled:cursor-not-allowed mb-2"
               >
                 <Plus size={15} className="group-hover:rotate-90 transition-transform duration-200" />
                 Crear Repositorio
+              </button>
+
+              <button
+                onClick={handleCloneRepoClick}
+                disabled={!hasProviders}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-dashed border-brand-500/50 text-brand-400 hover:bg-brand-500/10 hover:border-brand-400 transition-all text-sm font-semibold group disabled:opacity-40 disabled:cursor-not-allowed mb-3"
+              >
+                <Download size={15} className="group-hover:translate-y-0.5 transition-transform duration-200" />
+                Clonar Repositorio
               </button>
             </div>
             
@@ -720,6 +749,13 @@ export default function App() {
                       >
                         <Folder size={16} />
                         Abrir Carpeta Local...
+                      </button>
+                      <button 
+                        onClick={handleCloneRepoClick}
+                        className="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold transition-all text-sm flex items-center gap-2 justify-center"
+                      >
+                        <Download size={16} className="text-indigo-400" />
+                        Clonar Repositorio...
                       </button>
                       <button 
                         onClick={() => setShowProviderSetup(true)}
@@ -976,6 +1012,21 @@ export default function App() {
           onCreate={async (accountId, details) => {
             await createNewRepo(accountId, details)
             showToast(`Repositorio "${details.name}" creado con éxito`, 'success')
+          }}
+        />
+      )}
+
+      {showCloneRepoModal && (
+        <CloneRepoModal
+          providers={providers}
+          allRepos={allRepos}
+          onClose={() => setShowCloneRepoModal(false)}
+          onCloneSuccess={(clonedPath) => {
+            setLocalFolderPath(clonedPath)
+            setShowRepoDropdown(false)
+            loadLocalRepoData(clonedPath)
+            setActiveTab('history')
+            showToast('✓ Repositorio clonado con éxito', 'success')
           }}
         />
       )}

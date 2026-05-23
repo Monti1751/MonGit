@@ -343,6 +343,30 @@ ipcMain.handle('git-commit-merge', async (event, folderPath, message) => {
   }
 })
 
+ipcMain.handle('git-clone', async (event, url, parentFolder, repoName) => {
+  try {
+    const targetPath = join(parentFolder, repoName)
+    try {
+      const stat = await fs.stat(targetPath)
+      if (stat.isDirectory()) {
+        const files = await fs.readdir(targetPath)
+        if (files.length > 0) {
+          return { success: false, error: 'La carpeta de destino ya existe y no está vacía.' }
+        }
+      }
+    } catch (e) {
+      // Folder doesn't exist, fine
+    }
+
+    console.log(`[git-clone] Clonando ${url} en ${targetPath}`)
+    await execAsync(`git clone "${url}" "${targetPath}"`)
+    return { success: true, clonedPath: targetPath }
+  } catch (err) {
+    console.error('git-clone error:', err)
+    return { success: false, error: err.message || 'Error desconocido al clonar' }
+  }
+})
+
 ipcMain.handle('package-app', async () => {
   try {
     const cwd = join(__dirname, '..')
