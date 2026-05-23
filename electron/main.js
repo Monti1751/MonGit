@@ -147,42 +147,27 @@ ipcMain.handle('commit-changes', async (event, folderPath, files, message) => {
 
 ipcMain.handle('push-changes', async (event, folderPath, branchName) => {
   try {
-    // Determine the active branch either from provided argument or git
     let activeBranch = branchName;
     if (!activeBranch) {
       const { stdout: branchStdout } = await execAsync('git rev-parse --abbrev-ref HEAD', { cwd: folderPath });
       activeBranch = branchStdout.trim();
     }
 
-    // Check if upstream is set
-    let hasUpstream = true;
     try {
-      await execAsync('git rev-parse --abbrev-ref --symbolic-full-name @{u}', { cwd: folderPath });
-    } catch (e) {
-      hasUpstream = false;
+      await execAsync(`git push origin "${activeBranch}"`, { cwd: folderPath });
+      return { success: true };
+    } catch (pushErr) {
+      const stderr = pushErr.stderr || '';
+      if (stderr.includes('fetch first') || stderr.includes('non-fast-forward')) {
+        await execAsync(`git pull --rebase origin "${activeBranch}"`, { cwd: folderPath });
+        await execAsync(`git push origin "${activeBranch}"`, { cwd: folderPath });
+        return { success: true };
+      }
+      throw pushErr;
     }
-
-    // Execute push command
-    const pushCmd = hasUpstream
-      ? 'git push'
-      : `git push -u origin "${activeBranch}"`;
-    const { stdout, stderr } = await execAsync(pushCmd, { cwd: folderPath });
-
-    // Analyze stderr for fatal, rejected or auth error messages
-    const lowerStderr = (stderr || '').toLowerCase();
-    if (
-      lowerStderr.includes('fatal:') ||
-      lowerStderr.includes('rejected') ||
-      lowerStderr.includes('error:') ||
-      lowerStderr.includes('permission denied') ||
-      lowerStderr.includes('authentication failed')
-    ) {
-      return { success: false, error: stderr.trim() };
-    }
-
-    return { success: true };
   } catch (err) {
-    return { success: false, error: err.message };
+    console.error('push-changes error:', err);
+    return { success: false, error: err.message || 'Unknown error during push' };
   }
 });
 

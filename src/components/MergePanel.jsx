@@ -267,21 +267,13 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
           console.log('Push result:', pushResult)
           if (!pushResult.success) {
             console.error('Push after merge failed:', pushResult.error)
-            setErrorMsg('Merge succeeded, but push failed: ' + (pushResult.error || 'unknown error'))
-            setPushCompletedMessage('')
+            setErrorMsg('La fusión se completó localmente, pero el envío al remoto falló:\n' + (pushResult.error || 'Error desconocido'))
           } else {
-            setPushStatusMsg('Cambios enviados al remoto')
-            // Refresh repository state after successful push
-    const branchInfo = await window.electronAPI.getBranches(folderPath);
-    if (branchInfo && branchInfo.branches) {
-      // Assuming parent component can accept updated branches via a callback prop
-      // If not, we could use a state update here or trigger a re-fetch in parent
-    }
+            setPushStatusMsg('✓ Cambios enviados a GitHub correctamente')
           }
         } catch (pushErr) {
           console.error('Push after merge exception:', pushErr)
-          setErrorMsg('Merge succeeded, but push error: ' + (pushErr.message || pushErr))
-          setPushCompletedMessage('')
+          setErrorMsg('La fusión se completó localmente, pero ocurrió un error al enviar: ' + (pushErr.message || pushErr))
         }
         setTimeout(() => {
           if (onMergeComplete) onMergeComplete()
@@ -398,22 +390,13 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
           console.log('Push after commit result:', pushResult)
           if (!pushResult.success) {
             console.error('Push after merge commit failed:', pushResult.error)
-            setErrorMsg('Merge commit succeeded, but push failed: ' + (pushResult.error || 'unknown error'))
-            setPushCompletedMessage('')
-            setPushStatusMsg('')
+            setErrorMsg('La fusión se confirmó localmente, pero el envío al remoto falló:\n' + (pushResult.error || 'Error desconocido'))
           } else {
-            // Refresh repository state after successful push
-    const branchInfo = await window.electronAPI.getBranches(folderPath);
-    if (branchInfo && branchInfo.branches) {
-      // Assuming parent component can accept updated branches via a callback prop
-      // If not, we could use a state update here or trigger a re-fetch in parent
-    }
-            setPushStatusMsg('Cambios enviados al remoto')
+            setPushStatusMsg('✓ Cambios enviados a GitHub correctamente')
           }
         } catch (pushErr) {
           console.error('Push after merge commit exception:', pushErr)
-          setErrorMsg('Merge commit succeeded, but push error: ' + (pushErr.message || pushErr))
-          setPushCompletedMessage('')
+          setErrorMsg('La fusión se confirmó localmente, pero ocurrió un error al enviar: ' + (pushErr.message || pushErr))
         }
         setTimeout(() => {
           if (onMergeComplete) onMergeComplete()
