@@ -22,6 +22,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   writeFileContent: (folderPath, filePath, content) => ipcRenderer.invoke('write-file-content', folderPath, filePath, content),
   gitStageFile: (folderPath, filePath) => ipcRenderer.invoke('git-stage-file', folderPath, filePath),
   gitCommitMerge: (folderPath, message) => ipcRenderer.invoke('git-commit-merge', folderPath, message),
-  gitClone: (url, parentFolder, repoName) => ipcRenderer.invoke('git-clone', url, parentFolder, repoName),
-  openExternalUrl: (url) => ipcRenderer.invoke('open-external-url', url)
+  gitClone: (url, parentFolder, repoName) => ipcRenderer.invoke('git-clone', url, parentFolder, repoName)
 })
