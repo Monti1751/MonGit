@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react'
 import {
   GitMerge, GitBranch, AlertTriangle, Check, X,
   ChevronRight, FileWarning, RefreshCw, ArrowRight,
-  CheckCircle2, XCircle, Layers, ArrowDown, Zap, Ban
+  CheckCircle2, XCircle, Layers, ArrowDown, Zap, Ban,
+  Search
 } from 'lucide-react'
 
 // ─── Conflict Parser ────────────────────────────────────────────────────────────
@@ -84,86 +85,217 @@ function reconstructFile(content, blocks) {
 
 function ConflictBlock({ block, onResolve }) {
   const isResolved = block.resolved
+  const [hoveredResolution, setHoveredResolution] = useState(null)
+
+  // Style highlights based on hover
+  const oursHighlight = hoveredResolution === 'ours'
+    ? 'border-emerald-500/40 bg-emerald-500/5 scale-[1.005] opacity-100 shadow-md shadow-emerald-500/5'
+    : hoveredResolution === 'theirs'
+      ? 'opacity-30 scale-[0.99] border-transparent'
+      : hoveredResolution === 'both'
+        ? 'border-purple-500/30 bg-purple-500/5 opacity-100 scale-[1.002]'
+        : 'border-slate-700/50';
+
+  const theirsHighlight = hoveredResolution === 'theirs'
+    ? 'border-indigo-500/40 bg-indigo-500/5 scale-[1.005] opacity-100 shadow-md shadow-indigo-500/5'
+    : hoveredResolution === 'ours'
+      ? 'opacity-30 scale-[0.99] border-transparent'
+      : hoveredResolution === 'both'
+        ? 'border-purple-500/30 bg-purple-500/5 opacity-100 scale-[1.002]'
+        : 'border-slate-700/50';
 
   return (
     <div className={`rounded-xl border overflow-hidden transition-all duration-300 ${
       isResolved
-        ? 'border-emerald-500/30 bg-emerald-500/5 opacity-70'
-        : 'border-amber-500/40 bg-slate-800/40'
+        ? 'border-emerald-500/40 bg-slate-900/40 shadow-lg shadow-emerald-950/10'
+        : 'border-slate-700 bg-slate-900/60 shadow-xl'
     }`}>
       {/* Block Header */}
-      <div className={`px-4 py-2 flex items-center justify-between text-xs font-semibold ${
+      <div className={`px-4 py-2.5 flex items-center justify-between text-xs font-semibold select-none ${
         isResolved
-          ? 'bg-emerald-500/10 text-emerald-400'
-          : 'bg-amber-500/10 text-amber-400'
+          ? 'bg-emerald-500/10 text-emerald-400 border-b border-emerald-500/10'
+          : 'bg-slate-800/80 text-slate-300 border-b border-slate-800'
       }`}>
         <span className="flex items-center gap-2">
-          {isResolved
-            ? <><CheckCircle2 size={12} /> Conflicto resuelto — {
-                block.resolution === 'ours' ? 'Tus cambios' :
-                block.resolution === 'theirs' ? 'Cambios entrantes' : 'Ambos combinados'
-              }</>
-            : <><AlertTriangle size={12} /> Conflicto #{block.id + 1}</>
-          }
+          {isResolved ? (
+            <>
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>
+                Conflicto #{block.id + 1} resuelto — Aceptado:{' '}
+                <span className="font-bold font-mono">
+                  {block.resolution === 'ours' ? 'Tus cambios' :
+                   block.resolution === 'theirs' ? 'Cambios entrantes' : 'Ambos combinados'}
+                </span>
+              </span>
+            </>
+          ) : (
+            <>
+              <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              <span className="text-slate-200">Conflicto #{block.id + 1} pendiente</span>
+            </>
+          )}
         </span>
         {isResolved && (
           <button
             onClick={() => onResolve(block.id, null)}
-            className="text-xs text-slate-400 hover:text-white transition-colors underline"
+            className="flex items-center gap-1 text-xs text-slate-400 hover:text-white transition-colors bg-slate-800/50 hover:bg-slate-700 border border-slate-700/40 hover:border-slate-600 px-2 py-0.5 rounded-lg font-bold"
           >
-            Deshacer
+            Modificar
           </button>
         )}
       </div>
 
-      {!isResolved && (
+      {!isResolved ? (
         <>
-          {/* Side by side */}
-          <div className="grid grid-cols-2 divide-x divide-slate-700/50">
+          {/* Side by side code view */}
+          <div className="grid grid-cols-2 divide-x divide-slate-800 bg-[#080c14] overflow-hidden">
             {/* Ours */}
-            <div className="relative">
-              <div className="px-3 py-1.5 bg-emerald-500/8 border-b border-emerald-500/20 text-[10px] font-bold uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
-                <GitBranch size={10} />
-                Tus cambios (HEAD)
+            <div className={`relative flex flex-col min-w-0 transition-all duration-300 ${oursHighlight}`}>
+              <div className="px-3 py-2 bg-emerald-950/20 border-b border-emerald-900/30 text-[10px] font-bold uppercase tracking-widest text-emerald-400 flex items-center justify-between select-none">
+                <span className="flex items-center gap-1.5">
+                  <GitBranch size={10} />
+                  Tus cambios (Local)
+                </span>
+                <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500/10 text-emerald-400/80 font-mono">
+                  {block.ours.length} lín.
+                </span>
               </div>
-              <pre className="px-3 py-2 text-xs font-mono text-emerald-300/90 overflow-x-auto max-h-48 leading-5 whitespace-pre-wrap break-all">
-                {block.ours.join('\n') || '(vacío)'}
-              </pre>
+              <div className="flex font-mono text-xs overflow-x-auto max-h-60 leading-5">
+                {/* Faux relative line numbers */}
+                <div className="select-none text-right pr-2 pl-3 py-2 text-[10px] text-emerald-700/60 border-r border-emerald-950/30 bg-[#060a0f] flex flex-col justify-start min-w-[2.5rem]">
+                  {block.ours.length > 0 ? (
+                    block.ours.map((_, idx) => <div key={idx}>{idx + 1}</div>)
+                  ) : (
+                    <div>1</div>
+                  )}
+                </div>
+                {/* Code body */}
+                <div className="flex-1 py-2 px-3 text-emerald-300/90 whitespace-pre overflow-x-auto">
+                  {block.ours.length > 0 ? (
+                    block.ours.map((line, idx) => (
+                      <div key={idx} className="hover:bg-emerald-500/10 px-1 rounded-sm min-h-[1.25rem] transition-colors duration-150">
+                        {line || ' '}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-emerald-700/50 italic select-none">(vacío)</div>
+                  )}
+                </div>
+              </div>
             </div>
+            
             {/* Theirs */}
-            <div className="relative">
-              <div className="px-3 py-1.5 bg-indigo-500/8 border-b border-indigo-500/20 text-[10px] font-bold uppercase tracking-widest text-indigo-400 flex items-center gap-1.5">
-                <GitMerge size={10} />
-                Cambios entrantes
+            <div className={`relative flex flex-col min-w-0 transition-all duration-300 ${theirsHighlight}`}>
+              <div className="px-3 py-2 bg-indigo-950/20 border-b border-indigo-900/30 text-[10px] font-bold uppercase tracking-widest text-indigo-400 flex items-center justify-between select-none">
+                <span className="flex items-center gap-1.5">
+                  <GitMerge size={10} />
+                  Cambios entrantes
+                </span>
+                <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-indigo-500/10 text-indigo-400/80 font-mono">
+                  {block.theirs.length} lín.
+                </span>
               </div>
-              <pre className="px-3 py-2 text-xs font-mono text-indigo-300/90 overflow-x-auto max-h-48 leading-5 whitespace-pre-wrap break-all">
-                {block.theirs.join('\n') || '(vacío)'}
-              </pre>
+              <div className="flex font-mono text-xs overflow-x-auto max-h-60 leading-5">
+                {/* Faux relative line numbers */}
+                <div className="select-none text-right pr-2 pl-3 py-2 text-[10px] text-indigo-700/60 border-r border-indigo-950/30 bg-[#060a0f] flex flex-col justify-start min-w-[2.5rem]">
+                  {block.theirs.length > 0 ? (
+                    block.theirs.map((_, idx) => <div key={idx}>{idx + 1}</div>)
+                  ) : (
+                    <div>1</div>
+                  )}
+                </div>
+                {/* Code body */}
+                <div className="flex-1 py-2 px-3 text-indigo-300/90 whitespace-pre overflow-x-auto">
+                  {block.theirs.length > 0 ? (
+                    block.theirs.map((line, idx) => (
+                      <div key={idx} className="hover:bg-indigo-500/10 px-1 rounded-sm min-h-[1.25rem] transition-colors duration-150">
+                        {line || ' '}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-indigo-700/50 italic select-none">(vacío)</div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Resolution Actions */}
-          <div className="flex items-center gap-2 p-3 bg-slate-900/40 border-t border-slate-700/30">
+          {/* Action buttons */}
+          <div className="flex items-center gap-3 p-3 bg-slate-950/40 border-t border-slate-800/60">
             <button
               onClick={() => onResolve(block.id, 'ours')}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25 hover:border-emerald-400/50 transition-all text-xs font-semibold"
+              onMouseEnter={() => setHoveredResolution('ours')}
+              onMouseLeave={() => setHoveredResolution(null)}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-400/50 active:scale-[0.98] transition-all text-xs font-bold shadow-md shadow-emerald-950/20"
             >
-              <Check size={12} /> Aceptar Míos
+              <Check size={14} className="text-emerald-400" />
+              <span>Aceptar Míos</span>
             </button>
             <button
               onClick={() => onResolve(block.id, 'theirs')}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/25 hover:border-indigo-400/50 transition-all text-xs font-semibold"
+              onMouseEnter={() => setHoveredResolution('theirs')}
+              onMouseLeave={() => setHoveredResolution(null)}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/25 text-indigo-400 hover:bg-indigo-500/20 hover:border-indigo-400/50 active:scale-[0.98] transition-all text-xs font-bold shadow-md shadow-indigo-950/20"
             >
-              <Check size={12} /> Aceptar Entrantes
+              <Check size={14} className="text-indigo-400" />
+              <span>Aceptar Entrantes</span>
             </button>
             <button
               onClick={() => onResolve(block.id, 'both')}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-purple-500/15 border border-purple-500/30 text-purple-400 hover:bg-purple-500/25 hover:border-purple-400/50 transition-all text-xs font-semibold"
+              onMouseEnter={() => setHoveredResolution('both')}
+              onMouseLeave={() => setHoveredResolution(null)}
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-purple-500/10 border border-purple-500/25 text-purple-400 hover:bg-purple-500/20 hover:border-purple-400/50 active:scale-[0.98] transition-all text-xs font-bold shadow-md shadow-purple-950/20"
             >
-              <Layers size={12} /> Mantener Ambos
+              <Layers size={14} className="text-purple-400" />
+              <span>Mantener Ambos</span>
             </button>
           </div>
         </>
+      ) : (
+        /* Resolved code preview */
+        <div className="bg-[#05090f] relative overflow-hidden transition-all duration-300 border-t border-slate-800">
+          <div className="absolute top-2 right-3 z-10 flex items-center gap-1.5 select-none">
+            <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/20 shadow-sm shadow-emerald-950/20">
+              Vista Previa de Resolución
+            </span>
+          </div>
+          
+          <div className="flex font-mono text-xs overflow-x-auto max-h-52 leading-5">
+            {(() => {
+              let lines = [];
+              if (block.resolution === 'ours') {
+                lines = block.ours;
+              } else if (block.resolution === 'theirs') {
+                lines = block.theirs;
+              } else if (block.resolution === 'both') {
+                lines = [...block.ours, ...block.theirs];
+              }
+              
+              return (
+                <>
+                  <div className="select-none text-right pr-2 pl-3 py-2.5 text-[10px] text-emerald-800/50 border-r border-emerald-950/30 bg-[#03060a] flex flex-col justify-start min-w-[2.5rem]">
+                    {lines.length > 0 ? (
+                      lines.map((_, idx) => <div key={idx}>{idx + 1}</div>)
+                    ) : (
+                      <div>1</div>
+                    )}
+                  </div>
+                  <div className="flex-1 py-2.5 px-3 text-slate-300 whitespace-pre overflow-x-auto">
+                    {lines.length > 0 ? (
+                      lines.map((line, idx) => (
+                        <div key={idx} className="hover:bg-emerald-500/5 px-1 rounded-sm min-h-[1.25rem] transition-colors duration-150">
+                          {line || ' '}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-slate-600 italic select-none">(vacío)</div>
+                    )}
+                  </div>
+                </>
+              )
+            })()}
+          </div>
+        </div>
       )}
     </div>
   )
@@ -187,6 +319,8 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
   const [showDiff, setShowDiff] = useState(false)
   const [diffContent, setDiffContent] = useState('')
   const [loadingDiff, setLoadingDiff] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [conflictCounts, setConflictCounts] = useState({})
 
   const isElectron = !!window.electronAPI
   const availableBranches = branches.filter(b => b !== activeBranch)
@@ -197,6 +331,44 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
     checkMergeStatus()
     fetchRemoteUrl()
   }, [folderPath])
+
+  // ── Load conflict counts for files ───────────────────────────────────────
+  useEffect(() => {
+    const loadConflictCounts = async () => {
+      if (!folderPath || !conflictFiles.length) {
+        setConflictCounts({})
+        return
+      }
+      
+      const counts = {}
+      for (const file of conflictFiles) {
+        try {
+          const result = await window.electronAPI.readFileContent(folderPath, file)
+          if (result.success) {
+            const parsed = parseConflicts(result.content)
+            counts[file] = parsed.blocks.length
+          } else {
+            counts[file] = 0
+          }
+        } catch (err) {
+          console.error('Error reading conflict file:', file, err)
+          counts[file] = 0
+        }
+      }
+      setConflictCounts(counts)
+    }
+    
+    loadConflictCounts()
+  }, [conflictFiles, folderPath])
+
+  // ── Bulk resolve method ──────────────────────────────────────────────────
+  const resolveAllBlocks = (resolution) => {
+    setConflictBlocks(prev => prev.map(b => ({
+      ...b,
+      resolved: true,
+      resolution
+    })))
+  }
 
   const fetchRemoteUrl = async () => {
     const result = await window.electronAPI.getRemoteUrl(folderPath)
@@ -422,6 +594,10 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
     
     // Convert git URL to GitHub URL
     let repoUrl = remoteUrl
+    
+    // Strip credentials if present (e.g., https://user:token@github.com/...)
+    repoUrl = repoUrl.replace(/https:\/\/[^@]+@/, 'https://')
+    
     if (repoUrl.startsWith('git@github.com:')) {
       repoUrl = repoUrl.replace('git@github.com:', 'https://github.com/').replace('.git', '')
     } else if (repoUrl.endsWith('.git')) {
@@ -494,7 +670,7 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
               <button
                 onClick={() => {
                   const prUrl = getGitHubPrUrl()
-                  if (prUrl) window.open(prUrl, '_blank')
+                  if (prUrl) window.electronAPI.openExternalUrl(prUrl)
                 }}
                 disabled={!remoteUrl}
                 className="flex-1 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 font-bold transition-colors"
@@ -600,7 +776,7 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
                 <button
                   onClick={() => {
                     const prUrl = getGitHubPrUrl()
-                    if (prUrl) window.open(prUrl, '_blank')
+                    if (prUrl) window.electronAPI.openExternalUrl(prUrl)
                   }}
                   disabled={!fromBranch || !remoteUrl}
                   className="w-full py-3 rounded-xl bg-slate-700/50 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 font-bold text-sm transition-all shadow-lg flex items-center justify-center gap-2 group mb-3 border border-slate-600"
@@ -724,53 +900,120 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
           ) : (
             <div className="flex flex-1 min-h-0">
               {/* ── File list ──────────────────────────────────────────────────── */}
-              <div className="w-64 flex-shrink-0 border-r border-slate-700/50 flex flex-col min-h-0 bg-slate-900/30">
-                <div className="px-4 py-3 border-b border-slate-700/30 flex-shrink-0">
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Archivos en conflicto</h3>
+              <div className="w-68 flex-shrink-0 border-r border-slate-700/50 flex flex-col min-h-0 bg-[#090d16]">
+                <div className="px-4 py-3.5 border-b border-slate-700/30 flex-shrink-0 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Archivos con Conflictos</h3>
+                    {conflictFiles.length > 0 && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold font-mono">
+                        {conflictFiles.length}
+                      </span>
+                    )}
+                  </div>
+                  
+                  {/* File Search */}
+                  {conflictFiles.length > 2 && (
+                    <div className="relative">
+                      <Search size={12} className="absolute left-2.5 top-2.5 text-slate-500" />
+                      <input
+                        type="text"
+                        placeholder="Buscar archivo..."
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                        className="w-full pl-8 pr-2.5 py-1.5 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50 transition-all font-mono"
+                      />
+                    </div>
+                  )}
                 </div>
+
+                {/* Overall Progress Bar */}
+                {(conflictFiles.length > 0 || resolvedFiles.size > 0) && (
+                  <div className="px-4 pt-3 pb-3 border-b border-slate-800/30 bg-slate-950/15 flex-shrink-0">
+                    {(() => {
+                      const totalFiles = conflictFiles.length + resolvedFiles.size
+                      const percent = totalFiles > 0 ? Math.round((resolvedFiles.size / totalFiles) * 100) : 0
+                      return (
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center text-[10px] text-slate-400 font-medium">
+                            <span className="select-none">Progreso de resolución</span>
+                            <span className="font-bold font-mono text-emerald-400 bg-emerald-500/5 px-1.5 py-0.2 rounded border border-emerald-500/10">
+                              {percent}% ({resolvedFiles.size}/{totalFiles})
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden border border-slate-800">
+                            <div
+                              className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full transition-all duration-500 ease-out"
+                              style={{ width: `${percent}%` }}
+                            />
+                          </div>
+                        </div>
+                      )
+                    })()}
+                  </div>
+                )}
+
                 <div className="flex-1 overflow-y-auto p-2 space-y-1">
                   {conflictFiles.length === 0 && resolvedFiles.size > 0 && (
-                    <div className="text-center py-6 px-3">
-                      <CheckCircle2 size={24} className="text-emerald-400 mx-auto mb-2" />
+                    <div className="text-center py-8 px-3">
+                      <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-3 border border-emerald-500/20 shadow-lg shadow-emerald-950/20">
+                        <CheckCircle2 size={24} className="text-emerald-400 animate-pulse" />
+                      </div>
                       <p className="text-xs text-emerald-400 font-semibold">¡Todos resueltos!</p>
-                      <p className="text-[10px] text-slate-500 mt-1">Puedes concluir la fusión.</p>
+                      <p className="text-[10px] text-slate-500 mt-1">Listo para finalizar la fusión.</p>
                     </div>
                   )}
                   {conflictFiles.length === 0 && resolvedFiles.size === 0 && (
-                    <div className="text-center py-6 px-3">
-                      <AlertTriangle size={24} className="text-amber-400 mx-auto mb-2" />
+                    <div className="text-center py-8 px-3">
+                      <AlertTriangle size={24} className="text-amber-400 mx-auto mb-2 animate-bounce" />
                       <p className="text-xs text-amber-300 font-semibold">Analizando conflictos...</p>
-                      <p className="text-[10px] text-slate-500 mt-1">Por favor espera.</p>
+                      <p className="text-[10px] text-slate-500 mt-1">Espera un momento.</p>
                     </div>
                   )}
-                  {conflictFiles.map(file => (
-                    <button
-                      key={file}
-                      onClick={() => handleSelectFile(file)}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all text-xs group ${
-                        selectedFile === file
-                          ? 'bg-amber-500/15 border border-amber-500/30 text-amber-300'
-                          : 'hover:bg-slate-800/60 border border-transparent text-slate-300 hover:text-white'
-                      }`}
-                    >
-                      <FileWarning size={14} className={selectedFile === file ? 'text-amber-400' : 'text-slate-500 group-hover:text-amber-400'} />
-                      <span className="font-mono truncate flex-1">{file}</span>
-                      <ChevronRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </button>
-                  ))}
+                  
+                  {/* File list mapping over filtered list */}
+                  {(() => {
+                    const filtered = conflictFiles.filter(file => file.toLowerCase().includes(searchTerm.toLowerCase()))
+                    return filtered.map(file => (
+                      <button
+                        key={file}
+                        onClick={() => handleSelectFile(file)}
+                        className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all text-xs group relative overflow-hidden ${
+                          selectedFile === file
+                            ? 'bg-amber-500/10 border border-amber-500/20 text-amber-300 font-semibold shadow-inner'
+                            : 'hover:bg-slate-800/50 border border-transparent text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        <FileWarning size={14} className={selectedFile === file ? 'text-amber-400 flex-shrink-0' : 'text-slate-500 group-hover:text-amber-400 flex-shrink-0'} />
+                        <span className="font-mono truncate flex-1 z-10">{file}</span>
+                        
+                        {/* Conflicts count badge */}
+                        {conflictCounts[file] !== undefined && conflictCounts[file] > 0 && (
+                          <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold font-mono z-10 transition-all ${
+                            selectedFile === file
+                              ? 'bg-amber-400 text-slate-900 shadow-sm'
+                              : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                          }`}>
+                            {conflictCounts[file]}
+                          </span>
+                        )}
+                        <ChevronRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                      </button>
+                    ))
+                  })()}
+                  
                   {/* Resolved files */}
                   {resolvedFiles.size > 0 && (
                     <>
-                      <div className="px-2 pt-3 pb-1">
-                        <span className="text-[10px] font-bold text-emerald-500/60 uppercase tracking-widest">Resueltos</span>
+                      <div className="px-2 pt-4 pb-1 select-none">
+                        <span className="text-[9px] font-bold text-emerald-500/60 uppercase tracking-widest">Resueltos</span>
                       </div>
                       {[...resolvedFiles].map(file => (
                         <div
                           key={file}
-                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-emerald-400/50"
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-emerald-400/40 font-mono bg-emerald-500/5 border border-emerald-500/5"
                         >
-                          <CheckCircle2 size={14} />
-                          <span className="font-mono truncate flex-1">{file}</span>
+                          <CheckCircle2 size={13} className="text-emerald-500/60" />
+                          <span className="truncate flex-1">{file}</span>
                         </div>
                       ))}
                     </>
@@ -782,28 +1025,31 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
                   <button
                     onClick={handleFinishMerge}
                     disabled={!allFilesResolved || loading}
-                    className={`w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all ${
+                    className={`w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all duration-300 ${
                       allFilesResolved
-                        ? 'bg-gradient-to-r from-emerald-600 to-brand-600 hover:from-emerald-500 hover:to-brand-500 text-white shadow-lg shadow-emerald-500/20 animate-pulse'
-                        : 'bg-slate-800 border border-slate-700 text-slate-500 cursor-not-allowed'
+                        ? 'bg-gradient-to-r from-emerald-600 to-indigo-600 hover:from-emerald-500 hover:to-indigo-500 text-white shadow-lg shadow-emerald-500/20 animate-pulse active:scale-95'
+                        : 'bg-slate-800 border border-slate-700/60 text-slate-500 cursor-not-allowed select-none'
                     }`}
                   >
-                    {loading
-                      ? <><RefreshCw size={12} className="animate-spin" /> Finalizando...</>
-                      : <><GitMerge size={12} /> Concluir Fusión</>
-                    }
+                    {loading ? (
+                      <><RefreshCw size={12} className="animate-spin" /> Finalizando...</>
+                    ) : (
+                      <><GitMerge size={12} /> Concluir Fusión</>
+                    )}
                   </button>
                 </div>
               </div>
 
               {/* ── Conflict editor ─────────────────────────────────────────────── */}
-              <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+              <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-[#080b12]">
                 {!selectedFile ? (
-                  <div className="flex-1 flex items-center justify-center text-center p-8">
-                    <div>
-                      <FileWarning size={40} className="text-slate-600 mx-auto mb-3" />
-                      <p className="text-sm text-slate-400">Selecciona un archivo con conflictos</p>
-                      <p className="text-xs text-slate-600 mt-1">para ver y resolver las diferencias</p>
+                  <div className="flex-1 flex items-center justify-center text-center p-8 bg-[#080b12]">
+                    <div className="max-w-xs">
+                      <div className="w-16 h-16 bg-slate-800/40 rounded-2xl border border-slate-700/30 flex items-center justify-center mx-auto mb-4 text-slate-500 shadow-md">
+                        <FileWarning size={32} />
+                      </div>
+                      <p className="text-sm font-semibold text-slate-300">Selecciona un archivo con conflictos</p>
+                      <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">Haz clic en un archivo en la barra lateral para inspeccionar y resolver sus diferencias.</p>
                     </div>
                   </div>
                 ) : loading ? (
@@ -814,22 +1060,69 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
                   <>
                     {/* File header */}
                     <div className="px-5 py-3 border-b border-slate-700/30 flex items-center justify-between flex-shrink-0 bg-slate-900/50">
-                      <div className="flex items-center gap-2">
-                        <FileWarning size={14} className="text-amber-400" />
-                        <span className="text-sm font-mono text-white font-semibold">{selectedFile}</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 font-bold">
-                          {conflictBlocks.filter(b => !b.resolved).length} pendiente{conflictBlocks.filter(b => !b.resolved).length !== 1 ? 's' : ''}
-                        </span>
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                          <FileWarning size={14} />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-mono text-slate-200 font-semibold leading-none mb-1">{selectedFile}</span>
+                          <span className="text-[10px] text-slate-500 font-medium font-mono">
+                            {conflictBlocks.filter(b => b.resolved).length} de {conflictBlocks.length} resueltos
+                          </span>
+                        </div>
                       </div>
-                      {allBlocksResolved && (
-                        <button
-                          onClick={handleSaveFile}
-                          className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/30 transition-all text-xs font-bold animate-pulse"
-                        >
-                          <Check size={12} /> Guardar y marcar como resuelto
-                        </button>
-                      )}
+                      
+                      {/* Bulk actions and Save Button */}
+                      <div className="flex items-center gap-2">
+                        {conflictBlocks.length > 1 && conflictBlocks.some(b => !b.resolved) && (
+                          <div className="flex items-center gap-1 bg-slate-950/40 p-1 border border-slate-800 rounded-lg mr-2 select-none">
+                            <span className="text-[9px] text-slate-500 uppercase font-bold tracking-widest px-2">
+                              Resolver todos:
+                            </span>
+                            <button
+                              onClick={() => resolveAllBlocks('ours')}
+                              className="px-2 py-1 rounded hover:bg-emerald-500/15 hover:text-emerald-300 text-emerald-400 text-[10px] font-bold transition-all"
+                              title="Aceptar todos los míos para este archivo"
+                            >
+                              Míos
+                            </button>
+                            <span className="text-slate-800 text-xs">|</span>
+                            <button
+                              onClick={() => resolveAllBlocks('theirs')}
+                              className="px-2 py-1 rounded hover:bg-indigo-500/15 hover:text-indigo-300 text-indigo-400 text-[10px] font-bold transition-all"
+                              title="Aceptar todos los entrantes para este archivo"
+                            >
+                              Entrantes
+                            </button>
+                          </div>
+                        )}
+                        
+                        {allBlocksResolved && (
+                          <button
+                            onClick={handleSaveFile}
+                            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/30 hover:border-emerald-300 transition-all text-xs font-bold shadow-lg shadow-emerald-500/10 active:scale-95 animate-pulse"
+                          >
+                            <Check size={12} /> Guardar y continuar
+                          </button>
+                        )}
+                      </div>
                     </div>
+
+                    {/* File conflict resolution progress bar line */}
+                    {conflictBlocks.length > 0 && (
+                      <div className="h-[2px] w-full bg-slate-950 flex-shrink-0">
+                        {(() => {
+                          const fileResolved = conflictBlocks.filter(b => b.resolved).length
+                          const filePercent = Math.round((fileResolved / conflictBlocks.length) * 100)
+                          return (
+                            <div
+                              className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full transition-all duration-500"
+                              style={{ width: `${filePercent}%` }}
+                            />
+                          )
+                        })()}
+                      </div>
+                    )}
 
                     {/* Conflict blocks */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-4">
