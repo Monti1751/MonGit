@@ -666,7 +666,7 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
               <button
                 onClick={() => {
                   const prUrl = getGitHubPrUrl()
-                  if (prUrl) window.open(prUrl, '_blank')
+                  if (prUrl) window.electronAPI.openExternalUrl(prUrl)
                 }}
                 disabled={!remoteUrl}
                 className="flex-1 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 font-bold transition-colors"
@@ -772,7 +772,7 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
                 <button
                   onClick={() => {
                     const prUrl = getGitHubPrUrl()
-                    if (prUrl) window.open(prUrl, '_blank')
+                    if (prUrl) window.electronAPI.openExternalUrl(prUrl)
                   }}
                   disabled={!fromBranch || !remoteUrl}
                   className="w-full py-3 rounded-xl bg-slate-700/50 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 font-bold text-sm transition-all shadow-lg flex items-center justify-center gap-2 group mb-3 border border-slate-600"
