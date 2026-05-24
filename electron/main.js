@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { exec } from 'child_process'
@@ -374,16 +374,6 @@ ipcMain.handle('package-app', async () => {
     return { success: true }
   } catch (err) {
     console.error('Package app error:', err)
-    return { success: false, error: err.message }
-  }
-})
-
-ipcMain.handle('open-external-url', async (event, url) => {
-  try {
-    await shell.openExternal(url)
-    return { success: true }
-  } catch (err) {
-    console.error('open-external-url error:', err)
     return { success: false, error: err.message }
   }
 })
