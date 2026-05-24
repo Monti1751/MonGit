@@ -5,8 +5,9 @@ import {
   Plus, ChevronDown, RotateCcw,
   Code2, Folder, FolderPlus, X, Check,
   AlertCircle, Clock, Layers,
-  RefreshCw, Terminal, Eye, Info, UserPlus, Trash2
+  RefreshCw, Terminal, Eye, Info, UserPlus, Trash2, Globe
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useProviders } from './hooks/useProviders'
 import ProviderSetup from './components/ProviderSetup'
 import LocalRepoPanel from './components/LocalRepoPanel'
@@ -68,6 +69,7 @@ function Avatar({ initials, color, avatarUrl, size = 'sm' }) {
 }
 
 function Modal({ title, subtitle, onClose, onConfirm, children }) {
+  const { t } = useTranslation()
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
@@ -90,13 +92,13 @@ function Modal({ title, subtitle, onClose, onConfirm, children }) {
             onClick={onClose}
             className="flex-1 py-2.5 px-4 rounded-xl border border-slate-600 text-slate-300 hover:bg-slate-700/50 transition-all text-sm font-medium"
           >
-            Cancelar
+            {t('app.buttons.cancel')}
           </button>
           <button
             onClick={onConfirm}
             className="flex-1 py-2.5 px-4 rounded-xl bg-brand-500 hover:bg-brand-400 text-white font-semibold transition-all text-sm glow-teal-sm"
           >
-            Confirmar
+            {t('app.buttons.confirm')}
           </button>
         </div>
       </div>
@@ -123,6 +125,7 @@ function ToastNotification({ message, type = 'success', onDismiss }) {
 }
 
 function CreateRepoModal({ providers, onClose, onCreate }) {
+  const { t } = useTranslation()
   const [accountId, setAccountId] = useState(providers[0]?.id || '')
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -131,8 +134,8 @@ function CreateRepoModal({ providers, onClose, onCreate }) {
   const [error, setError] = useState('')
 
   const handleSubmit = async () => {
-    if (!name.trim()) { setError('El nombre es obligatorio'); return }
-    if (!accountId) { setError('Selecciona una cuenta'); return }
+    if (!name.trim()) { setError(t('app.modals.createRepo.errors.nameRequired')); return }
+    if (!accountId) { setError(t('app.modals.createRepo.errors.accountRequired')); return }
     
     setLoading(true)
     setError('')
@@ -144,16 +147,16 @@ function CreateRepoModal({ providers, onClose, onCreate }) {
       })
       onClose()
     } catch (err) {
-      setError(err.message)
+      setError(t('app.errors.general') + ' (' + err.message + ')')
       setLoading(false)
     }
   }
 
   return (
-    <Modal title="Crear Nuevo Repositorio" onClose={onClose} onConfirm={handleSubmit}>
+    <Modal title={t('app.modals.createRepo.title')} onClose={onClose} onConfirm={handleSubmit}>
       <div className="space-y-4">
         <div>
-          <label className="text-xs font-semibold text-slate-400 block mb-1.5">Cuenta destino</label>
+          <label className="text-xs font-semibold text-slate-400 block mb-1.5">{t('app.modals.createRepo.targetAccount')}</label>
           <select 
             value={accountId} 
             onChange={e => setAccountId(e.target.value)}
@@ -165,47 +168,47 @@ function CreateRepoModal({ providers, onClose, onCreate }) {
           </select>
         </div>
         <div>
-          <label className="text-xs font-semibold text-slate-400 block mb-1.5">Nombre del repositorio</label>
+          <label className="text-xs font-semibold text-slate-400 block mb-1.5">{t('app.modals.createRepo.repoName')}</label>
           <input
             type="text"
             value={name}
             onChange={e => { setName(e.target.value); setError('') }}
-            placeholder="ej: mi-nuevo-proyecto"
+            placeholder={t('app.modals.createRepo.repoNamePlaceholder')}
             className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white font-mono focus:border-brand-500 focus:outline-none"
           />
         </div>
         <div>
-          <label className="text-xs font-semibold text-slate-400 block mb-1.5">Descripción (Opcional)</label>
+          <label className="text-xs font-semibold text-slate-400 block mb-1.5">{t('app.modals.createRepo.description')}</label>
           <input
             type="text"
             value={description}
             onChange={e => setDescription(e.target.value)}
-            placeholder="Breve descripción del proyecto"
+            placeholder={t('app.modals.createRepo.descriptionPlaceholder')}
             className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-brand-500 focus:outline-none"
           />
         </div>
         <div>
-          <label className="text-xs font-semibold text-slate-400 block mb-1.5">Privacidad</label>
+          <label className="text-xs font-semibold text-slate-400 block mb-1.5">{t('app.modals.createRepo.privacy')}</label>
           <div className="flex gap-2">
             <button
               onClick={() => setIsPrivate(false)}
               className={`flex-1 py-2 rounded-xl border text-sm font-medium transition-all ${!isPrivate ? 'bg-brand-500/20 border-brand-500 text-brand-400' : 'bg-slate-800 border-slate-700 text-slate-400'}`}
             >
-              🌍 Público
+              {t('app.modals.createRepo.public')}
             </button>
             <button
               onClick={() => setIsPrivate(true)}
               className={`flex-1 py-2 rounded-xl border text-sm font-medium transition-all ${isPrivate ? 'bg-brand-500/20 border-brand-500 text-brand-400' : 'bg-slate-800 border-slate-700 text-slate-400'}`}
             >
-              🔒 Privado
+              {t('app.modals.createRepo.private')}
             </button>
           </div>
         </div>
         {error && <p className="text-xs text-rose-400 flex items-center gap-1">
           <AlertCircle size={11} className="flex-shrink-0" />
-          <span>{error} — <button onClick={handleSubmit} className="underline hover:text-rose-300 font-medium ml-1">Inténtelo de nuevo</button></span>
+          <span>{error} — <button onClick={handleSubmit} className="underline hover:text-rose-300 font-medium ml-1">{t('app.modals.createRepo.errors.tryAgain')}</button></span>
         </p>}
-        {loading && <p className="text-xs text-brand-400 flex items-center gap-1"><RefreshCw size={11} className="animate-spin" /> Creando repositorio e inicializando con README...</p>}
+        {loading && <p className="text-xs text-brand-400 flex items-center gap-1"><RefreshCw size={11} className="animate-spin" /> {t('app.modals.createRepo.creating')}</p>}
       </div>
     </Modal>
   )
@@ -214,6 +217,7 @@ function CreateRepoModal({ providers, onClose, onCreate }) {
 // ─── Main App ─────────────────────────────────────────────────────────────────
 
 export default function App() {
+  const { t, i18n } = useTranslation()
   const {
     providers,
     allRepos,
@@ -225,6 +229,11 @@ export default function App() {
     createNewRepo,
     hasProviders
   } = useProviders()
+
+  // ── Constants ──────────────────────────────────────────────────────────────
+  const TOAST_DURATION_MS = 4000
+  const COMMIT_ID_HEX_LENGTH = 7
+  const COMMIT_SIMULATE_DELAY_MS = 1200
 
   const [activeRepo, setActiveRepo] = useState(null)
   const [localFolderPath, setLocalFolderPath] = useState(null)
@@ -260,7 +269,7 @@ export default function App() {
 
   const showToast = useCallback((message, type = 'success') => {
     setToast({ message, type })
-    setTimeout(() => setToast(null), 4000)
+    setTimeout(() => setToast(null), TOAST_DURATION_MS)
   }, [])
 
   // Auto-select first repo when repos load (disabled for local first)
@@ -280,7 +289,7 @@ export default function App() {
 
   const handleCreateRepoClick = () => {
     if (providers.length === 0) {
-      showToast('Por favor, conecta una cuenta en la nube (como GitHub) primero.', 'info')
+      showToast(t('app.messages.connectCloudFirst'), 'info')
       setShowProviderSetup(true)
     } else {
       setShowCreateRepoModal(true)
@@ -289,7 +298,7 @@ export default function App() {
 
   const handleCloneRepoClick = () => {
     if (providers.length === 0) {
-      showToast('Por favor, conecta una cuenta en la nube (como GitHub) primero.', 'info')
+      showToast(t('app.messages.connectCloudFirst'), 'info')
       setShowProviderSetup(true)
     } else {
       setShowCloneRepoModal(true)
@@ -308,7 +317,7 @@ export default function App() {
       setCommits(prev => ({ ...prev, [branchToLoad]: commitsData }))
       setRefreshTrigger(prev => prev + 1)
     } catch (err) {
-      showToast('Error cargando repositorio local', 'error')
+      showToast(t('app.errors.loadLocalRepo'), 'error')
     } finally {
       setLoadingData(false)
     }
@@ -324,9 +333,9 @@ export default function App() {
     const result = await window.electronAPI.checkoutBranch(localFolderPath, branch)
     if (result.success) {
       loadLocalRepoData(localFolderPath, branch)
-      showToast(`Cambiado a la rama "${branch}"`, 'info')
+      showToast(t('app.messages.branchSwitched', { branch }), 'info')
     } else {
-      showToast(`Error al cambiar de rama: ${result.error}`, 'error')
+      showToast(t('app.errors.switchBranch'), 'error')
       setLoadingData(false)
     }
   }
@@ -337,9 +346,9 @@ export default function App() {
   const activeCommits = commits[activeBranch] || []
   const checkedFiles = files.filter(f => f.checked)
   const syncStates = {
-    pull: { label: 'Descargar cambios', icon: <Download size={15} />, color: 'bg-indigo-500 hover:bg-indigo-400', glow: 'shadow-indigo-500/30' },
-    push: { label: 'Subir mis cambios', icon: <Upload size={15} />, color: 'bg-brand-500 hover:bg-brand-400', glow: 'shadow-brand-500/30' },
-    synced: { label: 'Todo actualizado', icon: <CheckCircle2 size={15} />, color: 'bg-emerald-600 hover:bg-emerald-500', glow: 'shadow-emerald-500/30' },
+    pull: { label: t('app.status.pullChanges'), icon: <Download size={15} />, color: 'bg-indigo-500 hover:bg-indigo-400', glow: 'shadow-indigo-500/30' },
+    push: { label: t('app.status.pushChanges'), icon: <Upload size={15} />, color: 'bg-brand-500 hover:bg-brand-400', glow: 'shadow-brand-500/30' },
+    synced: { label: t('app.status.allSynced'), icon: <CheckCircle2 size={15} />, color: 'bg-emerald-600 hover:bg-emerald-500', glow: 'shadow-emerald-500/30' },
   }
   const currentSync = syncStates[syncState]
 
@@ -351,22 +360,22 @@ export default function App() {
     try {
       const pullResult = await window.electronAPI.pullChanges(localFolderPath)
       if (!pullResult.success) {
-        showToast(`Error al hacer pull: ${pullResult.error}`, 'error')
+        showToast(t('app.errors.pullFailed'), 'error')
         setSyncLoading(false)
         return
       }
 
       const pushResult = await window.electronAPI.pushChanges(localFolderPath)
       if (!pushResult.success) {
-        showToast(`Error al hacer push: ${pushResult.error}`, 'error')
+        showToast(t('app.errors.pushFailed'), 'error')
         setSyncLoading(false)
         return
       }
 
-      showToast('Sincronizado correctamente con origen (Pull & Push)', 'success')
+      showToast(t('app.messages.syncedSuccessfully'), 'success')
       loadLocalRepoData(localFolderPath, activeBranch)
     } catch (err) {
-      showToast(`Error de sincronización: ${err.message}`, 'error')
+      showToast(t('app.errors.syncFailed'), 'error')
     } finally {
       setSyncLoading(false)
     }
@@ -386,7 +395,7 @@ export default function App() {
     if (checkedFiles.length === 0) return
 
     setCommitLoading(true)
-    await new Promise(r => setTimeout(r, 1200))
+    await new Promise(r => setTimeout(r, COMMIT_SIMULATE_DELAY_MS))
 
     const newId = Math.random().toString(16).slice(2, 9)
     const newCommit = {
@@ -417,7 +426,7 @@ export default function App() {
     setSelectedFile(null)
     setSyncState('push')
     setCommitLoading(false)
-    showToast(`✓ Commit guardado: "${commitMessage.slice(0, 40)}..."`, 'success')
+    showToast(t('app.messages.commitSaved', { message: commitMessage.slice(0, 40) }), 'success')
   }
 
   const handleUndo = () => {
@@ -426,15 +435,15 @@ export default function App() {
     if (last.type === 'commit') {
       setCommits(prev => ({ ...prev, [last.branch]: last.commits }))
       setUndoStack(prev => prev.slice(0, -1))
-      showToast('Último commit deshecho correctamente', 'info')
+      showToast(t('app.messages.undoSuccess'), 'info')
     }
   }
 
   const handleCreateBranch = async () => {
     const trimmed = newBranchName.trim().replace(/\s+/g, '-').toLowerCase()
-    if (!trimmed) { setNewBranchError('El nombre no puede estar vacío'); return }
-    if (localBranches.includes(trimmed)) { setNewBranchError('Ya existe una rama con ese nombre'); return }
-    if (!/^[a-z0-9._/-]+$/.test(trimmed)) { setNewBranchError('Solo letras, números, guiones y puntos'); return }
+    if (!trimmed) { setNewBranchError(t('app.errors.branchNameEmpty')); return }
+    if (localBranches.includes(trimmed)) { setNewBranchError(t('app.errors.branchExists')); return }
+    if (!/^[a-z0-9._/-]+$/.test(trimmed)) { setNewBranchError(t('app.errors.branchInvalid')); return }
 
     if (!localFolderPath) return
     
@@ -445,9 +454,9 @@ export default function App() {
       setNewBranchName('')
       setNewBranchError('')
       loadLocalRepoData(localFolderPath, trimmed)
-      showToast(`Rama "${trimmed}" creada y activada`, 'success')
+      showToast(t('app.messages.branchCreated', { branch: trimmed }), 'success')
     } else {
-      setNewBranchError(`Error de Git: ${result.error}`)
+      setNewBranchError(t('app.errors.gitError'))
       setLoadingData(false)
     }
   }
@@ -460,18 +469,20 @@ export default function App() {
       const result = await window.electronAPI.deleteBranch(localFolderPath, branchToDelete, deleteRemoteBranch)
       if (result.success) {
         if (result.remoteError) {
-          showToast(`Rama "${branchToDelete}" eliminada localmente, pero falló en GitHub: ${result.remoteError}`, 'error')
+          showToast(t('app.errors.deleteRemoteFailed', { branch: branchToDelete }), 'error')
         } else {
-          showToast(`Rama "${branchToDelete}" eliminada correctamente ${deleteRemoteBranch ? '(local y de GitHub)' : '(local)'}`, 'success')
+          showToast(deleteRemoteBranch
+            ? t('app.messages.branchDeletedBoth', { branch: branchToDelete })
+            : t('app.messages.branchDeletedLocal', { branch: branchToDelete }), 'success')
         }
         setBranchToDelete(null)
         setDeleteRemoteBranch(false)
         loadLocalRepoData(localFolderPath, activeBranch)
       } else {
-        showToast(`Error al eliminar la rama: ${result.error}`, 'error')
+        showToast(t('app.errors.deleteFailed'), 'error')
       }
     } catch (err) {
-      showToast(`Error: ${err.message}`, 'error')
+      showToast(t('app.errors.general'), 'error')
     } finally {
       setLoadingData(false)
     }
@@ -495,28 +506,28 @@ export default function App() {
           <button
             onClick={handleSelectFolder}
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/70 border border-slate-700/60 hover:border-slate-600 hover:bg-slate-700/80 transition-all text-sm text-slate-200 font-medium"
-            title={localFolderPath || "Abrir carpeta del proyecto local"}
+            title={localFolderPath || t('app.buttons.openFolder')}
           >
             <Folder size={14} className="text-brand-400" />
-            <span>{localFolderPath ? 'Abrir Otra Carpeta...' : 'Abrir Carpeta Local...'}</span>
+            <span>{localFolderPath ? t('app.buttons.openOtherFolder') : t('app.buttons.openFolder')}</span>
           </button>
           
           <button
             onClick={handleCreateRepoClick}
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/40 border border-slate-700/40 hover:border-brand-500/50 hover:bg-brand-500/10 hover:text-brand-400 transition-all text-sm text-slate-300 font-medium cursor-pointer"
-            title="Crear un nuevo repositorio en la nube"
+            title={t('app.buttons.newRepo')}
           >
             <FolderPlus size={14} className="text-brand-400" />
-            <span>Nuevo Repo...</span>
+            <span>{t('app.buttons.newRepo')}</span>
           </button>
 
           <button
             onClick={handleCloneRepoClick}
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/40 border border-slate-700/40 hover:border-indigo-500/50 hover:bg-indigo-500/10 hover:text-indigo-400 transition-all text-sm text-slate-300 font-medium cursor-pointer"
-            title="Clonar un repositorio remoto de tu cuenta"
+            title={t('app.buttons.cloneRepo')}
           >
             <Download size={14} className="text-indigo-400" />
-            <span>Clonar Repo...</span>
+            <span>{t('app.buttons.cloneRepo')}</span>
           </button>
 
           {localFolderPath && (
@@ -557,14 +568,40 @@ export default function App() {
             {syncLoading
               ? <RefreshCw size={15} className="animate-spin" />
               : <Upload size={15} />}
-            <span>Sincronizar (Pull & Push)</span>
+            <span>{t('app.buttons.sync')}</span>
           </button>
         )}
+
+        {/* Language Switcher - Compact */}
+        <div className="flex items-center gap-0.5">
+          <button
+            onClick={() => i18n.changeLanguage('es')}
+            className={`p-1.5 rounded-lg text-xs font-bold transition-all ${
+              i18n.language === 'es' 
+                ? 'bg-brand-500 text-white shadow-lg' 
+                : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+            }`}
+            title="Español"
+          >
+            🇪🇸
+          </button>
+          <button
+            onClick={() => i18n.changeLanguage('en')}
+            className={`p-1.5 rounded-lg text-xs font-bold transition-all ${
+              i18n.language === 'en' || i18n.language.startsWith('en-') 
+                ? 'bg-brand-500 text-white shadow-lg' 
+                : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+            }`}
+            title="English"
+          >
+            🇬🇧
+          </button>
+        </div>
         
         <button 
           onClick={() => setShowProviderSetup(true)}
           className="p-2 rounded-xl bg-slate-800/50 hover:bg-slate-700 border border-slate-700/50 text-slate-300 hover:text-white transition-all relative"
-          title="Proveedores Git"
+          title={t('app.buttons.providers')}
         >
           <Settings size={17} />
           {providers.length > 0 && (
@@ -584,13 +621,13 @@ export default function App() {
               className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-dashed border-brand-500/50 text-brand-400 hover:bg-brand-500/10 hover:border-brand-400 transition-all text-sm font-semibold group disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Plus size={15} className="group-hover:rotate-90 transition-transform duration-200" />
-              Nueva Rama
+              <span>{t('app.buttons.newBranch')}</span>
             </button>
 
             <div>
               <div className="flex items-center gap-2 px-1 mb-2">
                 <GitBranch size={13} className="text-slate-500" />
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Mis Ramas</span>
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">{t('app.sidebar.myBranches')}</span>
               </div>
               {loadingData && !localBranches.length ? (
                  <div className="flex justify-center py-4"><RefreshCw size={16} className="animate-spin text-slate-500" /></div>
@@ -644,7 +681,7 @@ export default function App() {
             <div>
               <div className="flex items-center gap-2 px-1 mb-2 mt-4">
                 <GitMerge size={13} className="text-slate-500" />
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Repositorios</span>
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">{t('app.sidebar.repositories')}</span>
               </div>
               <button
                 onClick={() => setShowCreateRepoModal(true)}
@@ -652,7 +689,7 @@ export default function App() {
                 className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-dashed border-indigo-500/50 text-indigo-400 hover:bg-indigo-500/10 hover:border-indigo-400 transition-all text-sm font-semibold group disabled:opacity-40 disabled:cursor-not-allowed mb-2"
               >
                 <Plus size={15} className="group-hover:rotate-90 transition-transform duration-200" />
-                Crear Repositorio
+                <span>{t('app.buttons.createRepo')}</span>
               </button>
 
               <button
@@ -661,7 +698,7 @@ export default function App() {
                 className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border border-dashed border-brand-500/50 text-brand-400 hover:bg-brand-500/10 hover:border-brand-400 transition-all text-sm font-semibold group disabled:opacity-40 disabled:cursor-not-allowed mb-3"
               >
                 <Download size={15} className="group-hover:translate-y-0.5 transition-transform duration-200" />
-                Clonar Repositorio
+                <span>{t('app.buttons.cloneRepo')}</span>
               </button>
             </div>
             
@@ -669,7 +706,7 @@ export default function App() {
               <div>
                 <div className="flex items-center gap-2 px-1 mb-2 mt-4">
                   <Code2 size={13} className="text-slate-500" />
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Rama Remota</span>
+                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">{t('app.sidebar.remoteBranch')}</span>
                 </div>
                 <div className="space-y-1">
                   <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left hover:bg-slate-800/60 border border-transparent transition-all group opacity-70 cursor-not-allowed">
@@ -697,7 +734,7 @@ export default function App() {
                   }`}
                 >
                   <Layers size={15} />
-                  Historial
+                  {t('app.tabs.history')}
                 </button>
                 <button
                   onClick={() => setActiveTab('merge')}
@@ -708,7 +745,7 @@ export default function App() {
                   }`}
                 >
                   <GitMerge size={15} />
-                  Fusión y Conflictos
+                  {t('app.tabs.merge')}
                 </button>
               </div>
               
@@ -722,7 +759,7 @@ export default function App() {
                 onClick={() => loadLocalRepoData(localFolderPath, activeBranch)}
                 disabled={loadingData}
                 className="p-1.5 rounded-lg bg-slate-800/40 border border-slate-700/60 text-slate-400 hover:text-white hover:border-slate-500 hover:bg-slate-700/40 transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed group"
-                title="Actualizar historial"
+                title={t('app.buttons.refreshHistory')}
               >
                 <RefreshCw size={14} className={`transition-transform duration-500 ${loadingData ? 'animate-spin' : 'group-hover:rotate-180'}`} />
               </button>
@@ -738,9 +775,9 @@ export default function App() {
                     <div className="w-20 h-20 bg-gradient-to-br from-brand-400 to-indigo-500 rounded-2xl flex items-center justify-center mb-6 shadow-2xl shadow-brand-500/10">
                       <GitBranch size={40} className="text-white animate-pulse" />
                     </div>
-                    <h2 className="text-2xl font-bold text-white mb-3">Bienvenido a MonGit</h2>
+                    <h2 className="text-2xl font-bold text-white mb-3">{t('app.welcomeTitle')}</h2>
                     <p className="text-sm text-slate-400 max-w-md mb-8">
-                      Un cliente Git de escritorio ultrarrápido y premium para gestionar tus repositorios locales con facilidad.
+                      {t('app.welcomeSubtitle')}
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                       <button 
@@ -748,29 +785,29 @@ export default function App() {
                         className="px-6 py-3 rounded-xl bg-brand-500 hover:bg-brand-400 text-white font-semibold transition-all shadow-lg shadow-brand-500/20 text-sm flex items-center gap-2 justify-center"
                       >
                         <Folder size={16} />
-                        Abrir Carpeta Local...
+                        {t('app.buttons.openFolder')}
                       </button>
                       <button 
                         onClick={handleCloneRepoClick}
                         className="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold transition-all text-sm flex items-center gap-2 justify-center"
                       >
                         <Download size={16} className="text-indigo-400" />
-                        Clonar Repositorio...
+                        {t('app.buttons.cloneRepo')}
                       </button>
                       <button 
                         onClick={() => setShowProviderSetup(true)}
                         className="px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold transition-all text-sm flex items-center gap-2 justify-center"
                       >
                         <UserPlus size={16} />
-                        Conectar Cuenta Cloud...
+                        {t('app.buttons.connectCloud')}
                       </button>
                     </div>
                   </div>
                 ) : activeCommits.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-center p-8 text-slate-500">
                     <Clock size={48} className="mb-4 opacity-50 text-brand-400" />
-                    <p className="text-sm">No se encontraron commits en la rama "{activeBranch}".</p>
-                    <p className="text-xs text-slate-600 mt-1">Prepara cambios y realiza tu primer commit en el panel derecho.</p>
+                    <p className="text-sm">{t('app.status.noCommits', { branch: activeBranch })}</p>
+                    <p className="text-xs text-slate-600 mt-1">{t('app.status.prepareCommits')}</p>
                   </div>
                 ) : null}
                 
@@ -778,7 +815,7 @@ export default function App() {
                     <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-10">
                        <div className="bg-slate-800 border border-slate-700 px-6 py-4 rounded-xl flex items-center gap-3 shadow-xl">
                           <RefreshCw size={18} className="animate-spin text-brand-400" />
-                          <span className="text-sm font-medium text-slate-200">Cargando datos...</span>
+                          <span className="text-sm font-medium text-slate-200">{t('app.status.loadingData')}</span>
                        </div>
                     </div>
                 )}
@@ -848,7 +885,7 @@ export default function App() {
                               })}
                             </div>
                             <p className={`text-sm font-medium mt-0.5 truncate transition-colors ${isSelected ? 'text-white' : 'text-slate-200 group-hover:text-white'}`}>
-                              {commit.message || '(Sin mensaje)'}
+                              {commit.message || t('app.status.noMessage')}
                             </p>
                             <div className="flex items-center gap-3 mt-1">
                               <span className="text-xs text-slate-500 truncate max-w-[120px]">{commit.author}</span>
@@ -858,7 +895,7 @@ export default function App() {
                                 {commit.time}
                               </span>
                               <span className="font-mono text-xs text-slate-700 ml-auto flex-shrink-0">
-                                {commit.id.slice(0, 7)}
+                                {commit.id.slice(0, COMMIT_ID_HEX_LENGTH)}
                               </span>
                             </div>
                           </div>
@@ -871,13 +908,11 @@ export default function App() {
                                   onClick={e => e.stopPropagation()}
                                   className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-slate-700/40 hover:bg-slate-600/50 text-slate-300 text-xs transition-all col-span-2"
                                 >
-                                  Ver en {activeRepo?.providerLabel?.split(' ')[0]}
+                                  {t('app.buttons.viewIn', { provider: activeRepo?.providerLabel?.split(' ')[0] })}
                                 </a>
                              ) : (
                                <>
                                   <button
-                                    onClick={e => { e.stopPropagation(); showToast(`Función próximamente`, 'info') }}
-                                    className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-slate-700/40 hover:bg-slate-600/50 text-slate-400 text-xs transition-all"
                                   >
                                     <Code2 size={12} /> Ver diff completo
                                   </button>
@@ -930,20 +965,20 @@ export default function App() {
           <div className="flex items-center gap-1.5 text-slate-400">
             <Terminal size={12} className="text-brand-400" />
             <span>
-              {localFolderPath ? `Carpeta abierta: ${localFolderPath}` : 'No hay carpeta abierta'}
+              {localFolderPath ? t('app.status.folderOpen', { path: localFolderPath }) : t('app.status.noFolder')}
             </span>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-slate-500 font-mono">MonGit Desktop v1.0.0</span>
+          <span className="text-slate-500 font-mono">{t('app.title')}</span>
         </div>
       </footer>
 
       {/* ── MODALS ─────────────────────────────────────────────────── */}
       {showNewBranchModal && (
         <Modal
-          title="Nueva Rama"
-          subtitle={`A partir de "${activeBranch}"`}
+          title={t('app.modals.newBranch.title')}
+          subtitle={t('app.modals.newBranch.subtitle', { branch: activeBranch })}
           onClose={() => { setShowNewBranchModal(false); setNewBranchName(''); setNewBranchError('') }}
           onConfirm={handleCreateBranch}
         >
@@ -954,7 +989,7 @@ export default function App() {
                 value={newBranchName}
                 onChange={e => { setNewBranchName(e.target.value); setNewBranchError('') }}
                 onKeyDown={e => e.key === 'Enter' && handleCreateBranch()}
-                placeholder="ej: feature-perfil"
+                placeholder={t('app.modals.newBranch.placeholder')}
                 className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-mono focus:border-brand-500 focus:outline-none"
              />
              {newBranchError && <p className="text-xs text-rose-400">{newBranchError}</p>}
@@ -964,19 +999,19 @@ export default function App() {
 
       {branchToDelete && (
         <Modal
-          title="¿Eliminar rama?"
-          subtitle={`Esta acción es irreversible.`}
+          title={t('app.modals.deleteBranch.title')}
+          subtitle={t('app.modals.deleteBranch.subtitle')}
           onClose={() => { setBranchToDelete(null); setDeleteRemoteBranch(false) }}
           onConfirm={handleDeleteBranch}
         >
           <div className="space-y-3 py-1 text-left">
             <p className="text-sm text-slate-300">
-              ¿Estás seguro de que deseas eliminar la rama local <span className="font-mono text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded text-xs">{branchToDelete}</span>?
+              {t('app.modals.deleteBranch.confirmation')} <span className="font-mono text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded text-xs">{branchToDelete}</span>?
             </p>
             <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs">
               <AlertCircle size={15} className="flex-shrink-0 mt-0.5 text-amber-400" />
               <span>
-                <strong>Atención:</strong> Si esta rama tiene cambios o commits locales que no han sido fusionados con la rama principal (<code>main</code>), se perderán definitivamente.
+                <strong>{t('app.modals.deleteBranch.warning')}</strong> {t('app.modals.deleteBranch.warningText')}
               </span>
             </div>
             <div className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-800/40 border border-slate-700/50 hover:bg-slate-800/60 transition-all cursor-pointer">
@@ -988,7 +1023,7 @@ export default function App() {
                 className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-brand-500 focus:ring-brand-500 focus:ring-offset-slate-900 cursor-pointer accent-brand-500"
               />
               <label htmlFor="delete-remote-chk" className="text-xs font-semibold text-slate-300 select-none cursor-pointer hover:text-white transition-colors flex-1">
-                Eliminar también de GitHub (remoto)
+                {t('app.modals.deleteBranch.deleteRemote')}
               </label>
             </div>
           </div>
@@ -1011,7 +1046,7 @@ export default function App() {
           onClose={() => setShowCreateRepoModal(false)}
           onCreate={async (accountId, details) => {
             await createNewRepo(accountId, details)
-            showToast(`Repositorio "${details.name}" creado con éxito`, 'success')
+            showToast(t('app.messages.repoCreated', { name: details.name }), 'success')
           }}
         />
       )}
@@ -1026,7 +1061,7 @@ export default function App() {
             setShowRepoDropdown(false)
             loadLocalRepoData(clonedPath)
             setActiveTab('history')
-            showToast('✓ Repositorio clonado con éxito', 'success')
+            showToast(t('app.messages.repoCloned'), 'success')
           }}
         />
       )}

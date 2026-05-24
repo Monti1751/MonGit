@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   X, Search, Folder, RefreshCw, CheckCircle2,
   AlertCircle, Cloud, HelpCircle, ShieldAlert
 } from 'lucide-react'
 
 export default function CloneRepoModal({ providers, allRepos, onClose, onCloneSuccess }) {
+  const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedRepo, setSelectedRepo] = useState(null)
   const [parentFolder, setParentFolder] = useState('')
@@ -63,11 +65,11 @@ export default function CloneRepoModal({ providers, allRepos, onClose, onCloneSu
 
   const handleClone = async () => {
     if (!selectedRepo) {
-      setError('Por favor selecciona un repositorio para clonar')
+      setError(t('clone.errors.selectRepo'))
       return
     }
     if (!parentFolder) {
-      setError('Por favor selecciona la carpeta de destino local')
+      setError(t('clone.errors.selectFolder'))
       return
     }
 
@@ -86,10 +88,10 @@ export default function CloneRepoModal({ providers, allRepos, onClose, onCloneSu
         }
         onClose()
       } else {
-        setError(result.error || 'Ocurrió un error inesperado al clonar el repositorio.')
+        setError(result.error || t('clone.errors.unknown'))
       }
     } catch (err) {
-      setError(err.message || 'Error de conexión con el sistema de clonación.')
+      setError(err.message || t('clone.errors.connection'))
     } finally {
       setCloning(false)
     }
@@ -113,9 +115,9 @@ export default function CloneRepoModal({ providers, allRepos, onClose, onCloneSu
               <Cloud size={16} className="text-white" />
             </div>
             <div>
-              <h2 className="font-bold text-white text-base">Clonar Repositorio Remoto</h2>
+              <h2 className="font-bold text-white text-base">{t('clone.title')}</h2>
               <p className="text-xs text-slate-400">
-                Selecciona un proyecto de tu cuenta en la nube para traerlo a tu equipo local.
+                {t('clone.subtitle')}
               </p>
             </div>
           </div>
@@ -133,9 +135,9 @@ export default function CloneRepoModal({ providers, allRepos, onClose, onCloneSu
           {activeProviders.length === 0 ? (
             <div className="text-center py-8 bg-slate-800/20 rounded-2xl border border-dashed border-slate-700/50 flex flex-col items-center justify-center">
               <ShieldAlert size={36} className="text-amber-500 mb-3" />
-              <p className="text-sm font-semibold text-slate-300">No hay cuentas Git conectadas</p>
+              <p className="text-sm font-semibold text-slate-300">{t('clone.errors.noConnectedAccounts')}</p>
               <p className="text-xs text-slate-500 mt-1 max-w-md px-4">
-                Primero debes conectar una cuenta (como GitHub, GitLab o Gitea) en la sección de configuración para poder listar tus repositorios.
+                {t('clone.errors.noAccountsText')}
               </p>
             </div>
           ) : (
@@ -148,7 +150,7 @@ export default function CloneRepoModal({ providers, allRepos, onClose, onCloneSu
                   </span>
                   <input
                     type="text"
-                    placeholder="Buscar repositorio por nombre o descripción..."
+                    placeholder={t('clone.search.placeholder')}
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                     className="w-full bg-slate-800/80 border border-slate-700 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all font-sans"
@@ -161,7 +163,7 @@ export default function CloneRepoModal({ providers, allRepos, onClose, onCloneSu
                   onChange={e => setSelectedProviderId(e.target.value)}
                   className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-indigo-500"
                 >
-                  <option value="all">Todas las cuentas</option>
+                  <option value="all">{t('clone.search.accountFilter')}</option>
                   {activeProviders.map(p => (
                     <option key={p.id} value={p.id}>{p.label}</option>
                   ))}
@@ -171,19 +173,19 @@ export default function CloneRepoModal({ providers, allRepos, onClose, onCloneSu
               {/* Repositories List */}
               <div className="flex-1 border border-slate-700/50 rounded-xl overflow-hidden flex flex-col bg-slate-900/50 min-h-[180px]">
                 <div className="px-4 py-2 bg-slate-800/40 border-b border-slate-700/40 text-[10px] font-bold uppercase tracking-wider text-slate-500 flex justify-between">
-                  <span>Proyecto ({filteredRepos.length})</span>
-                  <span>Último push</span>
+                  <span>{t('clone.list.projectHeader')} ({filteredRepos.length})</span>
+                  <span>{t('clone.list.lastPushHeader')}</span>
                 </div>
                 
                 <div className="flex-1 overflow-y-auto divide-y divide-slate-800/40 max-h-[220px]">
                   {filteredRepos.length === 0 ? (
                     <div className="text-center py-8 text-slate-500 text-xs">
-                      {searchQuery ? 'No se encontraron repositorios que coincidan con la búsqueda.' : 'No tienes repositorios disponibles.'}
+                      {searchQuery ? t('clone.list.noResults') : t('clone.list.noRepositories')}
                     </div>
                   ) : (
                     filteredRepos.map(repo => {
                       const isSelected = selectedRepo?.id === repo.id
-                      const timeStr = repo.updatedAt ? new Date(repo.updatedAt).toLocaleDateString() : 'N/D'
+                      const timeStr = repo.updatedAt ? new Date(repo.updatedAt).toLocaleDateString() : t('clone.list.notFound')
                       return (
                         <button
                           key={repo.id}
@@ -205,9 +207,9 @@ export default function CloneRepoModal({ providers, allRepos, onClose, onCloneSu
                               <div className="flex items-center gap-1.5">
                                 <span className="font-semibold text-sm truncate">{repo.fullName}</span>
                                 {repo.private ? (
-                                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-400 font-bold">Privado</span>
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-400 font-bold">{t('clone.list.private')}</span>
                                 ) : (
-                                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-bold">Público</span>
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-bold">{t('clone.list.public')}</span>
                                 )}
                               </div>
                               {repo.description && (
@@ -225,13 +227,13 @@ export default function CloneRepoModal({ providers, allRepos, onClose, onCloneSu
 
               {/* Local Folder Selector */}
               <div className="space-y-2 bg-slate-800/20 border border-slate-700/30 p-4 rounded-xl flex-shrink-0">
-                <label className="text-xs font-semibold text-slate-400 block">Carpeta de destino local</label>
+                <label className="text-xs font-semibold text-slate-400 block">{t('clone.destination.label')}</label>
                 <div className="flex gap-2">
                   <div className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-300 font-mono flex items-center truncate min-h-[38px]">
                     {parentFolder ? (
                       <span className="text-slate-200 truncate">{parentFolder}</span>
                     ) : (
-                      <span className="text-slate-500">Selecciona la carpeta donde quieres clonar el proyecto...</span>
+                      <span className="text-slate-500">{t('clone.destination.placeholder')}</span>
                     )}
                   </div>
                   <button
@@ -240,12 +242,12 @@ export default function CloneRepoModal({ providers, allRepos, onClose, onCloneSu
                     className="px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700/80 transition-all text-xs font-medium flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <Folder size={13} className="text-brand-400" />
-                    Examinar
+                    {t('clone.destination.browse')}
                   </button>
                 </div>
                 {selectedRepo && parentFolder && (
                   <p className="text-[10px] text-slate-500 mt-1">
-                    👉 Se creará la carpeta: <span className="font-mono text-indigo-400">{parentFolder}\{selectedRepo.name}</span>
+                    {t('clone.destination.willCreate')} <span className="font-mono text-indigo-400">{parentFolder}\{selectedRepo.name}</span>
                   </p>
                 )}
               </div>
@@ -264,8 +266,8 @@ export default function CloneRepoModal({ providers, allRepos, onClose, onCloneSu
             <div className="flex items-center gap-3 p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs flex-shrink-0 animate-pulse-slow">
               <RefreshCw size={15} className="animate-spin flex-shrink-0" />
               <div>
-                <p className="font-semibold text-white">Clonando repositorio remoto...</p>
-                <p className="text-[10px] text-indigo-400/80 mt-0.5">Esto puede demorar unos segundos dependiendo del tamaño del proyecto.</p>
+                <p className="font-semibold text-white">{t('clone.messages.cloning')}</p>
+                <p className="text-[10px] text-indigo-400/80 mt-0.5">{t('clone.messages.cloningDesc')}</p>
               </div>
             </div>
           )}
@@ -278,7 +280,7 @@ export default function CloneRepoModal({ providers, allRepos, onClose, onCloneSu
             disabled={cloning}
             className="flex-1 py-2.5 rounded-xl border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 transition-all text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Cancelar
+            {t('clone.buttons.cancel')}
           </button>
           <button
             onClick={handleClone}
@@ -290,9 +292,9 @@ export default function CloneRepoModal({ providers, allRepos, onClose, onCloneSu
             }`}
           >
             {cloning ? (
-              <><RefreshCw size={13} className="animate-spin" /> Clonando...</>
+              <><RefreshCw size={13} className="animate-spin" /> {t('clone.buttons.cloning')}</>
             ) : (
-              <>Clonar Proyecto</>
+              <>{t('clone.buttons.clone')}</>
             )}
           </button>
         </div>

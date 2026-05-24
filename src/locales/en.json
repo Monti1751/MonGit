@@ -1,0 +1,286 @@
+{
+  "app": {
+    "title": "MonGit Desktop v1.0.0",
+    "welcomeTitle": "Welcome to MonGit",
+    "welcomeSubtitle": "An ultra-fast, premium desktop Git client to manage your local repositories with ease.",
+    "buttons": {
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "openFolder": "Open Local Folder...",
+      "openOtherFolder": "Open Another Folder...",
+      "newRepo": "New Repo...",
+      "cloneRepo": "Clone Repo...",
+      "connectCloud": "Connect Cloud Account...",
+      "sync": "Sync (Pull & Push)",
+      "providers": "Git Providers",
+      "newBranch": "New Branch",
+      "createRepo": "Create Repository",
+      "refreshHistory": "Refresh history",
+      "viewIn": "View on {{provider}}",
+      "comingSoon": "Coming soon",
+      "viewFullDiff": "View full diff",
+      "revert": "Revert"
+    },
+    "tabs": {
+      "history": "History",
+      "merge": "Merge & Conflicts"
+    },
+    "sidebar": {
+      "myBranches": "My Branches",
+      "repositories": "Repositories",
+      "remoteBranch": "Remote Branch"
+    },
+    "status": {
+      "loadingData": "Loading data...",
+      "noCommits": "No commits found on branch \"{{branch}}\".",
+      "prepareCommits": "Prepare changes and make your first commit in the right panel.",
+      "noMessage": "(No message)",
+      "folderOpen": "Open folder: {{path}}",
+      "noFolder": "No folder opened",
+      "pullChanges": "Pull changes",
+      "pushChanges": "Push my changes",
+      "allSynced": "All up to date"
+    },
+    "modals": {
+      "createRepo": {
+        "title": "Create New Repository",
+        "targetAccount": "Target Account",
+        "selectAccount": "Select an account",
+        "repoName": "Repository name",
+        "repoNamePlaceholder": "e.g., my-new-project",
+        "description": "Description (Optional)",
+        "descriptionPlaceholder": "Brief description of the project",
+        "privacy": "Privacy",
+        "public": "🌍 Public",
+        "private": "🔒 Private",
+        "creating": "Creating repository and initializing with README...",
+        "errors": {
+          "nameRequired": "Name is required",
+          "accountRequired": "Select an account",
+          "tryAgain": "Try again"
+        }
+      },
+      "newBranch": {
+        "title": "New Branch",
+        "subtitle": "Based on \"{{branch}}\"",
+        "placeholder": "e.g., feature-profile"
+      },
+      "deleteBranch": {
+        "title": "Delete branch?",
+        "subtitle": "This action cannot be undone.",
+        "confirmation": "Are you sure you want to delete the local branch",
+        "warning": "Warning:",
+        "warningText": "If this branch has unmerged local changes or commits, they will be permanently lost.",
+        "deleteRemote": "Also delete from GitHub (remote)"
+      }
+    },
+    "messages": {
+      "connectCloudFirst": "Please connect a cloud account (like GitHub) first.",
+      "branchSwitched": "Switched to branch \"{{branch}}\"",
+      "syncedSuccessfully": "Successfully synced with origin (Pull & Push)",
+      "commitSaved": "✓ Commit saved: \"{{message}}...\"",
+      "undoSuccess": "Last commit successfully undone",
+      "branchCreated": "Branch \"{{branch}}\" created and checked out",
+      "repoCreated": "Repository \"{{name}}\" successfully created",
+      "repoCloned": "✓ Repository successfully cloned",
+      "branchDeletedLocal": "Branch \"{{branch}}\" successfully deleted (local)",
+      "branchDeletedBoth": "Branch \"{{branch}}\" successfully deleted (local and GitHub)"
+    },
+    "errors": {
+      "loadLocalRepo": "Error loading local repository. Check if it's a valid git repository.",
+      "switchBranch": "Could not switch branch. You may have uncommitted changes.",
+      "pullFailed": "Could not pull changes. There might be conflicts.",
+      "pushFailed": "Could not push changes. Make sure you have the right permissions.",
+      "syncFailed": "Synchronization error with the remote server.",
+      "branchNameEmpty": "The name cannot be empty",
+      "branchExists": "A branch with that name already exists",
+      "branchInvalid": "Only letters, numbers, hyphens, and dots",
+      "gitError": "Git Error: An unexpected issue occurred.",
+      "deleteRemoteFailed": "Branch \"{{branch}}\" deleted locally, but failed on GitHub.",
+      "deleteFailed": "Error deleting the branch.",
+      "general": "An unexpected error occurred."
+    }
+  },
+  "merge": {
+    "title": "Merge & Conflicts",
+    "selectBranch": "Select a branch to merge",
+    "noAvailableBranches": "No branches available",
+    "initiateMerge": "Initiate Merge",
+    "compareDiff": "Compare Differences",
+    "abortMerge": "Abort Merge",
+    "status": {
+      "idle": "Ready to merge",
+      "merging": "Merging...",
+      "conflict": "Conflicts detected",
+      "success": "Merge completed",
+      "error": "Merge error"
+    },
+    "conflict": {
+      "title": "Conflict #{{id}}",
+      "resolved": "Conflict resolved",
+      "yourChanges": "Your changes (HEAD)",
+      "incomingChanges": "Incoming changes",
+      "empty": "(empty)",
+      "acceptYours": "Accept Mine",
+      "acceptTheirs": "Accept Incoming",
+      "acceptBoth": "Keep Both",
+      "undoResolution": "Undo"
+    },
+    "fileConflict": {
+      "selectFile": "Select a file to resolve the conflict",
+      "saveFile": "Save file changes",
+      "finishMerge": "Complete Merge",
+      "noConflictFiles": "No conflict files"
+    },
+    "diff": {
+      "title": "Differences: {{from}} → {{to}}",
+      "noDifferences": "No differences",
+      "close": "Close",
+      "viewOnGitHub": "View on GitHub"
+    },
+    "messages": {
+      "uncommittedChanges": "You have uncommitted changes. Please commit or discard changes before merging.",
+      "selectSourceBranch": "Please select a source branch",
+      "noFolder": "No folder opened",
+      "pushSuccess": "✓ Changes pushed to GitHub successfully",
+      "pushAfterMerge": "Merge completed locally, but push to remote failed",
+      "pushAfterCommit": "Merge committed locally, but push to remote failed"
+    },
+    "errors": {
+      "connectionError": "Connection error",
+      "pullDiff": "Error getting diff"
+    }
+  },
+  "clone": {
+    "title": "Clone Remote Repository",
+    "subtitle": "Select a project from your cloud account to bring it to your local computer.",
+    "search": {
+      "placeholder": "Search repository by name or description...",
+      "accountFilter": "All accounts"
+    },
+    "list": {
+      "projectHeader": "Project",
+      "lastPushHeader": "Last push",
+      "noResults": "No repositories found matching the search.",
+      "noRepositories": "You don't have available repositories.",
+      "private": "Private",
+      "public": "Public",
+      "notFound": "N/A"
+    },
+    "destination": {
+      "label": "Local destination folder",
+      "placeholder": "Select the folder where you want to clone the project...",
+      "browse": "Browse",
+      "willCreate": "👉 The following folder will be created:"
+    },
+    "errors": {
+      "noConnectedAccounts": "No Git accounts connected",
+      "noAccountsText": "You must first connect an account (like GitHub, GitLab or Gitea) in the settings section to list your repositories.",
+      "selectRepo": "Please select a repository to clone",
+      "selectFolder": "Please select a local destination folder",
+      "unknown": "An unexpected error occurred when cloning the repository.",
+      "connection": "Connection error with the cloning system."
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "cloning": "Cloning...",
+      "clone": "Clone Project"
+    },
+    "messages": {
+      "cloning": "Cloning remote repository...",
+      "cloningDesc": "This may take a few seconds depending on the project size."
+    }
+  },
+  "provider": {
+    "title": "Connected Accounts",
+    "noAccounts": "No accounts connected yet",
+    "accountCount_one": "{{count}} active account",
+    "accountCount_other": "{{count}} active accounts",
+    "selectProvider": "Select a provider",
+    "manageAccounts": "Manage Accounts",
+    "connectNewAccount": "Connect New Account",
+    "addAccount": "Add account",
+    "activeAccounts": "Active accounts",
+    "addMore": "Add another account",
+    "connectFirst": "Connect your first account",
+    "connected_one": "account connected",
+    "connected_other": "accounts connected",
+    "disconnected": "Not connected",
+    "card": {
+      "accountsConnected_one": "{{count}} account connected",
+      "accountsConnected_other": "{{count}} accounts connected"
+    },
+    "connect": {
+      "title": "Connect {{provider}}",
+      "auth": "Personal token authentication",
+      "getToken": "Get {{provider}} token",
+      "openBrowser": "Opens in browser"
+    },
+    "giteaHint": "💡 Enter the root URL of your instance, e.g. https://git.myserver.com. Then create the token in /user/settings/applications.",
+    "security": "Your token is stored in localStorage of this browser and never leaves your computer except to communicate directly with {{provider}}.",
+    "fields": {
+      "token": "Personal Token",
+      "username": "Username",
+      "appPassword": "App Password",
+      "url": "Instance URL"
+    },
+    "actions": {
+      "back": "Back",
+      "test": "Test Connection",
+      "testing": "Testing...",
+      "connect": "Save and Connect",
+      "checkFirst": "Test first",
+      "testConnection": "Test connection",
+      "saving": "Saving...",
+      "save": "Save and connect",
+      "refresh": "Refresh repositories",
+      "disconnect": "Disconnect account"
+    },
+    "account": {
+      "repositories": "repositories"
+    },
+    "connection": {
+      "success": "Connection successful!",
+      "connectedAs": "Connected as",
+      "error": "Connection error"
+    },
+    "status": {
+      "success": "Connection successful!",
+      "successText": "Connected as @{{user}}",
+      "error": "Connection error"
+    },
+    "empty": {
+      "connectAccount": "Connect an account to see your real repositories",
+      "mockData": "For now, MonGit works with example data",
+      "privacy": "Your credentials are stored locally in your browser and never sent to MonGit servers."
+    }
+  },
+  "localRepo": {
+    "title": "Local Changes",
+    "noFolder": "Open a repository folder to get started",
+    "modifiedFiles": "Modified files ({{count}})",
+    "all": "All",
+    "noChanges": "No unsaved changes",
+    "commitPlaceholder": "Describe your changes...",
+    "commitButton_one": "Commit ({{count}} file)",
+    "commitButton_other": "Commit ({{count}} files)",
+    "pushButton": "Push",
+    "noPushPending": "No changes to push",
+    "pushTitle": "Push changes to server",
+    "messages": {
+      "commitSuccess": "Commit created successfully",
+      "pushSuccess": "Changes pushed successfully"
+    },
+    "errors": {
+      "loadStatus": "Error loading repository status",
+      "commitFailed": "Error creating commit",
+      "pushFailed": "Error pushing changes",
+      "general": "An unexpected error occurred"
+    }
+  },
+  "i18n": {
+    "language": "Language",
+    "english": "English",
+    "spanish": "Español"
+  }
+}

@@ -1,0 +1,286 @@
+{
+  "app": {
+    "title": "MonGit Desktop v1.0.0",
+    "welcomeTitle": "Bienvenido a MonGit",
+    "welcomeSubtitle": "Un cliente Git de escritorio ultrarrápido y premium para gestionar tus repositorios locales con facilidad.",
+    "buttons": {
+      "cancel": "Cancelar",
+      "confirm": "Confirmar",
+      "openFolder": "Abrir Carpeta Local...",
+      "openOtherFolder": "Abrir Otra Carpeta...",
+      "newRepo": "Nuevo Repo...",
+      "cloneRepo": "Clonar Repo...",
+      "connectCloud": "Conectar Cuenta Cloud...",
+      "sync": "Sincronizar (Pull & Push)",
+      "providers": "Proveedores Git",
+      "newBranch": "Nueva Rama",
+      "createRepo": "Crear Repositorio",
+      "refreshHistory": "Actualizar historial",
+      "viewIn": "Ver en {{provider}}",
+      "comingSoon": "Función próximamente",
+      "viewFullDiff": "Ver diff completo",
+      "revert": "Revertir"
+    },
+    "tabs": {
+      "history": "Historial",
+      "merge": "Fusión y Conflictos"
+    },
+    "sidebar": {
+      "myBranches": "Mis Ramas",
+      "repositories": "Repositorios",
+      "remoteBranch": "Rama Remota"
+    },
+    "status": {
+      "loadingData": "Cargando datos...",
+      "noCommits": "No se encontraron commits en la rama \"{{branch}}\".",
+      "prepareCommits": "Prepara cambios y realiza tu primer commit en el panel derecho.",
+      "noMessage": "(Sin mensaje)",
+      "folderOpen": "Carpeta abierta: {{path}}",
+      "noFolder": "No hay carpeta abierta",
+      "pullChanges": "Descargar cambios",
+      "pushChanges": "Subir mis cambios",
+      "allSynced": "Todo actualizado"
+    },
+    "modals": {
+      "createRepo": {
+        "title": "Crear Nuevo Repositorio",
+        "targetAccount": "Cuenta destino",
+        "selectAccount": "Selecciona una cuenta",
+        "repoName": "Nombre del repositorio",
+        "repoNamePlaceholder": "ej: mi-nuevo-proyecto",
+        "description": "Descripción (Opcional)",
+        "descriptionPlaceholder": "Breve descripción del proyecto",
+        "privacy": "Privacidad",
+        "public": "🌍 Público",
+        "private": "🔒 Privado",
+        "creating": "Creando repositorio e inicializando con README...",
+        "errors": {
+          "nameRequired": "El nombre es obligatorio",
+          "accountRequired": "Selecciona una cuenta",
+          "tryAgain": "Inténtelo de nuevo"
+        }
+      },
+      "newBranch": {
+        "title": "Nueva Rama",
+        "subtitle": "A partir de \"{{branch}}\"",
+        "placeholder": "ej: feature-perfil"
+      },
+      "deleteBranch": {
+        "title": "¿Eliminar rama?",
+        "subtitle": "Esta acción es irreversible.",
+        "confirmation": "¿Estás seguro de que deseas eliminar la rama local",
+        "warning": "Atención:",
+        "warningText": "Si esta rama tiene cambios o commits locales que no han sido fusionados con la rama principal (main), se perderán definitivamente.",
+        "deleteRemote": "Eliminar también de GitHub (remoto)"
+      }
+    },
+    "messages": {
+      "connectCloudFirst": "Por favor, conecta una cuenta en la nube (como GitHub) primero.",
+      "branchSwitched": "Cambiado a la rama \"{{branch}}\"",
+      "syncedSuccessfully": "Sincronizado correctamente con origen (Pull & Push)",
+      "commitSaved": "✓ Commit guardado: \"{{message}}...\"",
+      "undoSuccess": "Último commit deshecho correctamente",
+      "branchCreated": "Rama \"{{branch}}\" creada y activada",
+      "repoCreated": "Repositorio \"{{name}}\" creado con éxito",
+      "repoCloned": "✓ Repositorio clonado con éxito",
+      "branchDeletedLocal": "Rama \"{{branch}}\" eliminada correctamente (local)",
+      "branchDeletedBoth": "Rama \"{{branch}}\" eliminada correctamente (local y de GitHub)"
+    },
+    "errors": {
+      "loadLocalRepo": "Error cargando repositorio local. Comprueba que sea un repositorio git válido.",
+      "switchBranch": "No se pudo cambiar a la rama. Puede haber cambios sin guardar.",
+      "pullFailed": "No se pudieron descargar los cambios. Puede haber conflictos.",
+      "pushFailed": "No se pudieron subir los cambios. Asegúrate de tener permisos.",
+      "syncFailed": "Error de sincronización con el servidor remoto.",
+      "branchNameEmpty": "El nombre no puede estar vacío",
+      "branchExists": "Ya existe una rama con ese nombre",
+      "branchInvalid": "Solo letras, números, guiones y puntos",
+      "gitError": "Error de Git: Ocurrió un problema inesperado.",
+      "deleteRemoteFailed": "Rama \"{{branch}}\" eliminada localmente, pero falló en GitHub.",
+      "deleteFailed": "Error al eliminar la rama.",
+      "general": "Ocurrió un error inesperado."
+    }
+  },
+  "merge": {
+    "title": "Fusión y Conflictos",
+    "selectBranch": "Selecciona una rama para fusionar",
+    "noAvailableBranches": "No hay ramas disponibles",
+    "initiateMerge": "Iniciar Fusión",
+    "compareDiff": "Comparar Diferencias",
+    "abortMerge": "Cancelar Fusión",
+    "status": {
+      "idle": "Listo para fusionar",
+      "merging": "Fusionando...",
+      "conflict": "Conflictos detectados",
+      "success": "Fusión completada",
+      "error": "Error en la fusión"
+    },
+    "conflict": {
+      "title": "Conflicto #{{id}}",
+      "resolved": "Conflicto resuelto",
+      "yourChanges": "Tus cambios (HEAD)",
+      "incomingChanges": "Cambios entrantes",
+      "empty": "(vacío)",
+      "acceptYours": "Aceptar Míos",
+      "acceptTheirs": "Aceptar Entrantes",
+      "acceptBoth": "Mantener Ambos",
+      "undoResolution": "Deshacer"
+    },
+    "fileConflict": {
+      "selectFile": "Selecciona un archivo para resolver el conflicto",
+      "saveFile": "Guardar cambios en archivo",
+      "finishMerge": "Completar Fusión",
+      "noConflictFiles": "No hay archivos con conflictos"
+    },
+    "diff": {
+      "title": "Diferencias: {{from}} → {{to}}",
+      "noDifferences": "No hay diferencias",
+      "close": "Cerrar",
+      "viewOnGitHub": "Ver en GitHub"
+    },
+    "messages": {
+      "uncommittedChanges": "Hay cambios sin commitear. Por favor realiza un commit o descarta los cambios antes de fusionar.",
+      "selectSourceBranch": "Por favor selecciona una rama de origen",
+      "noFolder": "No hay carpeta abierta",
+      "pushSuccess": "✓ Cambios enviados a GitHub correctamente",
+      "pushAfterMerge": "La fusión se completó localmente, pero el envío al remoto falló",
+      "pushAfterCommit": "La fusión se confirmó localmente, pero el envío al remoto falló"
+    },
+    "errors": {
+      "connectionError": "Error de conexión",
+      "pullDiff": "Error al obtener el diff"
+    }
+  },
+  "clone": {
+    "title": "Clonar Repositorio Remoto",
+    "subtitle": "Selecciona un proyecto de tu cuenta en la nube para traerlo a tu equipo local.",
+    "search": {
+      "placeholder": "Buscar repositorio por nombre o descripción...",
+      "accountFilter": "Todas las cuentas"
+    },
+    "list": {
+      "projectHeader": "Proyecto",
+      "lastPushHeader": "Último push",
+      "noResults": "No se encontraron repositorios que coincidan con la búsqueda.",
+      "noRepositories": "No tienes repositorios disponibles.",
+      "private": "Privado",
+      "public": "Público",
+      "notFound": "N/D"
+    },
+    "destination": {
+      "label": "Carpeta de destino local",
+      "placeholder": "Selecciona la carpeta donde quieres clonar el proyecto...",
+      "browse": "Examinar",
+      "willCreate": "👉 Se creará la carpeta:"
+    },
+    "errors": {
+      "noConnectedAccounts": "No hay cuentas Git conectadas",
+      "noAccountsText": "Primero debes conectar una cuenta (como GitHub, GitLab o Gitea) en la sección de configuración para poder listar tus repositorios.",
+      "selectRepo": "Por favor selecciona un repositorio para clonar",
+      "selectFolder": "Por favor selecciona la carpeta de destino local",
+      "unknown": "Ocurrió un error inesperado al clonar el repositorio.",
+      "connection": "Error de conexión con el sistema de clonación."
+    },
+    "buttons": {
+      "cancel": "Cancelar",
+      "cloning": "Clonando...",
+      "clone": "Clonar Proyecto"
+    },
+    "messages": {
+      "cloning": "Clonando repositorio remoto...",
+      "cloningDesc": "Esto puede demorar unos segundos dependiendo del tamaño del proyecto."
+    }
+  },
+  "provider": {
+    "title": "Cuentas conectadas",
+    "noAccounts": "Ninguna cuenta conectada aún",
+    "accountCount_one": "{{count}} cuenta activa",
+    "accountCount_other": "{{count}} cuentas activas",
+    "selectProvider": "Selecciona un proveedor",
+    "manageAccounts": "Gestionar Cuentas",
+    "connectNewAccount": "Conectar Nueva Cuenta",
+    "addAccount": "Añadir cuenta",
+    "activeAccounts": "Cuentas activas",
+    "addMore": "Añadir otra cuenta",
+    "connectFirst": "Conecta tu primera cuenta",
+    "connected_one": "cuenta conectada",
+    "connected_other": "cuentas conectadas",
+    "disconnected": "No conectado",
+    "card": {
+      "accountsConnected_one": "{{count}} cuenta conectada",
+      "accountsConnected_other": "{{count}} cuentas conectadas"
+    },
+    "connect": {
+      "title": "Conectar {{provider}}",
+      "auth": "Autenticación por token personal",
+      "getToken": "Obtener token de {{provider}}",
+      "openBrowser": "Se abre en el navegador"
+    },
+    "giteaHint": "💡 Introduce la URL raíz de tu instancia, p.ej. https://git.miserver.com. Luego crea el token en /user/settings/applications.",
+    "security": "Tu token se guarda en localStorage de este navegador y nunca sale de tu ordenador salvo para comunicarse directamente con {{provider}}.",
+    "fields": {
+      "token": "Token Personal",
+      "username": "Nombre de usuario",
+      "appPassword": "App Password",
+      "url": "URL de la instancia"
+    },
+    "actions": {
+      "back": "Atrás",
+      "test": "Probar Conexión",
+      "testing": "Probando...",
+      "connect": "Guardar y Conectar",
+      "checkFirst": "Prueba primero",
+      "testConnection": "Probar conexión",
+      "saving": "Guardando...",
+      "save": "Guardar y conectar",
+      "refresh": "Actualizar repositorios",
+      "disconnect": "Desconectar cuenta"
+    },
+    "account": {
+      "repositories": "repositorios"
+    },
+    "connection": {
+      "success": "¡Conexión exitosa!",
+      "connectedAs": "Conectado como",
+      "error": "Error de conexión"
+    },
+    "status": {
+      "success": "¡Conexión exitosa!",
+      "successText": "Conectado como @{{user}}",
+      "error": "Error de conexión"
+    },
+    "empty": {
+      "connectAccount": "Conecta una cuenta para ver tus repositorios reales",
+      "mockData": "Mientras tanto, MonGit funciona con datos de ejemplo",
+      "privacy": "Tus credenciales se guardan localmente en tu navegador y nunca se envían a los servidores de MonGit."
+    }
+  },
+  "localRepo": {
+    "title": "Cambios Locales",
+    "noFolder": "Abre una carpeta de repositorio para empezar",
+    "modifiedFiles": "Archivos modificados ({{count}})",
+    "all": "Todos",
+    "noChanges": "No hay cambios sin guardar",
+    "commitPlaceholder": "Describe tus cambios...",
+    "commitButton_one": "Commit ({{count}} archivo)",
+    "commitButton_other": "Commit ({{count}} archivos)",
+    "pushButton": "Push",
+    "noPushPending": "No hay cambios sin enviar",
+    "pushTitle": "Enviar cambios al servidor",
+    "messages": {
+      "commitSuccess": "Commit realizado correctamente",
+      "pushSuccess": "Cambios enviados correctamente"
+    },
+    "errors": {
+      "loadStatus": "Error al cargar el estado del repositorio",
+      "commitFailed": "Error al hacer commit",
+      "pushFailed": "Error al enviar cambios",
+      "general": "Ocurrió un error inesperado"
+    }
+  },
+  "i18n": {
+    "language": "Idioma",
+    "english": "English",
+    "spanish": "Español"
+  }
+}

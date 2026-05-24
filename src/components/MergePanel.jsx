@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   GitMerge, GitBranch, AlertTriangle, Check, X,
   ChevronRight, FileWarning, RefreshCw, ArrowRight,
@@ -172,6 +173,7 @@ function ConflictBlock({ block, onResolve }) {
 // ─── Main MergePanel Component ──────────────────────────────────────────────────
 
 export default function MergePanel({ folderPath, branches, activeBranch, onMergeComplete }) {
+  const { t } = useTranslation()
   const [fromBranch, setFromBranch] = useState('')
   const [mergeState, setMergeState] = useState('idle') // idle | merging | conflict | success | error
   const [pushStatusMsg, setPushStatusMsg] = useState('')
@@ -226,12 +228,11 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
   // ── Initiate merge ───────────────────────────────────────────────────────
   const handleMerge = async () => {
     if (!fromBranch) {
-      setErrorMsg('Por favor selecciona una rama de origen')
-      return
-    }
-    if (!folderPath) {
-      setErrorMsg('No hay carpeta abierta')
-      return
+        setErrorMsg(t('merge.messages.selectSourceBranch'))
+        return
+      }
+      if (!folderPath) {
+        setErrorMsg(t('merge.messages.noFolder'))
     }
 
     // Check for uncommitted changes before merging (ignore untracked files)
@@ -239,7 +240,7 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
       const statusResult = await window.electronAPI.getGitStatus(folderPath);
       const pending = (statusResult || []).filter(f => f.status && !f.status.startsWith('??'));
       if (pending.length > 0) {
-        setErrorMsg('Hay cambios sin commitear. Por favor realiza un commit o descarta los cambios antes de fusionar.');
+        setErrorMsg(t('merge.messages.uncommittedChanges'));
         setLoading(false);
         return;
       }
@@ -267,9 +268,9 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
           console.log('Push result:', pushResult)
           if (!pushResult.success) {
             console.error('Push after merge failed:', pushResult.error)
-            setErrorMsg('La fusión se completó localmente, pero el envío al remoto falló:\n' + (pushResult.error || 'Error desconocido'))
+            setErrorMsg(t('merge.messages.pushAfterMerge') + (pushResult.error || 'Error desconocido'))
           } else {
-            setPushStatusMsg('✓ Cambios enviados a GitHub correctamente')
+            setPushStatusMsg(t('merge.messages.pushSuccess'))
           }
         } catch (pushErr) {
           console.error('Push after merge exception:', pushErr)
@@ -512,13 +513,13 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
           {!folderPath ? (
             <div className="text-center text-slate-500">
               <GitMerge size={48} className="mx-auto mb-4 opacity-40" />
-              <p className="text-sm">Abre una carpeta local para gestionar fusiones.</p>
+              <p className="text-sm">{t('merge.messages.noFolder')}</p>
             </div>
           ) : availableBranches.length === 0 ? (
             <div className="text-center text-slate-500">
               <GitBranch size={48} className="mx-auto mb-4 opacity-40" />
-              <p className="text-sm">Solo existe una rama en este repositorio.</p>
-              <p className="text-xs text-slate-600 mt-1">Crea una nueva rama para poder fusionar.</p>
+              <p className="text-sm">{t('merge.selectBranch')}</p>
+              <p className="text-xs text-slate-600 mt-1">{t('merge.noAvailableBranches')}</p>
             </div>
           ) : (
             <>
