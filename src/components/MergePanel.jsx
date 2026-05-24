@@ -594,6 +594,10 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
     
     // Convert git URL to GitHub URL
     let repoUrl = remoteUrl
+    
+    // Strip credentials if present (e.g., https://user:token@github.com/...)
+    repoUrl = repoUrl.replace(/https:\/\/[^@]+@/, 'https://')
+    
     if (repoUrl.startsWith('git@github.com:')) {
       repoUrl = repoUrl.replace('git@github.com:', 'https://github.com/').replace('.git', '')
     } else if (repoUrl.endsWith('.git')) {
