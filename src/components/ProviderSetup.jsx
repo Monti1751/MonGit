@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   X, CheckCircle2, AlertCircle, ExternalLink,
   RefreshCw, Trash2, Plus, ChevronLeft, Shield,
@@ -10,6 +11,7 @@ const PROVIDER_ORDER = ['github', 'gitlab', 'bitbucket', 'codeberg', 'gitea']
 
 // ─── Provider card shown in the selection step ────────────────────────────────
 function ProviderCard({ meta, connectedAccounts, onClick }) {
+  const { t } = useTranslation()
   return (
     <button
       onClick={onClick}
@@ -32,10 +34,10 @@ function ProviderCard({ meta, connectedAccounts, onClick }) {
         <p className="font-semibold text-white text-sm">{meta.name}</p>
         {connectedAccounts.length > 0 ? (
           <p className="text-xs mt-0.5" style={{ color: meta.color }}>
-            {connectedAccounts.length} cuenta{connectedAccounts.length > 1 ? 's' : ''} conectada{connectedAccounts.length > 1 ? 's' : ''}
+            {t('provider.connected', { count: connectedAccounts.length })}
           </p>
         ) : (
-          <p className="text-xs text-slate-500 mt-0.5">No conectado</p>
+          <p className="text-xs text-slate-500 mt-0.5">{t('provider.disconnected')}</p>
         )}
       </div>
       <div
@@ -43,7 +45,7 @@ function ProviderCard({ meta, connectedAccounts, onClick }) {
         style={{ backgroundColor: meta.color + '20', color: meta.color }}
       >
         <Plus size={11} />
-        Añadir cuenta
+        {t('provider.addAccount')}
       </div>
     </button>
   )
@@ -51,6 +53,7 @@ function ProviderCard({ meta, connectedAccounts, onClick }) {
 
 // ─── Connected account row in the "Manage" view ───────────────────────────────
 function AccountRow({ provider, account, onRemove, onRefresh }) {
+  const { t } = useTranslation()
   const meta = PROVIDER_META[account.providerId]
   const user = account.user
   const displayName = user?.login || user?.username || user?.nickname || user?.name || '?'
@@ -72,18 +75,18 @@ function AccountRow({ provider, account, onRemove, onRefresh }) {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-white truncate">@{displayName}</p>
-        <p className="text-xs text-slate-500">{account.repos?.length ?? 0} repositorios</p>
+        <p className="text-xs text-slate-500">{account.repos?.length ?? 0} {t('provider.account.repositories')}</p>
       </div>
       <button
         onClick={() => onRefresh(account.id)}
-        title="Actualizar repositorios"
+        title={t('provider.actions.refresh')}
         className="p-1.5 rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-white transition-colors"
       >
         <RefreshCw size={13} className={account.status === 'loading' ? 'animate-spin' : ''} />
       </button>
       <button
         onClick={() => onRemove(account.id)}
-        title="Desconectar cuenta"
+        title={t('provider.actions.disconnect')}
         className="p-1.5 rounded-lg hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition-colors"
       >
         <Trash2 size={13} />
@@ -94,6 +97,7 @@ function AccountRow({ provider, account, onRemove, onRefresh }) {
 
 // ─── The credential form for a specific provider ──────────────────────────────
 function ConnectForm({ providerId, onConnect, onBack }) {
+  const { t } = useTranslation()
   const meta = PROVIDER_META[providerId]
   const [fields, setFields] = useState(
     Object.fromEntries(meta.fields.map(f => [f.key, '']))
@@ -156,8 +160,8 @@ function ConnectForm({ providerId, onConnect, onBack }) {
         <div className="flex items-center gap-2">
           <span className="text-2xl">{meta.icon}</span>
           <div>
-            <h3 className="font-semibold text-white">Conectar {meta.name}</h3>
-            <p className="text-xs text-slate-400">Autenticación por token personal</p>
+            <h3 className="font-semibold text-white">{t('provider.connect.title', { provider: meta.name })}</h3>
+            <p className="text-xs text-slate-400">{t('provider.connect.auth')}</p>
           </div>
         </div>
       </div>
@@ -172,16 +176,15 @@ function ConnectForm({ providerId, onConnect, onBack }) {
           style={{ borderColor: meta.color + '50', color: meta.color, background: meta.bgColor }}
         >
           <ExternalLink size={14} />
-          {meta.tokenHelpText || `Obtener token de ${meta.name}`}
-          <span className="ml-auto text-xs opacity-60">Se abre en el navegador</span>
+          {meta.tokenHelpText || t('provider.connect.getToken', { provider: meta.name })}
+          <span className="ml-auto text-xs opacity-60">{t('provider.connect.openBrowser')}</span>
         </a>
       )}
 
       {/* Gitea URL hint */}
       {providerId === 'gitea' && (
         <div className="px-3 py-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-xs text-slate-400">
-          💡 Introduce la URL raíz de tu instancia, p.ej. <code className="text-green-400">https://git.miserver.com</code>.<br />
-          Luego crea el token en <code className="text-green-400">/user/settings/applications</code>.
+          {t('provider.giteaHint')}
         </div>
       )}
 
@@ -230,9 +233,9 @@ function ConnectForm({ providerId, onConnect, onBack }) {
         <div className="flex items-center gap-3 px-4 py-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10">
           <CheckCircle2 size={16} className="text-emerald-400 flex-shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-emerald-300">¡Conexión exitosa!</p>
+            <p className="text-sm font-medium text-emerald-300">{t('provider.connection.success')}</p>
             <p className="text-xs text-emerald-400/70 truncate">
-              Conectado como @{testUser.login || testUser.username || testUser.nickname || testUser.display_name}
+              {t('provider.connection.connectedAs')} @{testUser.login || testUser.username || testUser.nickname || testUser.display_name}
             </p>
           </div>
         </div>
@@ -241,7 +244,7 @@ function ConnectForm({ providerId, onConnect, onBack }) {
         <div className="flex items-start gap-3 px-4 py-3 rounded-xl border border-rose-500/30 bg-rose-500/10">
           <AlertCircle size={16} className="text-rose-400 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-rose-300">Error de conexión</p>
+            <p className="text-sm font-medium text-rose-300">{t('provider.connection.error')}</p>
             <p className="text-xs text-rose-400/70 mt-0.5">{errorMsg}</p>
           </div>
         </div>
@@ -256,8 +259,8 @@ function ConnectForm({ providerId, onConnect, onBack }) {
             className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-slate-600 text-slate-200 hover:bg-slate-700/50 transition-all text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {status === 'testing'
-              ? <><RefreshCw size={14} className="animate-spin" /> Probando…</>
-              : <><Wifi size={14} /> Probar conexión</>}
+              ? <><RefreshCw size={14} className="animate-spin" /> {t('provider.actions.testing')}</>
+              : <><Wifi size={14} /> {t('provider.actions.test')}</>}
           </button>
         ) : (
           <button
@@ -267,8 +270,8 @@ function ConnectForm({ providerId, onConnect, onBack }) {
             style={{ backgroundColor: meta.color }}
           >
             {status === 'connecting'
-              ? <><RefreshCw size={14} className="animate-spin" /> Guardando…</>
-              : <><CheckCircle2 size={14} /> Guardar y conectar</>}
+              ? <><RefreshCw size={14} className="animate-spin" /> {t('provider.actions.saving')}</>
+              : <><CheckCircle2 size={14} /> {t('provider.actions.connect')}</>}
           </button>
         )}
       </div>
@@ -278,6 +281,7 @@ function ConnectForm({ providerId, onConnect, onBack }) {
 
 // ─── Main modal ───────────────────────────────────────────────────────────────
 export default function ProviderSetup({ providers, onAdd, onRemove, onRefresh, onClose }) {
+  const { t } = useTranslation()
   const [step, setStep] = useState('list') // 'list' | providerId
   const [connecting, setConnecting] = useState(false)
 
@@ -304,9 +308,9 @@ export default function ProviderSetup({ providers, onAdd, onRemove, onRefresh, o
               <User size={15} className="text-white" />
             </div>
             <div>
-              <h2 className="font-bold text-white text-base">Cuentas conectadas</h2>
+              <h2 className="font-bold text-white text-base">{t('provider.title')}</h2>
               <p className="text-xs text-slate-400">
-                {totalAccounts === 0 ? 'Ninguna cuenta conectada aún' : `${totalAccounts} cuenta${totalAccounts > 1 ? 's' : ''} activa${totalAccounts > 1 ? 's' : ''}`}
+                {totalAccounts === 0 ? t('provider.noAccounts') : t('provider.accountCount', { count: totalAccounts })}
               </p>
             </div>
           </div>
@@ -324,7 +328,7 @@ export default function ProviderSetup({ providers, onAdd, onRemove, onRefresh, o
               {/* Connected accounts */}
               {providers.length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">Cuentas activas</p>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">{t('provider.activeAccounts')}</p>
                   {providers.map(account => (
                     <AccountRow
                       key={account.id}
@@ -339,7 +343,7 @@ export default function ProviderSetup({ providers, onAdd, onRemove, onRefresh, o
               {/* Provider selection grid */}
               <div>
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-3">
-                  {providers.length > 0 ? 'Añadir otra cuenta' : 'Conecta tu primera cuenta'}
+                  {providers.length > 0 ? t('provider.addMore') : t('provider.connectFirst')}
                 </p>
                 <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
                   {PROVIDER_ORDER.map(id => (
@@ -356,10 +360,10 @@ export default function ProviderSetup({ providers, onAdd, onRemove, onRefresh, o
               {providers.length === 0 && (
                 <div className="text-center py-4">
                   <WifiOff size={28} className="text-slate-600 mx-auto mb-2" />
-                  <p className="text-sm text-slate-400">Conecta una cuenta para ver tus repositorios reales</p>
-                  <p className="text-xs text-slate-600 mt-1">Mientras tanto, MonGit funciona con datos de ejemplo</p>
+                  <p className="text-sm text-slate-400">{t('provider.empty.connectAccount')}</p>
+                  <p className="text-xs text-slate-600 mt-1">{t('provider.empty.mockData')}</p>
                   <p className="text-xs text-slate-600 max-w-xs mt-3 text-center px-4 mx-auto border-t border-slate-700/50 pt-3">
-                    Tus credenciales se guardan localmente en tu navegador y nunca se envían a los servidores de MonGit.
+                    {t('provider.empty.privacy')}
                   </p>
                 </div>
               )}
