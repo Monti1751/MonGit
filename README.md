@@ -35,8 +35,38 @@
 * **Sincronización Total (Pull & Push)**: Botón dedicado en la barra superior para sincronizar tus cambios locales con el repositorio en la nube en un solo paso.
 
 ### 4. 🔒 Soporte Multicuenta y Nube
-* **Panel de Configuración de Proveedores**: Conecta y gestiona tus cuentas de GitHub, GitLab y otros proveedores de Git Cloud.
+* **Panel de Configuración de Proveedores**: Conecta y gestiona tus cuentas de múltiples proveedores Git:
+  * 🐙 **GitHub**
+  * 🦊 **GitLab**
+  * 🪣 **Bitbucket**
+  * 🐦 **Codeberg**
+  * 🍃 **Gitea**
 * **Selector Local-First**: Abre cualquier carpeta de tu ordenador al instante para empezar a trabajar de inmediato en local.
+* **Prueba de Conexión**: Verifica automáticamente la conectividad con tus cuentas cloud en tiempo real.
+
+### 5. 📥 Clonación de Repositorios
+* **Clonación Inteligente**: Busca y clona repositorios desde todas tus cuentas conectadas.
+* **Filtro por Proveedor**: Filtra repositorios por proveedor específico o visualiza todos a la vez.
+* **Búsqueda Avanzada**: Busca por nombre de repositorio o descripción.
+* **Selección de Carpeta**: Elige dónde guardar el repositorio clonado en tu sistema local.
+
+### 6. ✨ Creación de Nuevos Repositorios
+* **Crear en la Nube**: Crea nuevos repositorios directamente desde MonGit en tu cuenta cloud.
+* **Configuración Flexible**: Establece privacidad (público/privado), nombre y descripción.
+* **Inicialización Automática**: Se crea automáticamente con archivo README.
+
+### 7. 🔄 Resolución de Conflictos de Merge
+* **Detección Automática**: Identifica conflictos durante operaciones de merge.
+* **Editor de Conflictos Interactivo**: Visualiza y resuelve conflictos línea por línea.
+* **Dos Estrategias de Resolución**: 
+  * Usar cambios locales (theirs)
+  * Usar cambios remotos (ours)
+* **Validación de Merge**: Completa el merge una vez resueltos todos los conflictos.
+
+### 8. 🌍 Internacionalización (i18n)
+* **Soporte Multiidioma**: Interfaz completa en español e inglés.
+* **Detección Automática**: Se adapta al idioma del sistema operativo.
+* **Fácil de Extender**: Estructura lista para agregar más idiomas.
 
 ---
 
