@@ -5,13 +5,14 @@ import {
   Plus, ChevronDown, RotateCcw,
   Code2, Folder, FolderPlus, X, Check,
   AlertCircle, Clock, Layers,
-  RefreshCw, Terminal, Eye, Info, UserPlus, Trash2, Globe
+  RefreshCw, Terminal, Eye, Info, UserPlus, Trash2, Globe, Zap
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useProviders } from './hooks/useProviders'
 import ProviderSetup from './components/ProviderSetup'
 import LocalRepoPanel from './components/LocalRepoPanel'
 import MergePanel from './components/MergePanel'
+import GitOperationsPanel from './components/GitOperationsPanel'
 import CloneRepoModal from './components/CloneRepoModal'
 
 // ─── Initial mock data (Fallback) ─────────────────────────────────────────────
@@ -747,6 +748,17 @@ export default function App() {
                   <GitMerge size={15} />
                   {t('app.tabs.merge')}
                 </button>
+                <button
+                  onClick={() => setActiveTab('advanced')}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${
+                    activeTab === 'advanced'
+                      ? 'bg-slate-700 text-white shadow-lg'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Zap size={15} />
+                  Advanced
+                </button>
               </div>
               
               {activeTab === 'history' && (
@@ -943,6 +955,17 @@ export default function App() {
                   onMergeComplete={() => {
                     loadLocalRepoData(localFolderPath, activeBranch)
                   }}
+                />
+              </div>
+            )}
+
+            {activeTab === 'advanced' && (
+              <div className="h-full p-4">
+                <GitOperationsPanel
+                  folderPath={localFolderPath}
+                  commits={activeCommits}
+                  activeBranch={activeBranch}
+                  branches={localBranches}
                 />
               </div>
             )}

@@ -22,5 +22,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
   writeFileContent: (folderPath, filePath, content) => ipcRenderer.invoke('write-file-content', folderPath, filePath, content),
   gitStageFile: (folderPath, filePath) => ipcRenderer.invoke('git-stage-file', folderPath, filePath),
   gitCommitMerge: (folderPath, message) => ipcRenderer.invoke('git-commit-merge', folderPath, message),
-  gitClone: (url, parentFolder, repoName) => ipcRenderer.invoke('git-clone', url, parentFolder, repoName)
+  gitClone: (url, parentFolder, repoName) => ipcRenderer.invoke('git-clone', url, parentFolder, repoName),
+  openExternalUrl: (url) => ipcRenderer.invoke('open-external-url', url),
+  // ── Advanced Git Operations ──────────────────────────────────────────────
+  gitStash: (folderPath, message) => ipcRenderer.invoke('git-stash', folderPath, message),
+  gitStashList: (folderPath) => ipcRenderer.invoke('git-stash-list', folderPath),
+  gitStashApply: (folderPath, index) => ipcRenderer.invoke('git-stash-apply', folderPath, index),
+  gitStashPop: (folderPath, index) => ipcRenderer.invoke('git-stash-pop', folderPath, index),
+  gitStashDrop: (folderPath, index) => ipcRenderer.invoke('git-stash-drop', folderPath, index),
+  gitCherryPick: (folderPath, commitId, targetBranch) => ipcRenderer.invoke('git-cherry-pick', folderPath, commitId, targetBranch),
+  gitRevert: (folderPath, commitId) => ipcRenderer.invoke('git-revert', folderPath, commitId),
+  gitListTags: (folderPath) => ipcRenderer.invoke('git-list-tags', folderPath),
+  gitCreateTag: (folderPath, name, message) => ipcRenderer.invoke('git-create-tag', folderPath, name, message),
+  gitDeleteTag: (folderPath, name) => ipcRenderer.invoke('git-delete-tag', folderPath, name),
+  gitPushTag: (folderPath, name) => ipcRenderer.invoke('git-push-tag', folderPath, name),
 })
+

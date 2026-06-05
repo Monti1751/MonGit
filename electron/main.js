@@ -367,6 +367,132 @@ ipcMain.handle('git-clone', async (event, url, parentFolder, repoName) => {
   }
 })
 
+// ─── Stash ────────────────────────────────────────────────────────────────────
+
+ipcMain.handle('git-stash', async (event, folderPath, message) => {
+  try {
+    const args = message ? ['push', '-m', message] : ['push']
+    const { stdout } = await execAsync(`git stash ${args.map(a => `"${a}"`).join(' ')}`, { cwd: folderPath })
+    return { success: true, output: stdout }
+  } catch (err) {
+    return { success: false, error: err.stderr || err.message }
+  }
+})
+
+ipcMain.handle('git-stash-list', async (event, folderPath) => {
+  try {
+    const { stdout } = await execAsync('git stash list --format="%gd|%s|%cr"', { cwd: folderPath })
+    const stashes = stdout.split('\n').filter(l => l.trim()).map(line => {
+      const parts = line.split('|')
+      return { ref: parts[0], message: parts[1] || '', date: parts[2] || '' }
+    })
+    return { success: true, stashes }
+  } catch (err) {
+    return { success: false, stashes: [], error: err.message }
+  }
+})
+
+ipcMain.handle('git-stash-apply', async (event, folderPath, index) => {
+  try {
+    await execAsync(`git stash apply "stash@{${index}}"`, { cwd: folderPath })
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.stderr || err.message }
+  }
+})
+
+ipcMain.handle('git-stash-pop', async (event, folderPath, index) => {
+  try {
+    await execAsync(`git stash pop "stash@{${index}}"`, { cwd: folderPath })
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.stderr || err.message }
+  }
+})
+
+ipcMain.handle('git-stash-drop', async (event, folderPath, index) => {
+  try {
+    await execAsync(`git stash drop "stash@{${index}}"`, { cwd: folderPath })
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.stderr || err.message }
+  }
+})
+
+// ─── Cherry-pick ──────────────────────────────────────────────────────────────
+
+ipcMain.handle('git-cherry-pick', async (event, folderPath, commitId, targetBranch) => {
+  try {
+    // Switch to target branch, cherry-pick, come back
+    const { stdout: currentBranch } = await execAsync('git rev-parse --abbrev-ref HEAD', { cwd: folderPath })
+    const current = currentBranch.trim()
+    await execAsync(`git checkout "${targetBranch}"`, { cwd: folderPath })
+    try {
+      await execAsync(`git cherry-pick "${commitId}"`, { cwd: folderPath })
+    } catch (cpErr) {
+      // Try to go back even on failure
+      await execAsync(`git checkout "${current}"`, { cwd: folderPath }).catch(() => {})
+      return { success: false, error: cpErr.stderr || cpErr.message }
+    }
+    await execAsync(`git checkout "${current}"`, { cwd: folderPath })
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.stderr || err.message }
+  }
+})
+
+// ─── Revert ───────────────────────────────────────────────────────────────────
+
+ipcMain.handle('git-revert', async (event, folderPath, commitId) => {
+  try {
+    await execAsync(`git revert --no-edit "${commitId}"`, { cwd: folderPath })
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.stderr || err.message }
+  }
+})
+
+// ─── Tags ─────────────────────────────────────────────────────────────────────
+
+ipcMain.handle('git-list-tags', async (event, folderPath) => {
+  try {
+    const { stdout } = await execAsync('git tag --sort=-version:refname', { cwd: folderPath })
+    const tags = stdout.split('\n').filter(t => t.trim())
+    return { success: true, tags }
+  } catch (err) {
+    return { success: false, tags: [], error: err.message }
+  }
+})
+
+ipcMain.handle('git-create-tag', async (event, folderPath, name, message) => {
+  try {
+    await execAsync(`git tag -a "${name}" -m "${message}"`, { cwd: folderPath })
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.stderr || err.message }
+  }
+})
+
+ipcMain.handle('git-delete-tag', async (event, folderPath, name) => {
+  try {
+    await execAsync(`git tag -d "${name}"`, { cwd: folderPath })
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.stderr || err.message }
+  }
+})
+
+ipcMain.handle('git-push-tag', async (event, folderPath, name) => {
+  try {
+    await execAsync(`git push origin "${name}"`, { cwd: folderPath })
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.stderr || err.message }
+  }
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 ipcMain.handle('package-app', async () => {
   try {
     const cwd = join(__dirname, '..')
