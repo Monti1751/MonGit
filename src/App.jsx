@@ -757,7 +757,7 @@ export default function App() {
                   }`}
                 >
                   <Zap size={15} />
-                  Advanced
+                  {t('app.tabs.advanced')}
                 </button>
               </div>
               
@@ -966,6 +966,7 @@ export default function App() {
                   commits={activeCommits}
                   activeBranch={activeBranch}
                   branches={localBranches}
+                  onRefresh={() => loadLocalRepoData(localFolderPath, activeBranch)}
                 />
               </div>
             )}

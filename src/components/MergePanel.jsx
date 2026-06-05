@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   GitMerge, GitBranch, AlertTriangle, Check, X,
   ChevronRight, FileWarning, RefreshCw, ArrowRight,
   CheckCircle2, XCircle, Layers, ArrowDown, Zap, Ban,
-  File, Info, ChevronDown, ChevronUp, Copy
+  Info, ChevronDown, ChevronUp
 } from 'lucide-react'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -59,44 +60,61 @@ function parseConflicts(content) {
 
 function reconstructFile(content, blocks) {
   const lines = content.split('\n')
-  const result = []
-  let i = 0
+  const output = []
+  let currentBlockIndex = 0
 
-  while (i < lines.length) {
+  for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
 
     if (line.startsWith('<<<<<<<')) {
-      const block = blocks.find(b => b.startLine === i)
+      const block = blocks[currentBlockIndex++]
       if (block && block.resolved) {
         if (block.resolution === 'ours') {
-          result.push(...block.ours)
+          output.push(...block.ours)
         } else if (block.resolution === 'theirs') {
-          result.push(...block.theirs)
+          output.push(...block.theirs)
         } else if (block.resolution === 'both') {
-          result.push(...block.ours, ...block.theirs)
+          output.push(...block.ours)
+          output.push(...block.theirs)
         }
-        i = block.endLine + 1
+      } else {
+        // Leave conflict markers intact
+        let j = i
+        while (j < lines.length && !lines[j].startsWith('>>>>>>>')) {
+          output.push(lines[j])
+          j++
+        }
+        if (j < lines.length) {
+          output.push(lines[j])
+        }
+        i = j
         continue
       }
+      // Skip original block until end marker
+      while (i < lines.length && !lines[i].startsWith('>>>>>>>')) {
+        i++
+      }
+    } else {
+      output.push(line)
     }
-
-    result.push(line)
-    i++
   }
 
-  return result.join('\n')
+  return output.join('\n')
 }
 
-// ─── Line-numbered code block ─────────────────────────────────────────────────
+// ─── Code Viewer ─────────────────────────────────────────────────────────────
 
 function CodeLines({ lines, colorClass, emptyLabel = '(empty)' }) {
-  if (!lines || lines.length === 0) {
+  if (lines.length === 0) {
     return (
-      <div className="px-3 py-4 text-xs text-slate-500 italic text-center">{emptyLabel}</div>
+      <div className="px-3 py-4 text-center text-xs text-slate-500 font-medium italic">
+        {emptyLabel}
+      </div>
     )
   }
+
   return (
-    <div className="overflow-x-auto max-h-52 font-mono text-xs leading-5">
+    <div className="font-mono text-xs overflow-x-auto py-1 bg-black/20">
       {lines.map((line, idx) => (
         <div key={idx} className="flex group hover:bg-black/10">
           <span className="select-none w-8 flex-shrink-0 text-right pr-2 py-px text-slate-600 group-hover:text-slate-500 border-r border-slate-700/50">
@@ -112,13 +130,14 @@ function CodeLines({ lines, colorClass, emptyLabel = '(empty)' }) {
 // ─── Conflict Block Card ───────────────────────────────────────────────────────
 
 function ConflictBlock({ block, index, total, onResolve, fromBranch, activeBranch }) {
+  const { t } = useTranslation()
   const [collapsed, setCollapsed] = useState(false)
   const isResolved = block.resolved
 
   const resolutionLabel = {
-    ours: `Kept: ${activeBranch} (yours)`,
-    theirs: `Kept: ${fromBranch} (incoming)`,
-    both: 'Kept: both combined',
+    ours: t('merge.keptYours', { branch: activeBranch }),
+    theirs: t('merge.keptIncoming', { branch: fromBranch || 'incoming' }),
+    both: t('merge.keptBoth'),
   }
 
   return (
@@ -134,8 +153,8 @@ function ConflictBlock({ block, index, total, onResolve, fromBranch, activeBranc
       }`}>
         <span className="flex items-center gap-2">
           {isResolved
-            ? <><CheckCircle2 size={13} /> Conflict {index + 1}/{total} resolved — {resolutionLabel[block.resolution]}</>
-            : <><AlertTriangle size={13} className="animate-pulse" /> Conflict {index + 1} of {total} — choose which changes to keep</>
+            ? <><CheckCircle2 size={13} /> {t('merge.conflictResolvedLabel', { current: index + 1, total, label: resolutionLabel[block.resolution] })}</>
+            : <><AlertTriangle size={13} className="animate-pulse" /> {t('merge.conflictUnresolvedLabel', { current: index + 1, total })}</>
           }
         </span>
         <div className="flex items-center gap-2">
@@ -144,7 +163,7 @@ function ConflictBlock({ block, index, total, onResolve, fromBranch, activeBranc
               onClick={() => onResolve(block.id, null)}
               className="text-xs text-slate-400 hover:text-rose-400 transition-colors underline"
             >
-              Undo
+              {t('merge.undo')}
             </button>
           )}
           <button
@@ -164,7 +183,7 @@ function ConflictBlock({ block, index, total, onResolve, fromBranch, activeBranc
               {block.context.map((l, i) => (
                 <div key={i} className="truncate">{l || ' '}</div>
               ))}
-              <div className="text-slate-500 text-[9px] mt-0.5">↑ code before the conflict</div>
+              <div className="text-slate-500 text-[9px] mt-0.5">↑ {t('merge.codeBefore')}</div>
             </div>
           )}
 
@@ -180,14 +199,14 @@ function ConflictBlock({ block, index, total, onResolve, fromBranch, activeBranc
                   : 'bg-emerald-500/8 border-emerald-500/20 text-emerald-500'
               }`}>
                 <GitBranch size={10} />
-                <span className="truncate">{activeBranch} <span className="opacity-60 normal-case font-normal">(current · HEAD)</span></span>
+                <span className="truncate">{activeBranch} <span className="opacity-60 normal-case font-normal">({t('merge.yoursLabel')})</span></span>
                 {isResolved && block.resolution === 'ours' && <Check size={10} className="ml-auto flex-shrink-0" />}
               </div>
               <div className="bg-emerald-950/20">
                 <CodeLines
                   lines={block.ours}
                   colorClass="text-emerald-300/90"
-                  emptyLabel="(this side is empty — deletion)"
+                  emptyLabel={t('merge.emptySide')}
                 />
               </div>
             </div>
@@ -202,14 +221,14 @@ function ConflictBlock({ block, index, total, onResolve, fromBranch, activeBranc
                   : 'bg-indigo-500/8 border-indigo-500/20 text-indigo-500'
               }`}>
                 <GitMerge size={10} />
-                <span className="truncate">{fromBranch} <span className="opacity-60 normal-case font-normal">(incoming)</span></span>
+                <span className="truncate">{fromBranch || 'incoming'} <span className="opacity-60 normal-case font-normal">({t('merge.incomingLabel')})</span></span>
                 {isResolved && block.resolution === 'theirs' && <Check size={10} className="ml-auto flex-shrink-0" />}
               </div>
               <div className="bg-indigo-950/20">
                 <CodeLines
                   lines={block.theirs}
                   colorClass="text-indigo-300/90"
-                  emptyLabel="(this side is empty — deletion)"
+                  emptyLabel={t('merge.emptySide')}
                 />
               </div>
             </div>
@@ -223,7 +242,7 @@ function ConflictBlock({ block, index, total, onResolve, fromBranch, activeBranc
                 className="flex-1 flex flex-col items-center justify-center gap-1 py-3 bg-emerald-500/8 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 transition-all text-xs font-semibold group"
               >
                 <Check size={14} className="group-hover:scale-110 transition-transform" />
-                <span>Keep Mine</span>
+                <span>{t('merge.keepMine')}</span>
                 <span className="text-[10px] font-normal text-emerald-600 truncate max-w-full px-2">{activeBranch}</span>
               </button>
               <button
@@ -231,16 +250,16 @@ function ConflictBlock({ block, index, total, onResolve, fromBranch, activeBranc
                 className="flex-1 flex flex-col items-center justify-center gap-1 py-3 bg-indigo-500/8 hover:bg-indigo-500/20 text-indigo-400 hover:text-indigo-300 transition-all text-xs font-semibold group"
               >
                 <Check size={14} className="group-hover:scale-110 transition-transform" />
-                <span>Keep Incoming</span>
-                <span className="text-[10px] font-normal text-indigo-600 truncate max-w-full px-2">{fromBranch}</span>
+                <span>{t('merge.keepIncoming')}</span>
+                <span className="text-[10px] font-normal text-indigo-600 truncate max-w-full px-2">{fromBranch || 'incoming'}</span>
               </button>
               <button
                 onClick={() => onResolve(block.id, 'both')}
                 className="flex-1 flex flex-col items-center justify-center gap-1 py-3 bg-purple-500/8 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 transition-all text-xs font-semibold group"
               >
                 <Layers size={14} className="group-hover:scale-110 transition-transform" />
-                <span>Keep Both</span>
-                <span className="text-[10px] font-normal text-purple-600">concatenated</span>
+                <span>{t('merge.keepBoth')}</span>
+                <span className="text-[10px] font-normal text-purple-600">{t('merge.concatenated')}</span>
               </button>
             </div>
           )}
@@ -253,23 +272,21 @@ function ConflictBlock({ block, index, total, onResolve, fromBranch, activeBranc
 // ─── No Conflicts Banner ───────────────────────────────────────────────────────
 
 function NoConflictsBanner({ activeBranch, fromBranch }) {
+  const { t } = useTranslation()
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-10 text-center gap-4">
       <div className="w-20 h-20 rounded-full bg-emerald-500/15 border-2 border-emerald-500/30 flex items-center justify-center shadow-2xl shadow-emerald-500/10">
         <CheckCircle2 size={40} className="text-emerald-400" />
       </div>
       <div>
-        <h3 className="text-lg font-bold text-emerald-400 mb-1">No conflicts detected!</h3>
+        <h3 className="text-lg font-bold text-emerald-400 mb-1">{t('merge.noConflictsTitle')}</h3>
         <p className="text-sm text-slate-400 max-w-xs">
-          The merge between{' '}
-          <span className="font-mono text-indigo-400">{fromBranch}</span> and{' '}
-          <span className="font-mono text-emerald-400">{activeBranch}</span>{' '}
-          can be completed cleanly.
+          {t('merge.noConflictsDesc', { from: fromBranch, to: activeBranch })}
         </p>
       </div>
       <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800/60 border border-slate-700 text-xs text-slate-400">
         <Info size={13} className="text-brand-400 flex-shrink-0" />
-        Click <strong className="text-white mx-1">Start Merge</strong> to apply the changes automatically.
+        {t('merge.clickStartMerge')}
       </div>
     </div>
   )
@@ -278,10 +295,12 @@ function NoConflictsBanner({ activeBranch, fromBranch }) {
 // ─── Main MergePanel Component ────────────────────────────────────────────────
 
 export default function MergePanel({ folderPath, branches, activeBranch, onMergeComplete }) {
+  const { t } = useTranslation()
   const [fromBranch, setFromBranch] = useState('')
   const [mergeState, setMergeState] = useState('idle') // idle | merging | conflict | success | error | noconflict
+  const [inRebase, setInRebase] = useState(false)
   const [pushStatusMsg, setPushStatusMsg] = useState('')
-  const [pushCompletedMessage, setPushCompletedMessage] = useState('')
+  const [pushCompletedMessage] = useState('')
   const [conflictFiles, setConflictFiles] = useState([])
   const [selectedFile, setSelectedFile] = useState(null)
   const [fileContent, setFileContent] = useState('')
@@ -300,13 +319,6 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
   const resolvedCount = resolvedFiles.size
   const allFilesResolved = pendingConflictCount === 0 && mergeState === 'conflict' && resolvedCount > 0
 
-  // ── Check merge status on mount ──────────────────────────────────────────
-  useEffect(() => {
-    if (!folderPath || !isElectron) return
-    checkMergeStatus()
-    fetchRemoteUrl()
-  }, [folderPath])
-
   const fetchRemoteUrl = async () => {
     const result = await window.electronAPI.getRemoteUrl(folderPath)
     if (result.success) setRemoteUrl(result.url)
@@ -314,11 +326,12 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
 
   const checkMergeStatus = async () => {
     const status = await window.electronAPI.getMergeStatus(folderPath)
-    if (status.inMerge && status.conflicts.length > 0) {
+    setInRebase(!!status.inRebase)
+    if ((status.inMerge || status.inRebase) && status.conflicts.length > 0) {
       setMergeState('conflict')
       setConflictFiles(status.conflicts)
       setResolvedFiles(new Set())
-    } else if (status.inMerge) {
+    } else if (status.inMerge || status.inRebase) {
       setMergeState('conflict')
       setConflictFiles([])
     } else {
@@ -330,16 +343,25 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
     }
   }
 
+  // ── Check merge status on mount ──────────────────────────────────────────
+  useEffect(() => {
+    if (!folderPath || !isElectron) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    checkMergeStatus()
+    fetchRemoteUrl()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [folderPath])
+
   // ── Initiate merge ───────────────────────────────────────────────────────
   const handleMerge = async () => {
-    if (!fromBranch) { setErrorMsg('Please select a source branch first.'); return }
-    if (!folderPath) { setErrorMsg('No folder is open.'); return }
+    if (!fromBranch) { setErrorMsg(t('merge.errors.selectSource')); return }
+    if (!folderPath) { setErrorMsg(t('merge.errors.noFolder')); return }
 
     try {
       const statusResult = await window.electronAPI.getGitStatus(folderPath)
       const pending = (statusResult || []).filter(f => f.status && !f.status.startsWith('??'))
       if (pending.length > 0) {
-        setErrorMsg('You have uncommitted changes. Please commit or discard them before merging.')
+        setErrorMsg(t('merge.errors.uncommittedChanges'))
         return
       }
     } catch { /* ignore */ }
@@ -356,12 +378,12 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
         try {
           const pushResult = await window.electronAPI.pushChanges(folderPath, activeBranch)
           if (!pushResult.success) {
-            setErrorMsg('Merge completed locally, but pushing to remote failed: ' + (pushResult.error || 'Unknown error'))
+            setErrorMsg(t('merge.errors.pushFailed', { error: pushResult.error || 'Unknown error' }))
           } else {
-            setPushStatusMsg('✓ Changes pushed to remote successfully')
+            setPushStatusMsg('✓ ' + t('merge.pushedSuccess'))
           }
         } catch (pushErr) {
-          setErrorMsg('Merge completed locally, but an error occurred while pushing: ' + (pushErr.message || pushErr))
+          setErrorMsg(t('merge.errors.pushFailed', { error: pushErr.message || pushErr }))
         }
         setTimeout(() => {
           if (onMergeComplete) onMergeComplete()
@@ -376,21 +398,24 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
         await checkMergeStatus()
       } else {
         setMergeState('error')
-        setErrorMsg(result.error || 'An unknown error occurred during the merge.')
+        setErrorMsg(result.error || t('merge.errors.genericMerge'))
       }
     } catch (err) {
       setMergeState('error')
-      setErrorMsg('Something went wrong: ' + (err.message || err))
+      setErrorMsg(t('merge.errors.generic', { error: err.message || err }))
     } finally {
       setLoading(false)
     }
   }
 
-  // ── Abort merge ──────────────────────────────────────────────────────────
+  // ── Abort merge or rebase ──────────────────────────────────────────────────
   const handleAbort = async () => {
     setLoading(true)
     try {
-      const result = await window.electronAPI.gitAbortMerge(folderPath)
+      const result = inRebase 
+        ? await window.electronAPI.gitRebaseAbort(folderPath)
+        : await window.electronAPI.gitAbortMerge(folderPath)
+
       if (result.success) {
         setMergeState('idle')
         setConflictFiles([])
@@ -401,7 +426,7 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
         setErrorMsg('')
         if (onMergeComplete) onMergeComplete()
       } else {
-        setErrorMsg(result.error || 'Could not abort the merge. Please try manually.')
+        setErrorMsg(result.error || (inRebase ? t('merge.errors.rebaseAbort') : t('merge.errors.mergeAbort')))
       }
     } finally {
       setLoading(false)
@@ -448,68 +473,95 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
     }
   }
 
-  // ── Finish merge ─────────────────────────────────────────────────────────
+  // ── Finish merge or continue rebase ────────────────────────────────────────
   const handleFinishMerge = async () => {
     setLoading(true)
     try {
-      const msg = `Merge branch '${fromBranch || 'unknown'}' into ${activeBranch}`
-      const result = await window.electronAPI.gitCommitMerge(folderPath, msg)
-      if (result.success) {
-        setMergeState('success')
-        try {
-          const pushResult = await window.electronAPI.pushChanges(folderPath, activeBranch)
-          if (!pushResult.success) {
-            setErrorMsg('Merge confirmed locally, but pushing to remote failed: ' + (pushResult.error || 'Unknown error'))
+      if (inRebase) {
+        const result = await window.electronAPI.gitRebaseContinue(folderPath)
+        if (result.success) {
+          if (result.finished) {
+            setMergeState('success')
+            setTimeout(() => {
+              if (onMergeComplete) onMergeComplete()
+              setMergeState('idle')
+              setFromBranch('')
+              setConflictFiles([])
+              setResolvedFiles(new Set())
+            }, MERGE_SUCCESS_DELAY_MS)
           } else {
-            setPushStatusMsg('✓ Changes pushed to remote successfully')
+            setErrorMsg('')
+            await checkMergeStatus()
           }
-        } catch (pushErr) {
-          setErrorMsg('Merge confirmed locally, but an error occurred while pushing: ' + (pushErr.message || pushErr))
+        } else {
+          if (result.conflict) {
+            setErrorMsg(t('merge.errors.rebaseConflictNext'))
+            await checkMergeStatus()
+          } else {
+            setErrorMsg(result.error || t('merge.errors.rebaseContinue'))
+          }
         }
-        setTimeout(() => {
-          if (onMergeComplete) onMergeComplete()
-          setMergeState('idle')
-          setFromBranch('')
-          setConflictFiles([])
-          setResolvedFiles(new Set())
-        }, MERGE_SUCCESS_DELAY_MS)
       } else {
-        setErrorMsg(result.error || 'Could not complete the merge commit. Please check git status.')
+        const msg = `Merge branch '${fromBranch || 'unknown'}' into ${activeBranch}`
+        const result = await window.electronAPI.gitCommitMerge(folderPath, msg)
+        if (result.success) {
+          setMergeState('success')
+          try {
+            const pushResult = await window.electronAPI.pushChanges(folderPath, activeBranch)
+            if (!pushResult.success) {
+              setErrorMsg(t('merge.errors.pushFailed', { error: pushResult.error || 'Unknown error' }))
+            } else {
+              setPushStatusMsg('✓ ' + t('merge.pushedSuccess'))
+            }
+          } catch (pushErr) {
+            setErrorMsg(t('merge.errors.pushFailed', { error: pushErr.message || pushErr }))
+          }
+          setTimeout(() => {
+            if (onMergeComplete) onMergeComplete()
+            setMergeState('idle')
+            setFromBranch('')
+            setConflictFiles([])
+            setResolvedFiles(new Set())
+          }, MERGE_SUCCESS_DELAY_MS)
+        } else {
+          setErrorMsg(result.error || t('merge.errors.finishMergeCommit'))
+        }
       }
     } finally {
       setLoading(false)
     }
   }
 
-  // ── Get GitHub PR URL ──────────────────────────────────────────────────────
-  const getGitHubPrUrl = () => {
-    if (!remoteUrl) return null
-    let repoUrl = remoteUrl
-      .replace(/https?:\/\/[^@]+@/, 'https://')
-    if (repoUrl.startsWith('git@github.com:')) {
-      repoUrl = repoUrl.replace('git@github.com:', 'https://github.com/').replace('.git', '')
-    } else if (repoUrl.endsWith('.git')) {
-      repoUrl = repoUrl.slice(0, -4)
-    }
-    return `${repoUrl}/compare/${activeBranch}...${fromBranch}`
-  }
-
+  // ── Branch diff preview ──────────────────────────────────────────────────
   const handleCompareDiff = async () => {
     if (!fromBranch || !folderPath) return
     setLoadingDiff(true)
+    setErrorMsg('')
     try {
       const result = await window.electronAPI.gitDiffBranches(folderPath, activeBranch, fromBranch)
       if (result.success) {
         setDiffContent(result.diff || '')
         setShowDiff(true)
       } else {
-        setErrorMsg('Could not load diff: ' + (result.error || 'Unknown'))
+        setErrorMsg(t('merge.errors.loadDiff', { error: result.error || 'Unknown' }))
       }
     } catch (err) {
-      setErrorMsg('Error loading diff: ' + err.message)
+      setErrorMsg(t('merge.errors.loadDiff', { error: err.message }))
     } finally {
       setLoadingDiff(false)
     }
+  }
+
+  const getGitHubPrUrl = () => {
+    if (!remoteUrl) return null
+    let cleanUrl = remoteUrl.trim()
+    if (cleanUrl.startsWith('git@github.com:')) {
+      cleanUrl = cleanUrl.replace('git@github.com:', 'https://github.com/')
+    }
+    if (cleanUrl.endsWith('.git')) {
+      cleanUrl = cleanUrl.slice(0, -4)
+    }
+    return `${cleanUrl}/compare/${activeBranch}...${fromBranch}`
   }
 
   const allBlocksResolved = conflictBlocks.length > 0 && conflictBlocks.every(b => b.resolved)
@@ -529,7 +581,7 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
             <div className="flex items-center justify-between p-4 border-b border-slate-700">
               <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
                 <GitBranch size={15} className="text-brand-400" />
-                Diff: <span className="font-mono text-emerald-400">{activeBranch}</span>
+                {t('merge.diffTitle')}: <span className="font-mono text-emerald-400">{activeBranch}</span>
                 <ArrowRight size={14} className="text-slate-500" />
                 <span className="font-mono text-indigo-400">{fromBranch}</span>
               </h3>
@@ -552,21 +604,21 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
               ) : (
                 <div className="flex flex-col items-center justify-center py-16 text-slate-500 gap-3">
                   <CheckCircle2 size={40} className="text-emerald-500 opacity-60" />
-                  <p className="text-sm">No differences between branches</p>
+                  <p className="text-sm">{t('merge.noDifferences')}</p>
                 </div>
               )}
             </div>
             <div className="flex gap-2 p-4 border-t border-slate-700">
               <button onClick={() => setShowDiff(false)}
                 className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-sm transition-colors">
-                Close
+                {t('app.buttons.cancel')}
               </button>
               <button
                 onClick={() => { const u = getGitHubPrUrl(); if (u) window.electronAPI?.openExternalUrl?.(u) || window.open(u, '_blank') }}
                 disabled={!remoteUrl}
                 className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-sm transition-colors flex items-center justify-center gap-2"
               >
-                <GitMerge size={14} /> Open Pull Request on GitHub
+                <GitMerge size={14} /> {t('merge.openPrGitHub')}
               </button>
             </div>
           </div>
@@ -579,13 +631,13 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
           {!folderPath ? (
             <div className="text-center text-slate-500">
               <GitMerge size={48} className="mx-auto mb-4 opacity-40" />
-              <p className="text-sm">Open a repository folder to start merging.</p>
+              <p className="text-sm">{t('merge.noFolderPrompt')}</p>
             </div>
           ) : availableBranches.length === 0 ? (
             <div className="text-center text-slate-500">
               <GitBranch size={48} className="mx-auto mb-4 opacity-40" />
-              <p className="text-sm font-medium">No other branches available</p>
-              <p className="text-xs text-slate-600 mt-1">Create a branch first to be able to merge.</p>
+              <p className="text-sm font-medium">{t('merge.noOtherBranches')}</p>
+              <p className="text-xs text-slate-600 mt-1">{t('merge.createBranchFirst')}</p>
             </div>
           ) : (
             <div className="w-full max-w-lg">
@@ -594,8 +646,8 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
                 <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-2xl shadow-purple-500/20">
                   <GitMerge size={32} className="text-white" />
                 </div>
-                <h2 className="text-xl font-bold text-white mb-1">Merge Center</h2>
-                <p className="text-sm text-slate-400">Merge changes from another branch into your current one</p>
+                <h2 className="text-xl font-bold text-white mb-1">{t('merge.title')}</h2>
+                <p className="text-sm text-slate-400">{t('merge.subtitle')}</p>
               </div>
 
               {pushCompletedMessage && (
@@ -605,7 +657,7 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
               {/* Merge flow diagram */}
               <div className="flex items-center justify-center gap-4 mb-8">
                 <div className="flex-1 max-w-52">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-emerald-400/80 mb-2 block text-center">Destination branch</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-emerald-400/80 mb-2 block text-center">{t('merge.destBranch')}</label>
                   <div className="px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -621,15 +673,15 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
                 </div>
 
                 <div className="flex-1 max-w-52">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-indigo-400/80 mb-2 block text-center">Source branch</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-indigo-400/80 mb-2 block text-center">{t('merge.srcBranch')}</label>
                   <select
-                    value={fromBranch}
-                    onChange={e => { setFromBranch(e.target.value); setErrorMsg('') }}
-                    className={`w-full px-4 py-3 rounded-xl border text-center text-sm font-mono font-semibold focus:outline-none focus:border-indigo-400 transition-all appearance-none cursor-pointer ${
-                      fromBranch ? 'bg-indigo-500/20 text-indigo-200 border-indigo-400' : 'bg-indigo-500/10 text-slate-400 border-indigo-500/30'
-                    }`}
+                     value={fromBranch}
+                     onChange={e => { setFromBranch(e.target.value); setErrorMsg('') }}
+                     className={`w-full px-4 py-3 rounded-xl border text-center text-sm font-mono font-semibold focus:outline-none focus:border-indigo-400 transition-all appearance-none cursor-pointer ${
+                       fromBranch ? 'bg-indigo-500/20 text-indigo-200 border-indigo-400' : 'bg-indigo-500/10 text-slate-400 border-indigo-500/30'
+                     }`}
                   >
-                    <option value="" className="bg-slate-900 text-slate-400">Select branch...</option>
+                    <option value="" className="bg-slate-900 text-slate-400">{t('merge.selectBranch')}</option>
                     {availableBranches.map(b => (
                       <option key={b} value={b} className="bg-slate-900 text-indigo-300">{b}</option>
                     ))}
@@ -653,8 +705,8 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
                   className="w-full py-3 rounded-xl bg-slate-700/50 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 font-semibold text-sm transition-all flex items-center justify-center gap-2 border border-slate-600"
                 >
                   {loadingDiff
-                    ? <><RefreshCw size={15} className="animate-spin" /> Comparing...</>
-                    : <><GitBranch size={15} /> Compare Branches (view diff)</>
+                    ? <><RefreshCw size={15} className="animate-spin" /> {t('merge.comparing')}</>
+                    : <><GitBranch size={15} /> {t('merge.compareBtn')}</>
                   }
                 </button>
 
@@ -663,13 +715,13 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
                   disabled={!fromBranch || !remoteUrl}
                   className="w-full py-3 rounded-xl bg-slate-700/50 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 font-semibold text-sm transition-all flex items-center justify-center gap-2 border border-slate-600"
                 >
-                  <GitMerge size={15} /> Compare &amp; Pull Request on GitHub
+                  <GitMerge size={15} /> {t('merge.githubPrBtn')}
                 </button>
 
                 <button
                   onClick={handleMerge}
                   disabled={!fromBranch || loading}
-                  title={!fromBranch ? 'Select a source branch first' : 'Start git merge'}
+                  title={!fromBranch ? t('merge.errors.selectSource') : t('merge.startMergeBtn')}
                   className={`w-full py-3.5 rounded-xl font-bold text-sm transition-all shadow-lg flex items-center justify-center gap-2 group ${
                     !fromBranch || loading
                       ? 'bg-slate-600 text-slate-400 cursor-not-allowed opacity-40'
@@ -677,10 +729,10 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
                   }`}
                 >
                   {loading
-                    ? <><RefreshCw size={16} className="animate-spin" /> Merging...</>
+                    ? <><RefreshCw size={16} className="animate-spin" /> {t('merge.merging')}</>
                     : !fromBranch
-                      ? <><AlertTriangle size={16} /> Select a branch</>
-                      : <><Zap size={16} className="group-hover:animate-pulse" /> Start Merge (git merge)</>
+                      ? <><AlertTriangle size={16} /> {t('merge.selectBranch')}</>
+                      : <><Zap size={16} className="group-hover:animate-pulse" /> {t('merge.startMergeBtn')}</>
                   }
                 </button>
               </div>
@@ -694,7 +746,7 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="text-center">
             <RefreshCw size={48} className="animate-spin text-purple-400 mx-auto mb-4" />
-            <p className="text-lg font-semibold text-white">Merging branches...</p>
+            <p className="text-lg font-semibold text-white">{t('merge.mergingTitle')}</p>
             <p className="text-sm text-slate-400 mt-2">
               <span className="font-mono text-indigo-400">{fromBranch}</span>
               <ArrowRight size={14} className="inline mx-2 text-slate-500" />
@@ -711,9 +763,13 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
             <div className="w-20 h-20 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-emerald-500/40 animate-pulse">
               <CheckCircle2 size={40} className="text-emerald-400" />
             </div>
-            <h3 className="text-xl font-bold text-emerald-400 mb-2">Merge completed!</h3>
+            <h3 className="text-xl font-bold text-emerald-400 mb-2">
+              {inRebase ? t('merge.rebaseSuccessTitle') : t('merge.successTitle')}
+            </h3>
             <p className="text-sm text-slate-400">
-              Changes have been merged into <span className="font-mono text-emerald-400">{activeBranch}</span>.
+              {inRebase
+                ? t('merge.rebaseSuccessDesc')
+                : t('merge.successDesc', { branch: activeBranch })}
             </p>
             {pushStatusMsg && <p className="mt-2 text-sm text-emerald-300">{pushStatusMsg}</p>}
             {errorMsg && (
@@ -730,13 +786,15 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="text-center max-w-md">
             <XCircle size={48} className="text-rose-400 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-rose-400 mb-2">Merge error</h3>
+            <h3 className="text-lg font-bold text-rose-400 mb-2">
+              {inRebase ? t('merge.rebaseErrorTitle') : t('merge.errorTitle')}
+            </h3>
             <p className="text-sm text-slate-400 mb-6 bg-slate-800/60 border border-slate-700 rounded-xl p-3 text-left font-mono">{errorMsg}</p>
             <button
               onClick={() => { setMergeState('idle'); setErrorMsg('') }}
               className="px-6 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700 text-sm font-medium transition-all"
             >
-              Back to start
+              {t('merge.backBtn')}
             </button>
           </div>
         </div>
@@ -754,16 +812,20 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
               </div>
               <div>
                 <p className="text-sm font-bold text-amber-300">
-                  Merge paused — conflicts detected
+                  {inRebase ? t('merge.rebasePausedTitle') : t('merge.pausedTitle')}
                 </p>
                 <p className="text-xs text-amber-400/60">
                   {loading
-                    ? 'Loading conflict information...'
+                    ? t('merge.loadingConflicts')
                     : pendingConflictCount > 0
-                      ? `${pendingConflictCount} file${pendingConflictCount > 1 ? 's' : ''} with unresolved conflicts`
+                      ? pendingConflictCount === 1
+                        ? t('merge.fileUnresolved')
+                        : t('merge.filesUnresolved', { count: pendingConflictCount })
                       : resolvedCount > 0
-                        ? 'All conflicts resolved — ready to finish'
-                        : 'Analyzing conflicts...'
+                        ? inRebase
+                          ? t('merge.allResolvedReadyRebase')
+                          : t('merge.allResolvedReady')
+                        : t('merge.analyzing')
                   }
                 </p>
               </div>
@@ -773,7 +835,7 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
               disabled={loading}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-400 hover:bg-rose-500/25 transition-all text-xs font-semibold flex-shrink-0"
             >
-              <Ban size={12} /> Abort Merge
+              <Ban size={12} /> {inRebase ? t('merge.abortRebaseBtn') : t('merge.abortMergeBtn')}
             </button>
           </div>
 
@@ -781,7 +843,7 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
                 <RefreshCw size={32} className="animate-spin text-amber-400 mx-auto mb-3" />
-                <p className="text-sm text-slate-300">Loading conflicts...</p>
+                <p className="text-sm text-slate-300">{t('merge.loadingConflicts')}</p>
               </div>
             </div>
           ) : (
@@ -791,7 +853,7 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
               <div className="w-64 flex-shrink-0 border-r border-slate-700/50 flex flex-col min-h-0 bg-slate-900/30">
                 <div className="px-4 py-3 border-b border-slate-700/30 flex-shrink-0">
                   <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                    Conflicting files
+                    {t('merge.conflictingFiles')}
                   </h3>
                 </div>
                 <div className="flex-1 overflow-y-auto p-2 space-y-1">
@@ -800,7 +862,7 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
                     <div className="pb-1">
                       <div className="px-2 pt-1 pb-1.5">
                         <span className="text-[10px] font-bold text-amber-500/70 uppercase tracking-widest">
-                          Needs resolution ({pendingConflictCount})
+                          {t('merge.needsResolution', { count: pendingConflictCount })}
                         </span>
                       </div>
                       {conflictFiles.map(file => (
@@ -825,8 +887,8 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
                   {pendingConflictCount === 0 && resolvedCount === 0 && (
                     <div className="text-center py-6 px-3">
                       <AlertTriangle size={24} className="text-amber-400 mx-auto mb-2" />
-                      <p className="text-xs text-amber-300 font-semibold">Analyzing conflicts...</p>
-                      <p className="text-[10px] text-slate-500 mt-1">Please wait.</p>
+                      <p className="text-xs text-amber-300 font-semibold">{t('merge.analyzing')}</p>
+                      <p className="text-[10px] text-slate-500 mt-1">{t('gitOps.common.loading')}</p>
                     </div>
                   )}
 
@@ -835,7 +897,7 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
                     <>
                       <div className="px-2 pt-3 pb-1">
                         <span className="text-[10px] font-bold text-emerald-500/60 uppercase tracking-widest">
-                          Resolved ({resolvedCount})
+                          {t('merge.resolved', { count: resolvedCount })}
                         </span>
                       </div>
                       {[...resolvedFiles].map(file => (
@@ -851,13 +913,15 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
                   {pendingConflictCount === 0 && resolvedCount > 0 && (
                     <div className="text-center py-4 px-3 mt-2">
                       <CheckCircle2 size={24} className="text-emerald-400 mx-auto mb-1" />
-                      <p className="text-xs text-emerald-400 font-semibold">All resolved!</p>
-                      <p className="text-[10px] text-slate-500 mt-1">Click Finish below.</p>
+                      <p className="text-xs text-emerald-400 font-semibold">{t('merge.allResolved')}</p>
+                      <p className="text-[10px] text-slate-500 mt-1">
+                        {inRebase ? t('merge.clickFinishRebase') : t('merge.clickFinish')}
+                      </p>
                     </div>
                   )}
                 </div>
 
-                {/* Finish merge button */}
+                {/* Finish merge/rebase button */}
                 <div className="p-3 border-t border-slate-700/30 flex-shrink-0">
                   <button
                     onClick={handleFinishMerge}
@@ -869,8 +933,10 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
                     }`}
                   >
                     {loading
-                      ? <><RefreshCw size={12} className="animate-spin" /> Finishing...</>
-                      : <><GitMerge size={12} /> Finish Merge</>
+                      ? <><RefreshCw size={12} className="animate-spin" /> {inRebase ? t('merge.continuing') : t('merge.finishing')}</>
+                      : inRebase
+                        ? <><Check size={12} /> {t('merge.continueRebaseBtn')}</>
+                        : <><GitMerge size={12} /> {t('merge.finishMergeBtn')}</>
                     }
                   </button>
                 </div>
@@ -882,8 +948,8 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
                   <div className="flex-1 flex items-center justify-center text-center p-8">
                     <div>
                       <FileWarning size={40} className="text-slate-600 mx-auto mb-3" />
-                      <p className="text-sm text-slate-400">Select a conflicting file</p>
-                      <p className="text-xs text-slate-600 mt-1">to view and resolve the differences line by line</p>
+                      <p className="text-sm text-slate-400">{t('merge.selectFilePrompt')}</p>
+                      <p className="text-xs text-slate-600 mt-1">{t('merge.selectFileDesc')}</p>
                     </div>
                   </div>
                 ) : loading ? (
@@ -900,12 +966,12 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
                           <span className="text-sm font-mono text-white font-semibold truncate">{selectedFile}</span>
                           {unresolvedCount > 0 && (
                             <span className="flex-shrink-0 text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 font-bold">
-                              {unresolvedCount} unresolved
+                              {t('merge.unresolvedCount', { count: unresolvedCount })}
                             </span>
                           )}
                           {unresolvedCount === 0 && conflictBlocks.length > 0 && (
                             <span className="flex-shrink-0 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-bold">
-                              All resolved ✓
+                              {t('merge.allResolvedLabel')}
                             </span>
                           )}
                         </div>
@@ -914,16 +980,16 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
                             onClick={handleSaveFile}
                             className="flex-shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/30 transition-all text-xs font-bold"
                           >
-                            <Check size={12} /> Save &amp; mark resolved
+                            <Check size={12} /> {t('merge.saveMarkResolved')}
                           </button>
                         )}
                       </div>
 
                       {/* Legend */}
                       <div className="flex items-center gap-4 mt-2 text-[10px] text-slate-500">
-                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" /> {activeBranch} (yours · HEAD)</span>
-                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-indigo-400 inline-block" /> {fromBranch} (incoming)</span>
-                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-purple-400 inline-block" /> Both (combined)</span>
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" /> {activeBranch} ({t('merge.yoursLabel')})</span>
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-indigo-400 inline-block" /> {fromBranch || 'incoming'} ({t('merge.incomingLabel')})</span>
+                        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-purple-400 inline-block" /> {t('merge.combinedLabel')}</span>
                       </div>
                     </div>
 

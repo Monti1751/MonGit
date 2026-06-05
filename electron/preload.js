@@ -36,5 +36,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   gitCreateTag: (folderPath, name, message) => ipcRenderer.invoke('git-create-tag', folderPath, name, message),
   gitDeleteTag: (folderPath, name) => ipcRenderer.invoke('git-delete-tag', folderPath, name),
   gitPushTag: (folderPath, name) => ipcRenderer.invoke('git-push-tag', folderPath, name),
+  gitInteractiveRebase: (folderPath, baseCommit, todoList) => ipcRenderer.invoke('git-interactive-rebase', folderPath, baseCommit, todoList),
+  gitRebaseContinue: (folderPath) => ipcRenderer.invoke('git-rebase-continue', folderPath),
+  gitRebaseAbort: (folderPath) => ipcRenderer.invoke('git-rebase-abort', folderPath),
 })
 

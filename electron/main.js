@@ -221,23 +221,40 @@ ipcMain.handle('get-merge-status', async (event, folderPath) => {
       console.log(`[get-merge-status] No hay MERGE_HEAD`)
     }
 
+    let inRebase = false
+    try {
+      await fs.stat(join(folderPath, '.git', 'rebase-merge'))
+      inRebase = true
+      console.log(`[get-merge-status] Carpeta rebase-merge encontrada - rebase en progreso`)
+    } catch (e) {
+      try {
+        await fs.stat(join(folderPath, '.git', 'rebase-apply'))
+        inRebase = true
+        console.log(`[get-merge-status] Carpeta rebase-apply encontrada - rebase en progreso`)
+      } catch (e2) {
+        inRebase = false
+      }
+    }
+
     let conflicts = []
     try {
       const { stdout: conflictOutput } = await execAsync('git diff --name-only --diff-filter=U', { cwd: folderPath })
       conflicts = conflictOutput.split('\n').map(s => s.trim()).filter(Boolean)
       if (conflicts.length > 0) {
         console.log(`[get-merge-status] Conflictos encontrados:`, conflicts)
-        inMerge = true
+        if (!inMerge && !inRebase) {
+          inMerge = true
+        }
       }
     } catch (err) {
       console.log(`[get-merge-status] Error al obtener conflictos:`, err.message)
     }
 
-    console.log(`[get-merge-status] Resultado: inMerge=${inMerge}, conflicts=${conflicts.length}`)
-    return { inMerge, conflicts }
+    console.log(`[get-merge-status] Resultado: inMerge=${inMerge}, inRebase=${inRebase}, conflicts=${conflicts.length}`)
+    return { inMerge, inRebase, conflicts }
   } catch (err) {
     console.error('[get-merge-status] Error:', err)
-    return { inMerge: false, conflicts: [] }
+    return { inMerge: false, inRebase: false, conflicts: [] }
   }
 })
 
@@ -487,6 +504,145 @@ ipcMain.handle('git-push-tag', async (event, folderPath, name) => {
     await execAsync(`git push origin "${name}"`, { cwd: folderPath })
     return { success: true }
   } catch (err) {
+    return { success: false, error: err.stderr || err.message }
+  }
+})
+
+// Helper to clean up rebase files
+async function cleanUpRebaseFiles(gitDir) {
+  const files = ['mon-git-todo.txt', 'mon-git-rebase-messages.json', 'mon-git-sequence-editor.cjs', 'mon-git-editor.cjs']
+  for (const f of files) {
+    await fs.unlink(join(gitDir, f)).catch(() => {})
+  }
+}
+
+// ─── Interactive Rebase ────────────────────────────────────────────────────────
+
+ipcMain.handle('git-interactive-rebase', async (event, folderPath, baseCommit, todoList) => {
+  try {
+    const gitDir = join(folderPath, '.git')
+    
+    // Write the todo list
+    const todoLines = todoList.map(item => `${item.action} ${item.id}`).join('\n')
+    await fs.writeFile(join(gitDir, 'mon-git-todo.txt'), todoLines, 'utf8')
+    
+    // Write message mappings
+    const messagesMap = {}
+    todoList.forEach(item => {
+      if ((item.action === 'reword' || item.action === 'squash') && item.message) {
+        messagesMap[item.id] = item.message
+      }
+    })
+    await fs.writeFile(join(gitDir, 'mon-git-rebase-messages.json'), JSON.stringify(messagesMap), 'utf8')
+    
+    // Write mon-git-sequence-editor.cjs
+    const sequenceEditorCode = `const fs = require('fs');
+const path = require('path');
+
+const targetFile = process.argv.find(arg => arg.endsWith('git-rebase-todo'));
+if (targetFile) {
+  const repoGitDir = path.dirname(path.dirname(targetFile));
+  const customTodoPath = path.join(repoGitDir, 'mon-git-todo.txt');
+  if (fs.existsSync(customTodoPath)) {
+    fs.writeFileSync(targetFile, fs.readFileSync(customTodoPath, 'utf8'), 'utf8');
+  }
+}
+process.exit(0);
+`
+    await fs.writeFile(join(gitDir, 'mon-git-sequence-editor.cjs'), sequenceEditorCode, 'utf8')
+    
+    // Write mon-git-editor.cjs
+    const gitEditorCode = `const fs = require('fs');
+const path = require('path');
+
+const msgFile = process.argv[process.argv.length - 1];
+const repoGitDir = path.dirname(path.dirname(msgFile));
+const configPath = path.join(repoGitDir, 'mon-git-rebase-messages.json');
+
+if (fs.existsSync(configPath) && fs.existsSync(msgFile)) {
+  const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+  
+  let sha = '';
+  const stoppedShaPath = path.join(repoGitDir, 'rebase-merge', 'stopped-sha');
+  if (fs.existsSync(stoppedShaPath)) {
+    sha = fs.readFileSync(stoppedShaPath, 'utf8').trim();
+  }
+  
+  if (sha && config[sha]) {
+    fs.writeFileSync(msgFile, config[sha], 'utf8');
+  }
+}
+process.exit(0);
+`
+    await fs.writeFile(join(gitDir, 'mon-git-editor.cjs'), gitEditorCode, 'utf8')
+    
+    const env = {
+      ...process.env,
+      GIT_SEQUENCE_EDITOR: `node "${join(gitDir, 'mon-git-sequence-editor.cjs')}"`,
+      GIT_EDITOR: `node "${join(gitDir, 'mon-git-editor.cjs')}"`
+    }
+    
+    try {
+      console.log(`[git-interactive-rebase] Running interactive rebase onto ${baseCommit}`)
+      const { stdout } = await execAsync(`git rebase -i "${baseCommit}"`, { cwd: folderPath, env })
+      await cleanUpRebaseFiles(gitDir).catch(() => {})
+      return { success: true, output: stdout }
+    } catch (rebaseErr) {
+      console.warn('[git-interactive-rebase] Rebase failed or stopped:', rebaseErr.message)
+      const inRebaseMerge = await fs.stat(join(gitDir, 'rebase-merge')).then(() => true).catch(() => false)
+      const inRebaseApply = await fs.stat(join(gitDir, 'rebase-apply')).then(() => true).catch(() => false)
+      
+      if (inRebaseMerge || inRebaseApply) {
+        return { success: false, conflict: true, error: rebaseErr.stderr || rebaseErr.message }
+      }
+      
+      await cleanUpRebaseFiles(gitDir).catch(() => {})
+      return { success: false, error: rebaseErr.stderr || rebaseErr.message }
+    }
+  } catch (err) {
+    console.error('git-interactive-rebase outer error:', err)
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('git-rebase-continue', async (event, folderPath) => {
+  try {
+    const gitDir = join(folderPath, '.git')
+    const env = {
+      ...process.env,
+      GIT_EDITOR: 'true'
+    }
+    const { stdout } = await execAsync('git rebase --continue', { cwd: folderPath, env })
+    
+    const inRebaseMerge = await fs.stat(join(gitDir, 'rebase-merge')).then(() => true).catch(() => false)
+    const inRebaseApply = await fs.stat(join(gitDir, 'rebase-apply')).then(() => true).catch(() => false)
+    
+    if (!inRebaseMerge && !inRebaseApply) {
+      await cleanUpRebaseFiles(gitDir).catch(() => {})
+      return { success: true, finished: true }
+    }
+    return { success: true, finished: false }
+  } catch (err) {
+    console.error('git-rebase-continue error:', err)
+    const gitDir = join(folderPath, '.git')
+    const inRebaseMerge = await fs.stat(join(gitDir, 'rebase-merge')).then(() => true).catch(() => false)
+    const inRebaseApply = await fs.stat(join(gitDir, 'rebase-apply')).then(() => true).catch(() => false)
+    
+    if (inRebaseMerge || inRebaseApply) {
+      return { success: false, conflict: true, error: err.stderr || err.message }
+    }
+    return { success: false, error: err.stderr || err.message }
+  }
+})
+
+ipcMain.handle('git-rebase-abort', async (event, folderPath) => {
+  try {
+    const gitDir = join(folderPath, '.git')
+    await execAsync('git rebase --abort', { cwd: folderPath })
+    await cleanUpRebaseFiles(gitDir).catch(() => {})
+    return { success: true }
+  } catch (err) {
+    console.error('git-rebase-abort error:', err)
     return { success: false, error: err.stderr || err.message }
   }
 })
