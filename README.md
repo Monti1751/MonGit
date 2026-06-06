@@ -63,7 +63,38 @@
   * Usar cambios remotos (ours)
 * **Validación de Merge**: Completa el merge una vez resueltos todos los conflictos.
 
-### 8. 🌍 Internacionalización (i18n)
+### 8. ⚡ Operaciones Git Avanzadas
+La pestaña **Avanzado** te proporciona herramientas profesionales para el control avanzado del historial de commits:
+
+#### 🗂️ Stash (Guardar Cambios Temporalmente)
+* **Guardar Cambios**: Guarda cambios locales sin hacer commit para cambiar de rama sin perder trabajo.
+* **Aplicar/Pop**: Restaura tus cambios guardados cuando los necesites.
+* **Gestión de Múltiples Stashes**: Guarda y maneja varios stashes con descripciones personalizadas.
+
+#### 📋 Rebase Interactivo
+* **Reorganizar Commits**: Reordena commits en cualquier orden deseado.
+* **Fusionar Commits (Squash)**: Combina múltiples commits en uno solo.
+* **Renombrar Mensajes (Reword)**: Edita los mensajes de commit en el historial.
+* **Limpiar Historial**: Elimina commits sin deseados o fija commits temporales con fixup.
+* **Interfaz Visual**: Selecciona acciones para cada commit de forma intuitiva.
+
+#### 🎯 Cherry-pick (Aplicar Commits Selectos)
+* **Copiar Commits**: Aplica un commit específico de una rama a otra sin necesidad de mergear.
+* **Selector Visual**: Elige el commit y la rama destino desde la interfaz.
+* **Preservar Historial**: Mantén la flexibilidad de aplicar cambios específicos sin fusionar ramas completas.
+
+#### ↩️ Revert (Deshacer Commits)
+* **Deshacer Seguro**: Crea nuevos commits que deshacen los cambios de commits anteriores.
+* **Preserva Historial**: A diferencia de reset, revert mantiene un registro completo del cambio.
+* **Control Selectivo**: Elige exactamente qué commit deshacer.
+
+#### 🏷️ Gestión de Tags (Etiquetas de Versión)
+* **Crear Tags**: Crea etiquetas anotadas para marcar versiones importantes.
+* **Mensajes de Tags**: Agrega descripciones a cada etiqueta de versión.
+* **Publicar Tags**: Envía tus tags al repositorio remoto.
+* **Gestión**: Visualiza, edita y elimina tags fácilmente.
+
+### 9. 🌍 Internacionalización (i18n)
 * **Soporte Multiidioma**: Interfaz completa en español e inglés.
 * **Detección Automática**: Se adapta al idioma del sistema operativo.
 * **Fácil de Extender**: Estructura lista para agregar más idiomas.

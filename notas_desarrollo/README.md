@@ -1,10 +1,16 @@
 # Memoria de Funcionalidades Futuras - MonGit
 
-Esta carpeta contiene la documentación de características planeadas y mejoras futuras para MonGit.
+Esta carpeta contiene la documentación de características planeadas, mejoras futuras, y el contexto general de la aplicación.
 
 ## Estructura de la Documentación
 
-- **operaciones_git_avanzadas.md** - Stash, Rebase, Cherry-pick, Revert, Tags
+### 📖 Contexto General
+- **contexto_general.md** - Visión, stack tecnológico, paleta de colores, elementos estéticos, i18n, arquitectura de componentes, convenciones de código, estructura de datos, IPC de Electron
+
+### 🚀 Características Implementadas
+- **operaciones_git_avanzadas.md** - Stash, Rebase, Cherry-pick, Revert, Tags (✅ COMPLETADO)
+
+### 🔮 Características Futuras
 - **visualizacion_analisis.md** - Estadísticas, búsqueda avanzada, Git Blame, historial de archivos
 - **colaboracion_prs.md** - Pull Requests, Comments, Reviews, CI/CD Status
 - **gestion_issues.md** - Board de issues, etiquetas, asignaciones
@@ -17,4 +23,4 @@ Esta carpeta contiene la documentación de características planeadas y mejoras 
 
 ---
 
-*Nota: Esta carpeta sirve como base de conocimiento y registro de tareas pendientes para el desarrollo futuro de MonGit.*
+*Nota: Esta carpeta sirve como base de conocimiento y registro de tareas pendientes para el desarrollo futuro de MonGit. El archivo `contexto_general.md` es esencial para nuevos desarrolladores.*
