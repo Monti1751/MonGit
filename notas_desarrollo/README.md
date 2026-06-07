@@ -9,6 +9,7 @@ Esta carpeta contiene la documentación de características planeadas, mejoras f
 
 ### 🚀 Características Implementadas
 - **operaciones_git_avanzadas.md** - Stash, Rebase, Cherry-pick, Revert, Tags (✅ COMPLETADO)
+- **gestion_avanzada.md** - Multirepo, Submodules, Diff avanzado, Templates (✅ COMPLETADO)
 
 ### 🔮 Características Futuras
 - **visualizacion_analisis.md** - Estadísticas, búsqueda avanzada, Git Blame, historial de archivos
@@ -16,7 +17,6 @@ Esta carpeta contiene la documentación de características planeadas, mejoras f
 - **gestion_issues.md** - Board de issues, etiquetas, asignaciones
 - **seguridad.md** - SSH Keys, GPG Signing, 2FA, Secret Scanning
 - **configuracion_personalizacion.md** - Settings, Git Hooks, temas, atajos
-- **gestion_avanzada.md** - Multirepo, Submodules, Diff avanzado, Templates
 - **integraciones.md** - Webhooks, Actions, integraciones externas
 - **ux_mejorada.md** - Light mode, Command Palette, Web version, Cloud sync
 - **rendimiento.md** - Virtualización, caché, worker threads

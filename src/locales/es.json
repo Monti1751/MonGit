@@ -10,6 +10,7 @@
       "openOtherFolder": "Abrir Otra Carpeta...",
       "newRepo": "Nuevo Repo...",
       "cloneRepo": "Clonar Repo...",
+      "multiRepo": "Workspace Multirepo",
       "connectCloud": "Conectar Cuenta Cloud...",
       "sync": "Sincronizar (Pull & Push)",
       "providers": "Proveedores Git",
@@ -277,12 +278,37 @@
       "commitFailed": "Error al hacer commit",
       "pushFailed": "Error al enviar cambios",
       "general": "Ocurrió un error inesperado"
+    },
+    "templates": {
+      "label": "Plantillas de commit"
     }
   },
   "i18n": {
     "language": "Idioma",
     "english": "English",
     "spanish": "Español"
+  },
+  "multiRepo": {
+    "title": "Workspace Multirepo",
+    "subtitle": "Gestiona y sincroniza varios repositorios a la vez",
+    "addRepo": "+ Agregar Repositorio",
+    "refresh": "Actualizar",
+    "syncSelected": "Sincronizar ({{count}})",
+    "selectAll": "Seleccionar todos",
+    "deselectAll": "Deseleccionar todos",
+    "repoCount": "{{count}} repositorio(s)",
+    "loading": "Cargando...",
+    "changedFiles": "{{count}} cambio(s)",
+    "unpushed": "Pendiente de push",
+    "remove": "Quitar del workspace",
+    "empty": "No tienes repositorios en el workspace",
+    "emptyHint": "Haz clic en \"+ Agregar Repositorio\" para añadir tu primer repositorio.",
+    "added": "✓ Repositorio \"{{name}}\" añadido al workspace.",
+    "syncSuccess": "✓ {{count}} repositorio(s) sincronizados correctamente.",
+    "syncPartial": "Sincronizados: {{ok}} OK, {{fail}} con errores.",
+    "errors": {
+      "alreadyAdded": "Este repositorio ya está en el workspace."
+    }
   },
   "gitOps": {
     "title": "Operaciones Git Avanzadas",
@@ -372,6 +398,57 @@
       "refresh": "Actualizar",
       "delete": "Eliminar",
       "error": "Ocurrió un error inesperado."
+    },
+    "submodules": {
+      "title": "Submódulos — Dependencias externas",
+      "info": "Los submódulos permiten incluir otros repositorios git dentro de este proyecto como dependencias versionadas.",
+      "addBtn": "Agregar Submódulo",
+      "updateAllBtn": "Actualizar Todos",
+      "addTitle": "Nuevo Submódulo",
+      "urlPlaceholder": "URL del repositorio (ej: https://github.com/user/repo.git)",
+      "pathPlaceholder": "Ruta de destino (ej: libs/mi-lib)",
+      "addConfirmBtn": "Agregar",
+      "listLabel": "Submódulos ({{count}})",
+      "empty": "No hay submódulos en este repositorio.",
+      "updateBtn": "Actualizar",
+      "removeBtn": "Eliminar",
+      "addSuccess": "Submódulo añadido en \"{{path}}\".",
+      "updateSuccess": "Submódulo \"{{path}}\" actualizado.",
+      "updateAllSuccess": "Todos los submódulos actualizados.",
+      "removeSuccess": "Submódulo \"{{path}}\" eliminado.",
+      "confirmRemove": "¿Eliminar submódulo \"{{path}}\"? Esta acción no se puede deshacer.",
+      "status": {
+        "ok": "Actualizado",
+        "modified": "Modificado",
+        "uninitialized": "No inicializado"
+      },
+      "errors": {
+        "add": "No se pudo añadir el submódulo.",
+        "update": "No se pudo actualizar el submódulo.",
+        "remove": "No se pudo eliminar el submódulo."
+      }
+    },
+    "diff": {
+      "title": "Diff Avanzado — Comparar ramas y commits",
+      "info": "Compara diferencias entre dos ramas o entre dos commits del historial.",
+      "types": {
+        "branches": "Ramas",
+        "commits": "Commits"
+      },
+      "selectA": "Rama A (origen)...",
+      "selectB": "Rama B (destino)...",
+      "selectCommitA": "Commit A...",
+      "selectCommitB": "Commit B...",
+      "compareBtn": "Comparar",
+      "comparing": "Comparando...",
+      "noDiff": "Sin diferencias — los dos son idénticos",
+      "diffOutput": "Resultado del diff",
+      "stats": {
+        "files": "{{count}} archivo(s)"
+      },
+      "errors": {
+        "generic": "No se pudo obtener el diff."
+      }
     }
   },
   "merge": {

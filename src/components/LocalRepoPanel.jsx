@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from 'react'
-import { Folder, RefreshCw, Check, CheckSquare, Square, UploadCloud, AlertCircle } from 'lucide-react'
+import { Folder, RefreshCw, Check, CheckSquare, Square, UploadCloud, AlertCircle, ChevronDown, FileText } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const SUCCESS_DISPLAY_MS = 3000
+
+const COMMIT_TEMPLATES = [
+  { key: 'conventional', label: 'Conventional', preview: 'type(scope): subject\n\nbody here' },
+  { key: 'semantic',     label: 'Semantic',     preview: '[type] Subject\n\nDescription' },
+  { key: 'angular',      label: 'Angular',       preview: 'type(scope): description\n\nBREAKING CHANGE: ...' },
+  { key: 'fix',          label: 'Bug Fix',       preview: 'fix: resolve issue with X\n\n- Root cause\n- Solution applied' },
+  { key: 'feat',         label: 'Feature',       preview: 'feat: add new feature X\n\n- What it does\n- How to use it' },
+]
 
 export default function LocalRepoPanel({ folderPath, refreshTrigger, onRefreshDone, onCommitSuccess }) {
   const { t } = useTranslation()
@@ -14,6 +22,7 @@ export default function LocalRepoPanel({ folderPath, refreshTrigger, onRefreshDo
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
   const [hasUnpushed, setHasUnpushed] = useState(false)
+  const [showTemplates, setShowTemplates] = useState(false)
 
   const isElectron = !!window.electronAPI
 
@@ -178,6 +187,31 @@ export default function LocalRepoPanel({ folderPath, refreshTrigger, onRefreshDo
           </div>
 
           <div className="p-4 border-t border-slate-700/50 bg-slate-800/50">
+            {/* Template picker */}
+            <div className="mb-2">
+              <button
+                onClick={() => setShowTemplates(s => !s)}
+                className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 hover:text-brand-400 transition-colors"
+              >
+                <FileText size={11} />
+                {t('localRepo.templates.label')}
+                <ChevronDown size={10} className={`transition-transform ${showTemplates ? 'rotate-180' : ''}`} />
+              </button>
+              {showTemplates && (
+                <div className="mt-1.5 grid grid-cols-1 gap-1">
+                  {COMMIT_TEMPLATES.map(tmpl => (
+                    <button
+                      key={tmpl.key}
+                      onClick={() => { setMessage(tmpl.preview); setShowTemplates(false) }}
+                      className="text-left px-2.5 py-1.5 rounded-lg bg-slate-900/80 border border-slate-700/50 hover:border-brand-500/50 hover:bg-brand-500/5 transition-all group"
+                    >
+                      <span className="text-[10px] font-bold text-brand-400 group-hover:text-brand-300">{tmpl.label}</span>
+                      <p className="text-[9px] font-mono text-slate-500 mt-0.5 truncate">{tmpl.preview.split('\n')[0]}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <textarea
               value={message}
               onChange={e => setMessage(e.target.value)}
