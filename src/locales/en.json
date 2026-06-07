@@ -10,6 +10,7 @@
       "openOtherFolder": "Open Another Folder...",
       "newRepo": "New Repo...",
       "cloneRepo": "Clone Repo...",
+      "multiRepo": "Multi-Repo Workspace",
       "connectCloud": "Connect Cloud Account...",
       "sync": "Sync (Pull & Push)",
       "providers": "Git Providers",
@@ -277,12 +278,37 @@
       "commitFailed": "Error creating commit",
       "pushFailed": "Error pushing changes",
       "general": "An unexpected error occurred"
+    },
+    "templates": {
+      "label": "Commit templates"
     }
   },
   "i18n": {
     "language": "Language",
     "english": "English",
     "spanish": "Español"
+  },
+  "multiRepo": {
+    "title": "Multi-Repo Workspace",
+    "subtitle": "Manage and sync multiple repositories at once",
+    "addRepo": "+ Add Repository",
+    "refresh": "Refresh",
+    "syncSelected": "Sync ({{count}})",
+    "selectAll": "Select all",
+    "deselectAll": "Deselect all",
+    "repoCount": "{{count}} repository(ies)",
+    "loading": "Loading...",
+    "changedFiles": "{{count}} change(s)",
+    "unpushed": "Pending push",
+    "remove": "Remove from workspace",
+    "empty": "No repositories in workspace",
+    "emptyHint": "Click on \"+ Add Repository\" to add your first repository.",
+    "added": "✓ Repository \"{{name}}\" added to workspace.",
+    "syncSuccess": "✓ {{count}} repository(ies) synced successfully.",
+    "syncPartial": "Synced: {{ok}} OK, {{fail}} with errors.",
+    "errors": {
+      "alreadyAdded": "This repository is already in the workspace."
+    }
   },
   "gitOps": {
     "title": "Advanced Git Operations",
@@ -372,6 +398,57 @@
       "refresh": "Refresh",
       "delete": "Delete",
       "error": "An unexpected error occurred."
+    },
+    "submodules": {
+      "title": "Submodules — External dependencies",
+      "info": "Submodules allow you to include other git repositories inside this project as versioned dependencies.",
+      "addBtn": "Add Submodule",
+      "updateAllBtn": "Update All",
+      "addTitle": "New Submodule",
+      "urlPlaceholder": "Repository URL (e.g. https://github.com/user/repo.git)",
+      "pathPlaceholder": "Destination path (e.g. libs/my-lib)",
+      "addConfirmBtn": "Add",
+      "listLabel": "Submodules ({{count}})",
+      "empty": "No submodules in this repository.",
+      "updateBtn": "Update",
+      "removeBtn": "Remove",
+      "addSuccess": "Submodule added at \"{{path}}\".",
+      "updateSuccess": "Submodule \"{{path}}\" updated.",
+      "updateAllSuccess": "All submodules updated.",
+      "removeSuccess": "Submodule \"{{path}}\" removed.",
+      "confirmRemove": "Remove submodule \"{{path}}\"? This action cannot be undone.",
+      "status": {
+        "ok": "Up to date",
+        "modified": "Modified",
+        "uninitialized": "Uninitialized"
+      },
+      "errors": {
+        "add": "Could not add submodule.",
+        "update": "Could not update submodule.",
+        "remove": "Could not remove submodule."
+      }
+    },
+    "diff": {
+      "title": "Advanced Diff — Compare branches & commits",
+      "info": "Compare differences between two branches or between two commits in history.",
+      "types": {
+        "branches": "Branches",
+        "commits": "Commits"
+      },
+      "selectA": "Branch A (source)...",
+      "selectB": "Branch B (target)...",
+      "selectCommitA": "Commit A...",
+      "selectCommitB": "Commit B...",
+      "compareBtn": "Compare",
+      "comparing": "Comparing...",
+      "noDiff": "No differences — both are identical",
+      "diffOutput": "Diff output",
+      "stats": {
+        "files": "{{count}} file(s)"
+      },
+      "errors": {
+        "generic": "Could not get the diff."
+      }
     }
   },
   "merge": {

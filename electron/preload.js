@@ -40,5 +40,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
   gitInteractiveRebase: (folderPath, baseCommit, todoList) => ipcRenderer.invoke('git-interactive-rebase', folderPath, baseCommit, todoList),
   gitRebaseContinue: (folderPath) => ipcRenderer.invoke('git-rebase-continue', folderPath),
   gitRebaseAbort: (folderPath) => ipcRenderer.invoke('git-rebase-abort', folderPath),
+  // Submodules
+  gitGetSubmodules: (folderPath) => ipcRenderer.invoke('git-get-submodules', folderPath),
+  gitAddSubmodule: (folderPath, repoUrl, subPath) => ipcRenderer.invoke('git-add-submodule', folderPath, repoUrl, subPath),
+  gitUpdateSubmodule: (folderPath, subPath) => ipcRenderer.invoke('git-update-submodule', folderPath, subPath),
+  gitRemoveSubmodule: (folderPath, subPath) => ipcRenderer.invoke('git-remove-submodule', folderPath, subPath),
+  // Diff commits
+  gitDiffCommits: (folderPath, commitA, commitB) => ipcRenderer.invoke('git-diff-commits', folderPath, commitA, commitB),
+  // Multirepo
+  gitGetRepoInfo: (folderPath) => ipcRenderer.invoke('git-get-repo-info', folderPath),
+  gitPullRepo: (folderPath) => ipcRenderer.invoke('git-pull-repo', folderPath),
+  gitPushRepo: (folderPath) => ipcRenderer.invoke('git-push-repo', folderPath),
 })
-

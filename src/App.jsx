@@ -14,6 +14,7 @@ import LocalRepoPanel from './components/LocalRepoPanel'
 import MergePanel from './components/MergePanel'
 import GitOperationsPanel from './components/GitOperationsPanel'
 import CloneRepoModal from './components/CloneRepoModal'
+import MultiRepoManager from './components/MultiRepoManager'
 
 // ─── Initial mock data (Fallback) ─────────────────────────────────────────────
 
@@ -260,6 +261,7 @@ export default function App() {
   const [showProviderSetup, setShowProviderSetup] = useState(false)
   const [showCreateRepoModal, setShowCreateRepoModal] = useState(false)
   const [showCloneRepoModal, setShowCloneRepoModal] = useState(false)
+  const [showMultiRepoManager, setShowMultiRepoManager] = useState(false)
   const [undoStack, setUndoStack] = useState([]);
   const [showMergePanel, setShowMergePanel] = useState(false);
   const [commitLoading, setCommitLoading] = useState(false)
@@ -529,6 +531,15 @@ export default function App() {
           >
             <Download size={14} className="text-indigo-400" />
             <span>{t('app.buttons.cloneRepo')}</span>
+          </button>
+
+          <button
+            onClick={() => setShowMultiRepoManager(true)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/40 border border-slate-700/40 hover:border-purple-500/50 hover:bg-purple-500/10 hover:text-purple-400 transition-all text-sm text-slate-300 font-medium cursor-pointer"
+            title={t('app.buttons.multiRepo')}
+          >
+            <Layers size={14} className="text-purple-400" />
+            <span className="hidden lg:inline">{t('app.buttons.multiRepo')}</span>
           </button>
 
           {localFolderPath && (
@@ -1088,6 +1099,10 @@ export default function App() {
             showToast(t('app.messages.repoCloned'), 'success')
           }}
         />
+      )}
+
+      {showMultiRepoManager && (
+        <MultiRepoManager onClose={() => setShowMultiRepoManager(false)} />
       )}
     </div>
   )

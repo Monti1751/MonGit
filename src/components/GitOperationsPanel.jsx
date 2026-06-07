@@ -4,11 +4,13 @@ import {
   Archive, RotateCcw, Tag, Zap,
   Plus, Trash2, Check, RefreshCw, AlertCircle,
   ChevronDown, ChevronRight, ArrowRightLeft, X,
-  CheckCircle2, Info, GitBranch, Layers, ArrowUp, ArrowDown, GitCommit
+  CheckCircle2, Info, GitBranch, Layers, ArrowUp, ArrowDown, GitCommit, GitMerge
 } from 'lucide-react'
+import SubmodulesPanel from './SubmodulesPanel'
+import AdvancedDiff from './AdvancedDiff'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const SECTION = { STASH: 'stash', REBASE: 'rebase', CHERRYPICK: 'cherrypick', REVERT: 'revert', TAGS: 'tags' }
+const SECTION = { STASH: 'stash', REBASE: 'rebase', CHERRYPICK: 'cherrypick', REVERT: 'revert', TAGS: 'tags', SUBMODULES: 'submodules', DIFF: 'diff' }
 const STATUS_TIMEOUT_MS = 4000
 
 // ─── Small helpers ────────────────────────────────────────────────────────────
@@ -756,6 +758,12 @@ export default function GitOperationsPanel({ folderPath, commits, activeBranch, 
 
           <SectionHeader icon={Tag} title={t('gitOps.tags.title')} active={activeSection === SECTION.TAGS} onClick={() => toggle(SECTION.TAGS)} />
           {activeSection === SECTION.TAGS && <TagsSection folderPath={folderPath} />}
+
+          <SectionHeader icon={GitMerge} title={t('gitOps.submodules.title')} active={activeSection === SECTION.SUBMODULES} onClick={() => toggle(SECTION.SUBMODULES)} />
+          {activeSection === SECTION.SUBMODULES && <SubmodulesPanel folderPath={folderPath} />}
+
+          <SectionHeader icon={ArrowRightLeft} title={t('gitOps.diff.title')} active={activeSection === SECTION.DIFF} onClick={() => toggle(SECTION.DIFF)} />
+          {activeSection === SECTION.DIFF && <AdvancedDiff folderPath={folderPath} commits={commits} branches={branches} />}
         </div>
       )}
     </div>

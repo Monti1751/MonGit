@@ -664,6 +664,102 @@ ipcMain.handle('git-rebase-abort', async (event, folderPath) => {
   }
 })
 
+// ─── Submodules ───────────────────────────────────────────────────────────────
+
+ipcMain.handle('git-get-submodules', async (event, folderPath) => {
+  try {
+    const { stdout } = await execAsync('git submodule status', { cwd: folderPath })
+    const submodules = stdout.split('\n').filter(l => l.trim()).map(line => {
+      const parts = line.trim().split(/\s+/)
+      const hash = parts[0].replace(/^[-+]/, '')
+      const path = parts[1]
+      const status = parts[0].startsWith('+') ? 'modified' : parts[0].startsWith('-') ? 'uninitialized' : 'ok'
+      return { hash, path, name: path.split('/').pop(), status }
+    })
+    return { success: true, submodules }
+  } catch (err) {
+    return { success: false, submodules: [], error: err.message }
+  }
+})
+
+ipcMain.handle('git-add-submodule', async (event, folderPath, repoUrl, subPath) => {
+  try {
+    await execAsync(`git submodule add "${repoUrl}" "${subPath}"`, { cwd: folderPath })
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.stderr || err.message }
+  }
+})
+
+ipcMain.handle('git-update-submodule', async (event, folderPath, subPath) => {
+  try {
+    const cmd = subPath ? `git submodule update --init "${subPath}"` : 'git submodule update --init --recursive'
+    await execAsync(cmd, { cwd: folderPath })
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.stderr || err.message }
+  }
+})
+
+ipcMain.handle('git-remove-submodule', async (event, folderPath, subPath) => {
+  try {
+    await execAsync(`git submodule deinit -f "${subPath}"`, { cwd: folderPath })
+    await execAsync(`git rm -f "${subPath}"`, { cwd: folderPath })
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.stderr || err.message }
+  }
+})
+
+// ─── Diff commits ─────────────────────────────────────────────────────────────
+
+ipcMain.handle('git-diff-commits', async (event, folderPath, commitA, commitB) => {
+  try {
+    const { stdout } = await execAsync(`git diff "${commitA}" "${commitB}"`, { cwd: folderPath })
+    return { success: true, diff: stdout }
+  } catch (err) {
+    return { success: false, diff: '', error: err.message }
+  }
+})
+
+// ─── Repo info for multirepo ──────────────────────────────────────────────────
+
+ipcMain.handle('git-get-repo-info', async (event, folderPath) => {
+  try {
+    const { stdout: branchOut } = await execAsync('git branch --show-current', { cwd: folderPath })
+    const activeBranch = branchOut.trim() || 'HEAD'
+    const { stdout: statusOut } = await execAsync('git status --porcelain', { cwd: folderPath })
+    const changedFiles = statusOut.split('\n').filter(l => l.trim()).length
+    const name = folderPath.split(/[/\\]/).pop()
+    let hasUnpushed = false
+    try {
+      const { stdout: unpushedOut } = await execAsync(`git log origin/${activeBranch}..HEAD --oneline 2>/dev/null`, { cwd: folderPath })
+      hasUnpushed = unpushedOut.trim().length > 0
+    } catch {}
+    return { success: true, name, activeBranch, changedFiles, hasUnpushed }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('git-pull-repo', async (event, folderPath) => {
+  try {
+    await execAsync('git pull', { cwd: folderPath })
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.stderr || err.message }
+  }
+})
+
+ipcMain.handle('git-push-repo', async (event, folderPath) => {
+  try {
+    await execAsync('git push', { cwd: folderPath })
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.stderr || err.message }
+  }
+})
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 ipcMain.handle('package-app', async () => {
