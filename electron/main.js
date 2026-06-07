@@ -481,6 +481,18 @@ ipcMain.handle('git-list-tags', async (event, folderPath) => {
   }
 })
 
+ipcMain.handle('git-list-published-tags', async (event, folderPath) => {
+  try {
+    const { stdout } = await execAsync('git ls-remote --tags origin', { cwd: folderPath })
+    const tags = stdout.split('\n')
+      .filter(line => line.includes('refs/tags/'))
+      .map(line => line.split('refs/tags/')[1].replace(/\^\{\}$/, '').trim())
+    return { success: true, tags: [...new Set(tags)] }
+  } catch (err) {
+    return { success: false, tags: [], error: err.message }
+  }
+})
+
 ipcMain.handle('git-create-tag', async (event, folderPath, name, message) => {
   try {
     await execAsync(`git tag -a "${name}" -m "${message}"`, { cwd: folderPath })
@@ -493,6 +505,11 @@ ipcMain.handle('git-create-tag', async (event, folderPath, name, message) => {
 ipcMain.handle('git-delete-tag', async (event, folderPath, name) => {
   try {
     await execAsync(`git tag -d "${name}"`, { cwd: folderPath })
+    try {
+      await execAsync(`git push origin --delete "${name}"`, { cwd: folderPath })
+    } catch (e) {
+      // Ignore if not in remote
+    }
     return { success: true }
   } catch (err) {
     return { success: false, error: err.stderr || err.message }
