@@ -565,6 +565,7 @@ function RevertSection({ folderPath, commits }) {
 function TagsSection({ folderPath }) {
   const { t } = useTranslation()
   const [tags, setTags] = useState([])
+  const [publishedTags, setPublishedTags] = useState([])
   const [loading, setLoading] = useState(false)
   const [tagName, setTagName] = useState('')
   const [tagMessage, setTagMessage] = useState('')
@@ -581,7 +582,15 @@ function TagsSection({ folderPath }) {
     try {
       const result = await window.electronAPI.gitListTags(folderPath)
       setTags(result.tags || [])
-    } catch { setTags([]) }
+      
+      const pubResult = await window.electronAPI.gitListPublishedTags(folderPath)
+      if (pubResult.success) {
+        setPublishedTags(pubResult.tags || [])
+      }
+    } catch { 
+      setTags([]) 
+      setPublishedTags([])
+    }
     finally { setLoading(false) }
   }
 
@@ -624,8 +633,12 @@ function TagsSection({ folderPath }) {
     setLoading(true)
     try {
       const result = await window.electronAPI.gitPushTag(folderPath, name)
-      if (result.success) showStatus('success', t('gitOps.tags.pushSuccess', { name }))
-      else showStatus('error', result.error || t('gitOps.tags.errorPush'))
+      if (result.success) {
+        showStatus('success', t('gitOps.tags.pushSuccess', { name }))
+        await load()
+      } else {
+        showStatus('error', result.error || t('gitOps.tags.errorPush'))
+      }
     } catch { showStatus('error', t('gitOps.common.error')) }
     finally { setLoading(false) }
   }
@@ -682,9 +695,15 @@ function TagsSection({ folderPath }) {
                 <Tag size={13} className="text-emerald-400 flex-shrink-0" />
                 <span className="flex-1 font-mono text-sm text-slate-200">{tag}</span>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => handlePushTag(tag)} title={t('gitOps.tags.push')} className="px-2 py-1 rounded-lg bg-brand-500/20 text-brand-400 hover:bg-brand-500/30 text-[10px] font-bold transition-all">
-                    {t('gitOps.tags.push')}
-                  </button>
+                  {publishedTags.includes(tag) ? (
+                    <span className="px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-[10px] font-bold flex items-center">
+                      {t('gitOps.tags.published', 'Publicado')}
+                    </span>
+                  ) : (
+                    <button onClick={() => handlePushTag(tag)} title={t('gitOps.tags.push')} className="px-2 py-1 rounded-lg bg-brand-500/20 text-brand-400 hover:bg-brand-500/30 text-[10px] font-bold transition-all">
+                      {t('gitOps.tags.push')}
+                    </button>
+                  )}
                   <button onClick={() => handleDelete(tag)} title={t('gitOps.common.delete')} className="px-2 py-1 rounded-lg bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 transition-all">
                     <Trash2 size={11} />
                   </button>

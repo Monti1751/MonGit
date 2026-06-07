@@ -33,6 +33,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   gitCherryPick: (folderPath, commitId, targetBranch) => ipcRenderer.invoke('git-cherry-pick', folderPath, commitId, targetBranch),
   gitRevert: (folderPath, commitId) => ipcRenderer.invoke('git-revert', folderPath, commitId),
   gitListTags: (folderPath) => ipcRenderer.invoke('git-list-tags', folderPath),
+  gitListPublishedTags: (folderPath) => ipcRenderer.invoke('git-list-published-tags', folderPath),
   gitCreateTag: (folderPath, name, message) => ipcRenderer.invoke('git-create-tag', folderPath, name, message),
   gitDeleteTag: (folderPath, name) => ipcRenderer.invoke('git-delete-tag', folderPath, name),
   gitPushTag: (folderPath, name) => ipcRenderer.invoke('git-push-tag', folderPath, name),
