@@ -614,7 +614,12 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
                 {t('app.buttons.cancel')}
               </button>
               <button
-                onClick={() => { const u = getGitHubPrUrl(); if (u) window.electronAPI?.openExternalUrl?.(u) || window.open(u, '_blank') }}
+                onClick={() => { 
+                  const u = getGitHubPrUrl()
+                  if (u) {
+                    (window.electronAPI?.openExternalUrl?.(u) || Promise.resolve()).catch(() => window.open(u, '_blank'))
+                  }
+                }}
                 disabled={!remoteUrl}
                 className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-sm transition-colors flex items-center justify-center gap-2"
               >
@@ -711,7 +716,12 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
                 </button>
 
                 <button
-                  onClick={() => { const u = getGitHubPrUrl(); if (u) window.electronAPI?.openExternalUrl?.(u) || window.open(u, '_blank') }}
+                  onClick={() => { 
+                    const u = getGitHubPrUrl()
+                    if (u) {
+                      (window.electronAPI?.openExternalUrl?.(u) || Promise.resolve()).catch(() => window.open(u, '_blank'))
+                    }
+                  }}
                   disabled={!fromBranch || !remoteUrl}
                   className="w-full py-3 rounded-xl bg-slate-700/50 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 font-semibold text-sm transition-all flex items-center justify-center gap-2 border border-slate-600"
                 >
