@@ -94,6 +94,27 @@ La pestaña **Avanzado** te proporciona herramientas profesionales para el contr
 * **Publicar Tags**: Envía tus tags al repositorio remoto.
 * **Gestión**: Visualiza, edita y elimina tags fácilmente.
 
+#### 📦 Gestión de Submódulos
+* **Agregar submódulos**: Incluye repositorios dentro de tu proyecto principal manteniendo su historial independiente.
+* **Actualizar submódulos**: Sincroniza submodules con sus commits más recientes.
+* **Eliminar submódulos**: Remueve submodules del proyecto gestionando correctamente el `.gitmodules` y `.git/config`.
+
+#### 🔀 Diff Avanzado
+* **Comparar ramas**: Analiza diferencias entre dos ramas en un visor unificado.
+* **Comparar commits**: Revisa los cambios introducidos entre dos commits concretos.
+* **Visores múltiples**: Alterna entre modos de visualización unificada y lateral.
+
+#### 🧩 Plantillas de Commit
+* **Plantillas predefinidas**: Elige entre convencional, semántica o Angular para estructurar tus mensajes.
+* **Selector integrado**: Acceso directo desde el panel de staging sin abandonar el flujo de trabajo.
+* **Personalización rápida**: Las plantillas se cargan instantáneamente en el área de mensaje del commit.
+
+#### 🗂️ Workspace Multirepositorio
+* **Múltiples repositorios**: Gestiona varios proyectos locales desde una única interfaz.
+* **Sincronización en lote**: Aplica Pull y Push a todos los repos seleccionados en un solo clic.
+* **Persistencia**: Los repositorios agregados se recuerdan entre sesiones gracias a `localStorage`.
+* **Acceso rápido**: Botón dedicado en la barra superior para abrir el workspace multirepo.
+
 ### 9. 🌍 Internacionalización (i18n)
 * **Soporte Multiidioma**: Interfaz completa en español e inglés.
 * **Detección Automática**: Se adapta al idioma del sistema operativo.
