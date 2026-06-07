@@ -555,9 +555,16 @@ export default function MergePanel({ folderPath, branches, activeBranch, onMerge
   const getGitHubPrUrl = () => {
     if (!remoteUrl) return null
     let cleanUrl = remoteUrl.trim()
+    
+    // Remove credentials like https://user:pass@github.com/...
+    cleanUrl = cleanUrl.replace(/(https?:\/\/)([^@]+@)/, '$1')
+
     if (cleanUrl.startsWith('git@github.com:')) {
       cleanUrl = cleanUrl.replace('git@github.com:', 'https://github.com/')
     }
+    // Handle other ssh formats like git@gitlab.com:
+    cleanUrl = cleanUrl.replace(/^git@([^:]+):/, 'https://$1/')
+
     if (cleanUrl.endsWith('.git')) {
       cleanUrl = cleanUrl.slice(0, -4)
     }
