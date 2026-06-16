@@ -16,7 +16,6 @@
       "providers": "Proveedores Git",
       "newBranch": "Nueva Rama",
       "createRepo": "Crear Repositorio",
-      "refreshHistory": "Actualizar historial",
       "viewIn": "Ver en {{provider}}",
       "comingSoon": "Función próximamente",
       "viewFullDiff": "Ver diff completo",
@@ -25,7 +24,8 @@
     "tabs": {
       "history": "Historial",
       "merge": "Fusión y Conflictos",
-      "advanced": "Avanzado"
+      "advanced": "Avanzado",
+      "analysis": "Análisis"
     },
     "sidebar": {
       "myBranches": "Mis Ramas",
@@ -74,6 +74,10 @@
         "warning": "Atención:",
         "warningText": "Si esta rama tiene cambios o commits locales que no han sido fusionados con la rama principal (main), se perderán definitivamente.",
         "deleteRemote": "Eliminar también de GitHub (remoto)"
+      },
+      "diff": {
+        "title": "Diff del commit: {{id}}",
+        "noChanges": "No hay cambios visibles o es un commit vacío."
       }
     },
     "messages": {
