@@ -534,5 +534,34 @@
       "finishMergeCommit": "No se pudo completar el commit de fusión. Por favor, revisa el estado de git.",
       "loadDiff": "No se pudo cargar el diff: {{error}}"
     }
+  },
+  "analysis": {
+    "tabs": {
+      "stats": "Estadísticas",
+      "search": "Búsqueda",
+      "file": "Archivos"
+    },
+    "stats": {
+      "totalCommits": "Total Commits",
+      "contributors": "Contribuidores",
+      "linesAdded": "Líneas Añadidas",
+      "linesRemoved": "Líneas Eliminadas",
+      "activityChart": "Actividad (Últimos 30 Días)",
+      "topContributors": "Top Contribuidores"
+    },
+    "search": {
+      "title": "Búsqueda Avanzada",
+      "message": "Mensaje del commit...",
+      "author": "Autor...",
+      "button": "Buscar",
+      "noResults": "No se encontraron commits.",
+      "prompt": "Utiliza los filtros de arriba para buscar."
+    },
+    "file": {
+      "history": "Historial",
+      "blame": "Blame",
+      "path": "Ruta del archivo (ej. src/main.js)",
+      "noDiff": "Sin cambios visibles"
+    }
   }
 }

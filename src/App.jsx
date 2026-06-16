@@ -5,7 +5,7 @@ import {
   Plus, ChevronDown, RotateCcw,
   Code2, Folder, FolderPlus, X, Check,
   AlertCircle, Clock, Layers,
-  RefreshCw, Terminal, Eye, Info, UserPlus, Trash2, Globe, Zap
+  RefreshCw, Terminal, Eye, Info, UserPlus, Trash2, Globe, Zap, PieChart
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useProviders } from './hooks/useProviders'
@@ -13,6 +13,7 @@ import ProviderSetup from './components/ProviderSetup'
 import LocalRepoPanel from './components/LocalRepoPanel'
 import MergePanel from './components/MergePanel'
 import GitOperationsPanel from './components/GitOperationsPanel'
+import AnalysisPanel from './components/AnalysisPanel'
 import CloneRepoModal from './components/CloneRepoModal'
 import MultiRepoManager from './components/MultiRepoManager'
 
@@ -267,8 +268,27 @@ export default function App() {
   const [commitLoading, setCommitLoading] = useState(false)
   const [syncLoading, setSyncLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('history')
-  
   const [repoSearch, setRepoSearch] = useState('')
+
+  const [diffModalCommit, setDiffModalCommit] = useState(null)
+  const [diffModalContent, setDiffModalContent] = useState(null)
+
+  const handleViewCommitDiff = async (commit) => {
+    if (!localFolderPath) return
+    setDiffModalCommit(commit)
+    setDiffModalContent(null)
+    try {
+      // Usar commit.id^ para ver los cambios introducidos por este commit
+      const result = await window.electronAPI.gitDiffCommits(localFolderPath, commit.id + '^', commit.id)
+      if (result.success) {
+        setDiffModalContent(result.diff || '')
+      } else {
+        setDiffModalContent(`Error: ${result.error}`)
+      }
+    } catch (e) {
+      setDiffModalContent(`Error: ${e.message}`)
+    }
+  }
 
   const showToast = useCallback((message, type = 'success') => {
     setToast({ message, type })
@@ -770,6 +790,17 @@ export default function App() {
                   <Zap size={15} />
                   {t('app.tabs.advanced')}
                 </button>
+                <button
+                  onClick={() => setActiveTab('analysis')}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${
+                    activeTab === 'analysis'
+                      ? 'bg-slate-700 text-white shadow-lg'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <PieChart size={15} />
+                  {t('app.tabs.analysis', 'Análisis')}
+                </button>
               </div>
               
               {activeTab === 'history' && (
@@ -936,8 +967,10 @@ export default function App() {
                              ) : (
                                <>
                                   <button
+                                    onClick={(e) => { e.stopPropagation(); handleViewCommitDiff(commit); }}
+                                    className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-slate-700/40 hover:bg-slate-600/50 text-slate-300 text-xs transition-all"
                                   >
-                                    <Code2 size={12} /> Ver diff completo
+                                    <Code2 size={12} /> {t('app.buttons.viewFullDiff', 'Ver diff completo')}
                                   </button>
                                   <button
                                     onClick={e => { e.stopPropagation(); showToast(`Función próximamente`, 'info') }}
@@ -979,6 +1012,12 @@ export default function App() {
                   branches={localBranches}
                   onRefresh={() => loadLocalRepoData(localFolderPath, activeBranch)}
                 />
+              </div>
+            )}
+
+            {activeTab === 'analysis' && (
+              <div className="h-full p-0">
+                <AnalysisPanel folderPath={localFolderPath} />
               </div>
             )}
           </div>

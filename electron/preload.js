@@ -51,4 +51,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   gitGetRepoInfo: (folderPath) => ipcRenderer.invoke('git-get-repo-info', folderPath),
   gitPullRepo: (folderPath) => ipcRenderer.invoke('git-pull-repo', folderPath),
   gitPushRepo: (folderPath) => ipcRenderer.invoke('git-push-repo', folderPath),
+  // Stats and Analysis
+  getRepoStats: (folderPath) => ipcRenderer.invoke('get-repo-stats', folderPath),
+  gitSearchLog: (folderPath, filters) => ipcRenderer.invoke('git-search-log', folderPath, filters),
+  gitBlame: (folderPath, filePath) => ipcRenderer.invoke('git-blame', folderPath, filePath),
+  gitFileHistory: (folderPath, filePath) => ipcRenderer.invoke('git-file-history', folderPath, filePath),
 })
