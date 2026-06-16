@@ -5,7 +5,7 @@ import {
   Plus, ChevronDown, RotateCcw,
   Code2, Folder, FolderPlus, X, Check,
   AlertCircle, Clock, Layers,
-  RefreshCw, Terminal, Eye, Info, UserPlus, Trash2, Globe, Zap
+  RefreshCw, Terminal, Eye, Info, UserPlus, Trash2, Globe, Zap, PieChart
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useProviders } from './hooks/useProviders'
@@ -13,6 +13,7 @@ import ProviderSetup from './components/ProviderSetup'
 import LocalRepoPanel from './components/LocalRepoPanel'
 import MergePanel from './components/MergePanel'
 import GitOperationsPanel from './components/GitOperationsPanel'
+import AnalysisPanel from './components/AnalysisPanel'
 import CloneRepoModal from './components/CloneRepoModal'
 import MultiRepoManager from './components/MultiRepoManager'
 
@@ -70,12 +71,12 @@ function Avatar({ initials, color, avatarUrl, size = 'sm' }) {
   )
 }
 
-function Modal({ title, subtitle, onClose, onConfirm, children }) {
+function Modal({ title, subtitle, onClose, onConfirm, children, showFooter = true, maxWidth = 'max-w-md' }) {
   const { t } = useTranslation()
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md rounded-2xl border border-slate-700/60 bg-slate-900 shadow-2xl shadow-black/50 p-6">
+      <div className={`relative z-10 w-full ${maxWidth} rounded-2xl border border-slate-700/60 bg-slate-900 shadow-2xl shadow-black/50 p-6`}>
         <div className="flex items-start justify-between mb-4">
           <div>
             <h3 className="text-lg font-semibold text-white">{title}</h3>
@@ -89,20 +90,22 @@ function Modal({ title, subtitle, onClose, onConfirm, children }) {
           </button>
         </div>
         {children}
-        <div className="flex gap-3 mt-5">
-          <button
-            onClick={onClose}
-            className="flex-1 py-2.5 px-4 rounded-xl border border-slate-600 text-slate-300 hover:bg-slate-700/50 transition-all text-sm font-medium"
-          >
-            {t('app.buttons.cancel')}
-          </button>
-          <button
-            onClick={onConfirm}
-            className="flex-1 py-2.5 px-4 rounded-xl bg-brand-500 hover:bg-brand-400 text-white font-semibold transition-all text-sm glow-teal-sm"
-          >
-            {t('app.buttons.confirm')}
-          </button>
-        </div>
+        {showFooter && (
+          <div className="flex gap-3 mt-5">
+            <button
+              onClick={onClose}
+              className="flex-1 py-2.5 px-4 rounded-xl border border-slate-600 text-slate-300 hover:bg-slate-700/50 transition-all text-sm font-medium"
+            >
+              {t('app.buttons.cancel')}
+            </button>
+            <button
+              onClick={onConfirm}
+              className="flex-1 py-2.5 px-4 rounded-xl bg-brand-500 hover:bg-brand-400 text-white font-semibold transition-all text-sm glow-teal-sm"
+            >
+              {t('app.buttons.confirm')}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -267,8 +270,27 @@ export default function App() {
   const [commitLoading, setCommitLoading] = useState(false)
   const [syncLoading, setSyncLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('history')
-  
   const [repoSearch, setRepoSearch] = useState('')
+
+  const [diffModalCommit, setDiffModalCommit] = useState(null)
+  const [diffModalContent, setDiffModalContent] = useState(null)
+
+  const handleViewCommitDiff = async (commit) => {
+    if (!localFolderPath) return
+    setDiffModalCommit(commit)
+    setDiffModalContent(null)
+    try {
+      // Usar commit.id^ para ver los cambios introducidos por este commit
+      const result = await window.electronAPI.gitDiffCommits(localFolderPath, commit.id + '^', commit.id)
+      if (result.success) {
+        setDiffModalContent(result.diff || '')
+      } else {
+        setDiffModalContent(`Error: ${result.error}`)
+      }
+    } catch (e) {
+      setDiffModalContent(`Error: ${e.message}`)
+    }
+  }
 
   const showToast = useCallback((message, type = 'success') => {
     setToast({ message, type })
@@ -770,6 +792,17 @@ export default function App() {
                   <Zap size={15} />
                   {t('app.tabs.advanced')}
                 </button>
+                <button
+                  onClick={() => setActiveTab('analysis')}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${
+                    activeTab === 'analysis'
+                      ? 'bg-slate-700 text-white shadow-lg'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <PieChart size={15} />
+                  {t('app.tabs.analysis', 'Análisis')}
+                </button>
               </div>
               
               {activeTab === 'history' && (
@@ -936,8 +969,10 @@ export default function App() {
                              ) : (
                                <>
                                   <button
+                                    onClick={(e) => { e.stopPropagation(); handleViewCommitDiff(commit); }}
+                                    className="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-slate-700/40 hover:bg-slate-600/50 text-slate-300 text-xs transition-all"
                                   >
-                                    <Code2 size={12} /> Ver diff completo
+                                    <Code2 size={12} /> {t('app.buttons.viewFullDiff', 'Ver diff completo')}
                                   </button>
                                   <button
                                     onClick={e => { e.stopPropagation(); showToast(`Función próximamente`, 'info') }}
@@ -979,6 +1014,12 @@ export default function App() {
                   branches={localBranches}
                   onRefresh={() => loadLocalRepoData(localFolderPath, activeBranch)}
                 />
+              </div>
+            )}
+
+            {activeTab === 'analysis' && (
+              <div className="h-full p-0">
+                <AnalysisPanel folderPath={localFolderPath} />
               </div>
             )}
           </div>
@@ -1099,6 +1140,36 @@ export default function App() {
             showToast(t('app.messages.repoCloned'), 'success')
           }}
         />
+      )}
+
+      {diffModalCommit && (
+        <Modal
+          title={t('app.modals.diff.title', { id: diffModalCommit.id.slice(0, 7) })}
+          subtitle={diffModalCommit.message}
+          onClose={() => { setDiffModalCommit(null); setDiffModalContent(null) }}
+          showFooter={false}
+          maxWidth="max-w-2xl"
+        >
+          {diffModalContent === null ? (
+            <div className="flex justify-center p-8"><RefreshCw size={24} className="animate-spin text-brand-400" /></div>
+          ) : diffModalContent === '' ? (
+            <div className="text-center text-slate-500 p-8">{t('app.modals.diff.noChanges', 'No hay cambios o es un commit vacío.')}</div>
+          ) : (
+            <div className="max-h-[60vh] overflow-y-auto bg-slate-950 border border-slate-700/50 rounded-xl p-3">
+              <pre className="text-[11px] font-mono whitespace-pre-wrap break-words leading-5">
+                {diffModalContent.split('\n').map((line, i) => (
+                  <span key={i} className={`block ${
+                    line.startsWith('+') && !line.startsWith('+++') ? 'text-emerald-400 bg-emerald-950/30' :
+                    line.startsWith('-') && !line.startsWith('---') ? 'text-rose-400 bg-rose-950/30' :
+                    line.startsWith('@@') ? 'text-brand-400 bg-slate-800/60' :
+                    line.startsWith('diff') ? 'text-indigo-400 font-semibold' :
+                    'text-slate-400'
+                  }`}>{line || ' '}</span>
+                ))}
+              </pre>
+            </div>
+          )}
+        </Modal>
       )}
 
       {showMultiRepoManager && (

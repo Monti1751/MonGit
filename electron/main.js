@@ -760,6 +760,108 @@ ipcMain.handle('git-push-repo', async (event, folderPath) => {
   }
 })
 
+// ─── Stats and Analysis ───────────────────────────────────────────────────────
+
+ipcMain.handle('get-repo-stats', async (event, folderPath) => {
+  try {
+    const { stdout: commitsOut } = await execAsync('git log --format="%an|%ad" --date=short', { cwd: folderPath })
+    const lines = commitsOut.split('\n').filter(Boolean)
+    
+    const totalCommits = lines.length
+    const authorsMap = {}
+    const commitsByDayMap = {}
+
+    lines.forEach(line => {
+      const [author, date] = line.split('|')
+      if (author) {
+        authorsMap[author] = (authorsMap[author] || 0) + 1
+      }
+      if (date) {
+        commitsByDayMap[date] = (commitsByDayMap[date] || 0) + 1
+      }
+    })
+
+    const contributors = Object.keys(authorsMap).map(name => ({ name, commits: authorsMap[name] })).sort((a,b) => b.commits - a.commits)
+    const commitsByDay = Object.keys(commitsByDayMap).map(date => ({ date, count: commitsByDayMap[date] })).sort((a,b) => a.date.localeCompare(b.date)).slice(-30) // last 30 days
+
+    let linesAdded = 0
+    let linesRemoved = 0
+    try {
+      const { stdout: diffOut } = await execAsync('git log --shortstat', { cwd: folderPath })
+      const addMatch = diffOut.match(/(\d+)\s+insertion/g) || []
+      const delMatch = diffOut.match(/(\d+)\s+deletion/g) || []
+      linesAdded = addMatch.reduce((sum, str) => sum + parseInt(str), 0)
+      linesRemoved = delMatch.reduce((sum, str) => sum + parseInt(str), 0)
+    } catch(e){}
+
+    return { success: true, stats: { totalCommits, contributors, commitsByDay, linesAdded, linesRemoved } }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('git-search-log', async (event, folderPath, filters) => {
+  try {
+    let cmd = 'git log --pretty=format:"%H|%s|%an|%ar|%d" -n 100'
+    if (filters.author) cmd += ` --author="${filters.author}"`
+    if (filters.message) cmd += ` --grep="${filters.message}"`
+    if (filters.dateFrom) cmd += ` --since="${filters.dateFrom}"`
+    if (filters.dateTo) cmd += ` --until="${filters.dateTo}"`
+
+    const { stdout } = await execAsync(cmd, { cwd: folderPath })
+    const commits = stdout.split('\n').filter(l => l.trim()).map(line => {
+      const parts = line.split('|')
+      return {
+        id: parts[0],
+        message: parts[1] || '',
+        author: parts[2],
+        time: parts[3]
+      }
+    })
+    return { success: true, commits }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('git-blame', async (event, folderPath, filePath) => {
+  try {
+    const { stdout } = await execAsync(`git blame "${filePath}" --date=short`, { cwd: folderPath })
+    const blame = stdout.split('\n').filter(Boolean).map(line => {
+      const match = line.match(/^(\^?\w+)\s+.*?\((.*?)\s+(\d{4}-\d{2}-\d{2})\s+\d+\)\s(.*)$/)
+      if (match) {
+        return { commit: match[1], author: match[2].trim(), date: match[3], code: match[4] }
+      }
+      return { code: line }
+    })
+    return { success: true, blame }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('git-file-history', async (event, folderPath, filePath) => {
+  try {
+    const { stdout } = await execAsync(`git log --pretty=format:"%H|%an|%ad|%s" --date=short -- "${filePath}"`, { cwd: folderPath })
+    const history = stdout.split('\n').filter(Boolean).map(line => {
+      const [hash, author, date, message] = line.split('|')
+      return { hash, author, date, message }
+    })
+    return { success: true, history }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('get-file-at-commit', async (event, folderPath, filePath, commitId) => {
+  try {
+    const { stdout } = await execAsync(`git show "${commitId}:${filePath}"`, { cwd: folderPath })
+    return { success: true, content: stdout }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 ipcMain.handle('package-app', async () => {

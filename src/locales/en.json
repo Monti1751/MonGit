@@ -25,7 +25,8 @@
     "tabs": {
       "history": "History",
       "merge": "Merge & Conflicts",
-      "advanced": "Advanced"
+      "advanced": "Advanced",
+      "analysis": "Analysis"
     },
     "sidebar": {
       "myBranches": "My Branches",
@@ -74,6 +75,10 @@
         "warning": "Warning:",
         "warningText": "If this branch has unmerged local changes or commits, they will be permanently lost.",
         "deleteRemote": "Also delete from GitHub (remote)"
+      },
+      "diff": {
+        "title": "Commit diff: {{id}}",
+        "noChanges": "No visible changes or empty commit."
       }
     },
     "messages": {
@@ -533,6 +538,35 @@
       "rebaseContinue": "Could not continue the rebase.",
       "finishMergeCommit": "Could not complete the merge commit. Please check git status.",
       "loadDiff": "Could not load diff: {{error}}"
+    }
+  },
+  "analysis": {
+    "tabs": {
+      "stats": "Statistics",
+      "search": "Search",
+      "file": "Files"
+    },
+    "stats": {
+      "totalCommits": "Total Commits",
+      "contributors": "Contributors",
+      "linesAdded": "Lines Added",
+      "linesRemoved": "Lines Removed",
+      "activityChart": "Activity (Last 30 Days)",
+      "topContributors": "Top Contributors"
+    },
+    "search": {
+      "title": "Advanced Search",
+      "message": "Commit message...",
+      "author": "Author...",
+      "button": "Search",
+      "noResults": "No commits found.",
+      "prompt": "Use the filters above to search."
+    },
+    "file": {
+      "history": "History",
+      "blame": "Blame",
+      "path": "File path (e.g. src/main.js)",
+      "noDiff": "No visible changes"
     }
   }
 }
