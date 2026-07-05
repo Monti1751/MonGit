@@ -385,14 +385,16 @@ export default function App() {
     try {
       const pullResult = await window.electronAPI.pullChanges(localFolderPath)
       if (!pullResult.success) {
-        showToast(t('app.errors.pullFailed'), 'error')
+        const errMsg = pullResult.error || ''
+        showToast(`${t('app.errors.pullFailed')}${errMsg ? ` (${errMsg})` : ''}`, 'error')
         setSyncLoading(false)
         return
       }
 
       const pushResult = await window.electronAPI.pushChanges(localFolderPath)
       if (!pushResult.success) {
-        showToast(t('app.errors.pushFailed'), 'error')
+        const errMsg = pushResult.error || ''
+        showToast(`${t('app.errors.pushFailed')}${errMsg ? ` (${errMsg})` : ''}`, 'error')
         setSyncLoading(false)
         return
       }
