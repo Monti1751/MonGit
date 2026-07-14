@@ -153,8 +153,20 @@ ipcMain.handle('push-changes', async (event, folderPath, branchName) => {
       activeBranch = branchStdout.trim();
     }
 
+    // Check if the branch already has a remote upstream tracking branch
+    let hasUpstream = true;
     try {
-      await execAsync(`git push origin "${activeBranch}"`, { cwd: folderPath });
+      await execAsync('git rev-parse --abbrev-ref --symbolic-full-name @{u}', { cwd: folderPath });
+    } catch {
+      hasUpstream = false;
+    }
+
+    const pushCmd = hasUpstream
+      ? `git push origin "${activeBranch}"`
+      : `git push --set-upstream origin "${activeBranch}"`;
+
+    try {
+      await execAsync(pushCmd, { cwd: folderPath });
       return { success: true };
     } catch (pushErr) {
       const stderr = pushErr.stderr || '';
@@ -170,6 +182,7 @@ ipcMain.handle('push-changes', async (event, folderPath, branchName) => {
     return { success: false, error: err.message || 'Unknown error during push' };
   }
 });
+
 
 ipcMain.handle('check-unpushed-commits', async (event, folderPath) => {
   try {

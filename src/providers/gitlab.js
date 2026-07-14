@@ -124,3 +124,143 @@ export async function createRepo(token, details) {
   }
   return res.json()
 }
+
+export async function getPullRequests(token, _owner, _repo, state = 'open', projectId) {
+  // Map open -> opened, all -> all, closed -> closed
+  const glState = state === 'open' ? 'opened' : state
+  const stateQuery = glState !== 'all' ? `&state=${encodeURIComponent(glState)}` : ''
+  const res = await fetch(`${BASE}/projects/${projectId}/merge_requests?per_page=100${stateQuery}`, {
+    headers: headers(token)
+  })
+  if (!res.ok) throw new Error(`Error cargando MRs (${res.status})`)
+  const data = await res.json()
+  return data.map(mr => ({
+    id: String(mr.iid),
+    number: mr.iid,
+    title: mr.title,
+    description: mr.description || '',
+    state: mr.state === 'opened' ? 'open' : 'closed',
+    user: mr.author.username,
+    avatar: mr.author.avatar_url,
+    source: mr.source_branch,
+    target: mr.target_branch,
+    headSha: mr.sha,
+    createdAt: mr.created_at,
+    url: mr.web_url,
+    provider: 'gitlab',
+    projectId: projectId
+  }))
+}
+
+export async function createPullRequest(token, _owner, _repo, details, projectId) {
+  const payload = {
+    title: details.title,
+    description: details.description || '',
+    source_branch: details.sourceBranch,
+    target_branch: details.targetBranch
+  }
+  const res = await fetch(`${BASE}/projects/${projectId}/merge_requests`, {
+    method: 'POST',
+    headers: headers(token),
+    body: JSON.stringify(payload)
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.message || `Error creando MR (${res.status})`)
+  }
+  return res.json()
+}
+
+export async function mergePullRequest(token, _owner, _repo, mrIid, projectId) {
+  const res = await fetch(`${BASE}/projects/${projectId}/merge_requests/${mrIid}/merge`, {
+    method: 'PUT',
+    headers: headers(token)
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.message || `Error fusionando MR (${res.status})`)
+  }
+  return res.json()
+}
+
+export async function getPRComments(token, _owner, _repo, mrIid, projectId) {
+  const res = await fetch(`${BASE}/projects/${projectId}/merge_requests/${mrIid}/notes?per_page=100&sort=asc`, {
+    headers: headers(token)
+  })
+  if (!res.ok) throw new Error(`Error cargando notas (${res.status})`)
+  const data = await res.json()
+  // Filter out system notes/bot messages if needed, or keep all
+  return data
+    .filter(note => !note.system)
+    .map(note => ({
+      id: String(note.id),
+      user: note.author.username,
+      avatar: note.author.avatar_url,
+      body: note.body,
+      createdAt: note.created_at,
+      path: note.position?.new_path || null,
+      line: note.position?.new_line || null,
+      side: 'RIGHT'
+    }))
+}
+
+export async function createPRComment(token, _owner, _repo, mrIid, body, inlineDetails = null, projectId) {
+  const isInline = !!inlineDetails
+  const payload = isInline
+    ? {
+        body,
+        position: {
+          position_type: 'text',
+          new_path: inlineDetails.path,
+          new_line: inlineDetails.line,
+          base_sha: inlineDetails.baseSha,
+          start_sha: inlineDetails.startSha,
+          head_sha: inlineDetails.commitId
+        }
+      }
+    : { body }
+
+  const res = await fetch(`${BASE}/projects/${projectId}/merge_requests/${mrIid}/notes`, {
+    method: 'POST',
+    headers: headers(token),
+    body: JSON.stringify(payload)
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.message || `Error creando nota (${res.status})`)
+  }
+  return res.json()
+}
+
+export async function getPRCheckRuns(token, _owner, _repo, ref, projectId) {
+  // Query pipelines for the given ref commit sha
+  const res = await fetch(`${BASE}/projects/${projectId}/pipelines?sha=${encodeURIComponent(ref)}`, {
+    headers: headers(token)
+  })
+  if (!res.ok) throw new Error(`Error cargando pipelines (${res.status})`)
+  const data = await res.json()
+  return data.map(p => ({
+    id: String(p.id),
+    name: `Pipeline #${p.id}`,
+    status: p.status === 'running' || p.status === 'pending' ? 'in_progress' : 'completed',
+    conclusion: p.status === 'success' ? 'success' : p.status === 'failed' ? 'failure' : 'neutral',
+    detailsUrl: p.web_url
+  }))
+}
+
+export async function getPRFiles(token, _owner, _repo, mrIid, projectId) {
+  const res = await fetch(`${BASE}/projects/${projectId}/merge_requests/${mrIid}/changes`, {
+    headers: headers(token)
+  })
+  if (!res.ok) throw new Error(`Error cargando cambios de MR (${res.status})`)
+  const data = await res.json()
+  return (data.changes || []).map(c => ({
+    sha: c.amended_commit_sha || '',
+    filename: c.new_path,
+    status: c.new_file ? 'added' : c.deleted_file ? 'removed' : 'modified',
+    additions: 0, // GitLab doesn't return count directly in simple change payload
+    deletions: 0,
+    changes: 0,
+    patch: c.diff || ''
+  }))
+}

@@ -140,3 +140,59 @@ export async function createProviderRepo(providerId, creds, details, meta = {}) 
     default: throw new Error(`Proveedor desconocido: ${providerId}`)
   }
 }
+
+export async function fetchPullRequests(providerId, creds, owner, repo, state, meta = {}) {
+  switch (providerId) {
+    case 'github': return github.getPullRequests(creds.token, owner, repo, state)
+    case 'gitlab': return gitlab.getPullRequests(creds.token, owner, repo, state, meta.projectId)
+    default: return []
+  }
+}
+
+export async function createPullRequest(providerId, creds, owner, repo, details, meta = {}) {
+  switch (providerId) {
+    case 'github': return github.createPullRequest(creds.token, owner, repo, details)
+    case 'gitlab': return gitlab.createPullRequest(creds.token, owner, repo, details, meta.projectId)
+    default: throw new Error(`Operación no soportada por el proveedor: ${providerId}`)
+  }
+}
+
+export async function mergePullRequest(providerId, creds, owner, repo, prNumber, meta = {}) {
+  switch (providerId) {
+    case 'github': return github.mergePullRequest(creds.token, owner, repo, prNumber)
+    case 'gitlab': return gitlab.mergePullRequest(creds.token, owner, repo, prNumber, meta.projectId)
+    default: throw new Error(`Operación no soportada por el proveedor: ${providerId}`)
+  }
+}
+
+export async function fetchPRComments(providerId, creds, owner, repo, prNumber, meta = {}) {
+  switch (providerId) {
+    case 'github': return github.getPRComments(creds.token, owner, repo, prNumber)
+    case 'gitlab': return gitlab.getPRComments(creds.token, owner, repo, prNumber, meta.projectId)
+    default: return []
+  }
+}
+
+export async function createPRComment(providerId, creds, owner, repo, prNumber, body, inlineDetails, meta = {}) {
+  switch (providerId) {
+    case 'github': return github.createPRComment(creds.token, owner, repo, prNumber, body, inlineDetails)
+    case 'gitlab': return gitlab.createPRComment(creds.token, owner, repo, prNumber, body, inlineDetails, meta.projectId)
+    default: throw new Error(`Operación no soportada por el proveedor: ${providerId}`)
+  }
+}
+
+export async function fetchPRCheckRuns(providerId, creds, owner, repo, ref, meta = {}) {
+  switch (providerId) {
+    case 'github': return github.getPRCheckRuns(creds.token, owner, repo, ref)
+    case 'gitlab': return gitlab.getPRCheckRuns(creds.token, owner, repo, ref, meta.projectId)
+    default: return []
+  }
+}
+
+export async function fetchPRFiles(providerId, creds, owner, repo, prNumber, meta = {}) {
+  switch (providerId) {
+    case 'github': return github.getPRFiles(creds.token, owner, repo, prNumber)
+    case 'gitlab': return gitlab.getPRFiles(creds.token, owner, repo, prNumber, meta.projectId)
+    default: return []
+  }
+}
