@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { GitPullRequest, GitMerge, Plus, RefreshCw, AlertCircle, Calendar, User, ArrowRight } from 'lucide-react'
+import { GitPullRequest, GitMerge, Plus, RefreshCw, AlertCircle, Calendar, User, ArrowRight, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { fetchBranches } from '../providers/index.js'
 import PRDetailsPanel from './PRDetailsPanel'
 
 export default function PRPanel({
@@ -110,8 +111,7 @@ export default function PRPanel({
     try {
       const provider = providers.find(p => p.id === matchingRepo.providerAccountId)
       if (provider) {
-        const { getBranches } = await import('../providers/index.js')
-        const branches = await getBranches(
+        const branches = await fetchBranches(
           provider.providerId,
           provider.creds,
           matchingRepo.owner,
@@ -119,7 +119,7 @@ export default function PRPanel({
           matchingRepo._meta || {}
         )
         setRepoBranches(branches)
-        
+
         // Find default branch
         const defaultTarget = branches.find(b => b.name === matchingRepo.defaultBranch || b.name === 'main' || b.name === 'master')
         setTargetBranch(defaultTarget?.name || branches[0]?.name || 'main')
