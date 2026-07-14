@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import {
-  GitBranch, GitCommit, GitMerge,
+  GitBranch, GitCommit, GitMerge, GitPullRequest,
   Upload, Download, CheckCircle2, Settings,
   Plus, ChevronDown, RotateCcw,
   Code2, Folder, FolderPlus, X, Check,
@@ -14,6 +14,7 @@ import LocalRepoPanel from './components/LocalRepoPanel'
 import MergePanel from './components/MergePanel'
 import GitOperationsPanel from './components/GitOperationsPanel'
 import AnalysisPanel from './components/AnalysisPanel'
+import PRPanel from './components/PRPanel'
 import CloneRepoModal from './components/CloneRepoModal'
 import MultiRepoManager from './components/MultiRepoManager'
 
@@ -232,6 +233,13 @@ export default function App() {
     loadBranches,
     loadCommits,
     createNewRepo,
+    getPullRequests,
+    createPR,
+    mergePR,
+    getPRComments,
+    createPRComment,
+    getPRCheckRuns,
+    getPRFiles,
     hasProviders
   } = useProviders()
 
@@ -385,16 +393,14 @@ export default function App() {
     try {
       const pullResult = await window.electronAPI.pullChanges(localFolderPath)
       if (!pullResult.success) {
-        const errMsg = pullResult.error || ''
-        showToast(`${t('app.errors.pullFailed')}${errMsg ? ` (${errMsg})` : ''}`, 'error')
+        showToast(t('app.errors.pullFailed'), 'error')
         setSyncLoading(false)
         return
       }
 
       const pushResult = await window.electronAPI.pushChanges(localFolderPath)
       if (!pushResult.success) {
-        const errMsg = pushResult.error || ''
-        showToast(`${t('app.errors.pushFailed')}${errMsg ? ` (${errMsg})` : ''}`, 'error')
+        showToast(t('app.errors.pushFailed'), 'error')
         setSyncLoading(false)
         return
       }
@@ -805,6 +811,17 @@ export default function App() {
                   <PieChart size={15} />
                   {t('app.tabs.analysis', 'Análisis')}
                 </button>
+                <button
+                  onClick={() => setActiveTab('collaboration')}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${
+                    activeTab === 'collaboration'
+                      ? 'bg-slate-700 text-white shadow-lg'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <GitPullRequest size={15} />
+                  {t('app.tabs.collaboration', 'Colaboración')}
+                </button>
               </div>
               
               {activeTab === 'history' && (
@@ -1022,6 +1039,24 @@ export default function App() {
             {activeTab === 'analysis' && (
               <div className="h-full p-0">
                 <AnalysisPanel folderPath={localFolderPath} />
+              </div>
+            )}
+
+            {activeTab === 'collaboration' && (
+              <div className="h-full p-0">
+                <PRPanel
+                  folderPath={localFolderPath}
+                  providers={providers}
+                  allRepos={allRepos}
+                  getPullRequests={getPullRequests}
+                  createPR={createPR}
+                  mergePR={mergePR}
+                  getPRComments={getPRComments}
+                  createPRComment={createPRComment}
+                  getPRCheckRuns={getPRCheckRuns}
+                  getPRFiles={getPRFiles}
+                  showToast={showToast}
+                />
               </div>
             )}
           </div>

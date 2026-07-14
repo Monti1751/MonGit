@@ -25,7 +25,8 @@
       "history": "Historial",
       "merge": "Fusión y Conflictos",
       "advanced": "Avanzado",
-      "analysis": "Análisis"
+      "analysis": "Análisis",
+      "collaboration": "Colaboración"
     },
     "sidebar": {
       "myBranches": "Mis Ramas",
@@ -566,6 +567,66 @@
       "blame": "Blame",
       "path": "Ruta del archivo (ej. src/main.js)",
       "noDiff": "Sin cambios visibles"
+    }
+  },
+  "pr": {
+    "diff": {
+      "noFiles": "No hay archivos modificados en este PR.",
+      "changedFiles": "Archivos cambiados",
+      "noChanges": "Sin cambios de código visibles.",
+      "addComment": "Añadir comentario inline",
+      "commentingLine": "Comentando línea",
+      "writeCommentPlaceholder": "Escribe tu comentario de revisión..."
+    },
+    "details": {
+      "stateOpen": "🟢 Abierto",
+      "stateClosed": "🟣 Fusionado / Cerrado",
+      "by": "por",
+      "tabConversation": "Conversación",
+      "tabFiles": "Archivos cambiados",
+      "tabChecks": "CI/CD Checks",
+      "noDescription": "Sin descripción.",
+      "comments": "Comentarios",
+      "noComments": "No hay comentarios generales.",
+      "cicdStatus": "Resultados de Integración Continua",
+      "noChecks": "No hay checks de CI/CD para esta revisión.",
+      "viewDetails": "Detalles",
+      "writeComment": "Escribe un comentario...",
+      "commentBtn": "Comentar",
+      "mergeBtn": "Fusionar PR",
+      "errorComment": "No se pudo publicar el comentario.",
+      "errorInlineComment": "No se pudo publicar el comentario inline."
+    },
+    "panel": {
+      "errorLoading": "No se pudieron cargar los Pull Requests.",
+      "noLinkedTitle": "Repositorio no vinculado a cuenta cloud",
+      "noLinkedDesc": "Para gestionar Pull Requests, debes añadir tu cuenta (GitHub/GitLab) en el panel de Proveedores y clonar o abrir un repositorio que coincida con tus repositorios remotos.",
+      "detailsUrl": "Detalles detectados:",
+      "filterOpen": "🟢 Abiertos",
+      "filterClosed": "🟣 Cerrados",
+      "filterAll": "Todos",
+      "refresh": "Actualizar",
+      "createBtn": "Crear PR",
+      "loading": "Buscando Pull Requests...",
+      "noResults": "No se encontraron Pull Requests.",
+      "stateOpen": "Abierto",
+      "stateClosed": "Fusionado",
+      "confirmMerge": "¿Estás seguro de que quieres fusionar este Pull Request?",
+      "successCreated": "Pull Request creado correctamente.",
+      "errorCreating": "Error al crear el Pull Request.",
+      "successMerged": "Pull Request fusionado correctamente.",
+      "errorMerging": "Error al fusionar el Pull Request."
+    },
+    "create": {
+      "title": "Crear nuevo Pull Request",
+      "source": "Origen (Local)",
+      "target": "Destino (Remoto)",
+      "loading": "Cargando...",
+      "prTitle": "Título del Pull Request",
+      "titlePlaceholder": "ej: feat: añadido nuevo botón de guardar",
+      "prDesc": "Descripción",
+      "descPlaceholder": "Detalla los cambios introducidos por este PR...",
+      "submitBtn": "Crear Pull Request"
     }
   }
 }

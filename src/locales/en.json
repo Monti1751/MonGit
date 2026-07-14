@@ -26,7 +26,8 @@
       "history": "History",
       "merge": "Merge & Conflicts",
       "advanced": "Advanced",
-      "analysis": "Analysis"
+      "analysis": "Analysis",
+      "collaboration": "Collaboration"
     },
     "sidebar": {
       "myBranches": "My Branches",
@@ -567,6 +568,66 @@
       "blame": "Blame",
       "path": "File path (e.g. src/main.js)",
       "noDiff": "No visible changes"
+    }
+  },
+  "pr": {
+    "diff": {
+      "noFiles": "No modified files in this PR.",
+      "changedFiles": "Changed Files",
+      "noChanges": "No visible code changes.",
+      "addComment": "Add inline comment",
+      "commentingLine": "Commenting line",
+      "writeCommentPlaceholder": "Write your review comment..."
+    },
+    "details": {
+      "stateOpen": "🟢 Open",
+      "stateClosed": "🟣 Merged / Closed",
+      "by": "by",
+      "tabConversation": "Conversation",
+      "tabFiles": "Files changed",
+      "tabChecks": "CI/CD Checks",
+      "noDescription": "No description.",
+      "comments": "Comments",
+      "noComments": "No general comments.",
+      "cicdStatus": "Continuous Integration Status",
+      "noChecks": "No CI/CD checks for this pull request.",
+      "viewDetails": "Details",
+      "writeComment": "Write a comment...",
+      "commentBtn": "Comment",
+      "mergeBtn": "Merge PR",
+      "errorComment": "Failed to post comment.",
+      "errorInlineComment": "Failed to post inline comment."
+    },
+    "panel": {
+      "errorLoading": "Failed to load Pull Requests.",
+      "noLinkedTitle": "Repository not linked to cloud account",
+      "noLinkedDesc": "To manage Pull Requests, you must add your account (GitHub/GitLab) in the Providers panel and clone or open a repository that matches your remote repositories.",
+      "detailsUrl": "Detected details:",
+      "filterOpen": "🟢 Open",
+      "filterClosed": "🟣 Closed",
+      "filterAll": "All",
+      "refresh": "Refresh",
+      "createBtn": "Create PR",
+      "loading": "Fetching Pull Requests...",
+      "noResults": "No Pull Requests found.",
+      "stateOpen": "Open",
+      "stateClosed": "Merged",
+      "confirmMerge": "Are you sure you want to merge this Pull Request?",
+      "successCreated": "Pull Request created successfully.",
+      "errorCreating": "Error creating Pull Request.",
+      "successMerged": "Pull Request merged successfully.",
+      "errorMerging": "Error merging Pull Request."
+    },
+    "create": {
+      "title": "Create new Pull Request",
+      "source": "Source (Local)",
+      "target": "Target (Remote)",
+      "loading": "Loading...",
+      "prTitle": "Pull Request Title",
+      "titlePlaceholder": "e.g., feat: add new save button",
+      "prDesc": "Description",
+      "descPlaceholder": "Describe the changes introduced by this PR...",
+      "submitBtn": "Create Pull Request"
     }
   }
 }

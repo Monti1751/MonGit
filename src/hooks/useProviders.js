@@ -7,6 +7,13 @@ import {
   fetchBranches,
   fetchCommits,
   createProviderRepo,
+  fetchPullRequests,
+  createPullRequest,
+  mergePullRequest,
+  fetchPRComments,
+  createPRComment,
+  fetchPRCheckRuns,
+  fetchPRFiles,
 } from '../providers/index.js'
 
 const STORAGE_KEY = 'mongit_providers_v1'
@@ -190,6 +197,49 @@ export function useProviders() {
     }
   }, [providers])
 
+  // ── Pull Requests / Merge Requests ─────────────────────────────────────────
+  const getPullRequests = useCallback(async (repo, state) => {
+    const provider = providers.find(p => p.id === repo.providerAccountId)
+    if (!provider) throw new Error('Proveedor no conectado')
+    return fetchPullRequests(provider.providerId, provider.creds, repo.owner, repo.name, state, repo._meta || {})
+  }, [providers])
+
+  const createPR = useCallback(async (repo, details) => {
+    const provider = providers.find(p => p.id === repo.providerAccountId)
+    if (!provider) throw new Error('Proveedor no conectado')
+    return createPullRequest(provider.providerId, provider.creds, repo.owner, repo.name, details, repo._meta || {})
+  }, [providers])
+
+  const mergePR = useCallback(async (repo, prNumber) => {
+    const provider = providers.find(p => p.id === repo.providerAccountId)
+    if (!provider) throw new Error('Proveedor no conectado')
+    return mergePullRequest(provider.providerId, provider.creds, repo.owner, repo.name, prNumber, repo._meta || {})
+  }, [providers])
+
+  const getPRCommentsData = useCallback(async (repo, prNumber) => {
+    const provider = providers.find(p => p.id === repo.providerAccountId)
+    if (!provider) throw new Error('Proveedor no conectado')
+    return fetchPRComments(provider.providerId, provider.creds, repo.owner, repo.name, prNumber, repo._meta || {})
+  }, [providers])
+
+  const createPRCommentData = useCallback(async (repo, prNumber, body, inlineDetails) => {
+    const provider = providers.find(p => p.id === repo.providerAccountId)
+    if (!provider) throw new Error('Proveedor no conectado')
+    return createPRComment(provider.providerId, provider.creds, repo.owner, repo.name, prNumber, body, inlineDetails, repo._meta || {})
+  }, [providers])
+
+  const getPRCheckRunsData = useCallback(async (repo, ref) => {
+    const provider = providers.find(p => p.id === repo.providerAccountId)
+    if (!provider) throw new Error('Proveedor no conectado')
+    return fetchPRCheckRuns(provider.providerId, provider.creds, repo.owner, repo.name, ref, repo._meta || {})
+  }, [providers])
+
+  const getPRFilesData = useCallback(async (repo, prNumber) => {
+    const provider = providers.find(p => p.id === repo.providerAccountId)
+    if (!provider) throw new Error('Proveedor no conectado')
+    return fetchPRFiles(provider.providerId, provider.creds, repo.owner, repo.name, prNumber, repo._meta || {})
+  }, [providers])
+
   return {
     providers,
     allRepos,
@@ -201,6 +251,13 @@ export function useProviders() {
     loadBranches,
     loadCommits,
     createNewRepo,
+    getPullRequests,
+    createPR,
+    mergePR,
+    getPRComments: getPRCommentsData,
+    createPRComment: createPRCommentData,
+    getPRCheckRuns: getPRCheckRunsData,
+    getPRFiles: getPRFilesData,
     hasProviders: providers.length > 0,
   }
 }

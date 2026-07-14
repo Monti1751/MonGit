@@ -122,3 +122,157 @@ export async function createRepo(token, details) {
   }
   return res.json()
 }
+
+export async function getPullRequests(token, owner, repo, state = 'open') {
+  const res = await fetch(`${BASE}/repos/${owner}/${repo}/pulls?state=${encodeURIComponent(state)}&per_page=100`, {
+    headers: headers(token)
+  })
+  if (!res.ok) throw new Error(`Error cargando PRs (${res.status})`)
+  const data = await res.json()
+  return data.map(pr => ({
+    id: String(pr.number),
+    number: pr.number,
+    title: pr.title,
+    description: pr.body || '',
+    state: pr.state,
+    user: pr.user.login,
+    avatar: pr.user.avatar_url,
+    source: pr.head.ref,
+    target: pr.base.ref,
+    headSha: pr.head.sha,
+    createdAt: pr.created_at,
+    url: pr.html_url,
+    provider: 'github'
+  }))
+}
+
+export async function createPullRequest(token, owner, repo, details) {
+  const payload = {
+    title: details.title,
+    body: details.description || '',
+    head: details.sourceBranch,
+    base: details.targetBranch
+  }
+  const res = await fetch(`${BASE}/repos/${owner}/${repo}/pulls`, {
+    method: 'POST',
+    headers: headers(token),
+    body: JSON.stringify(payload)
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.message || `Error creando PR (${res.status})`)
+  }
+  return res.json()
+}
+
+export async function mergePullRequest(token, owner, repo, prNumber) {
+  const payload = {
+    commit_title: `Merge Pull Request #${prNumber}`
+  }
+  const res = await fetch(`${BASE}/repos/${owner}/${repo}/pulls/${prNumber}/merge`, {
+    method: 'PUT',
+    headers: headers(token),
+    body: JSON.stringify(payload)
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.message || `Error fusionando PR (${res.status})`)
+  }
+  return res.json()
+}
+
+export async function getPRComments(token, owner, repo, prNumber) {
+  const [issueRes, reviewRes] = await Promise.all([
+    fetch(`${BASE}/repos/${owner}/${repo}/issues/${prNumber}/comments`, { headers: headers(token) }),
+    fetch(`${BASE}/repos/${owner}/${repo}/pulls/${prNumber}/comments`, { headers: headers(token) })
+  ])
+
+  const issueComments = issueRes.ok ? await issueRes.json() : []
+  const reviewComments = reviewRes.ok ? await reviewRes.json() : []
+
+  const allComments = [
+    ...issueComments.map(c => ({
+      id: String(c.id),
+      user: c.user.login,
+      avatar: c.user.avatar_url,
+      body: c.body,
+      createdAt: c.created_at,
+      path: null,
+      line: null,
+      side: null
+    })),
+    ...reviewComments.map(c => ({
+      id: String(c.id),
+      user: c.user.login,
+      avatar: c.user.avatar_url,
+      body: c.body,
+      createdAt: c.created_at,
+      path: c.path,
+      line: c.line || c.original_line,
+      side: c.side || 'RIGHT'
+    }))
+  ]
+
+  // Sort chronologically
+  return allComments.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+}
+
+export async function createPRComment(token, owner, repo, prNumber, body, inlineDetails = null) {
+  const isInline = !!inlineDetails
+  const url = isInline
+    ? `${BASE}/repos/${owner}/${repo}/pulls/${prNumber}/comments`
+    : `${BASE}/repos/${owner}/${repo}/issues/${prNumber}/comments`
+
+  const payload = isInline
+    ? {
+        body,
+        commit_id: inlineDetails.commitId,
+        path: inlineDetails.path,
+        line: inlineDetails.line,
+        side: inlineDetails.side || 'RIGHT'
+      }
+    : { body }
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: headers(token),
+    body: JSON.stringify(payload)
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.message || `Error creando comentario (${res.status})`)
+  }
+  return res.json()
+}
+
+export async function getPRCheckRuns(token, owner, repo, ref) {
+  const res = await fetch(`${BASE}/repos/${owner}/${repo}/commits/${ref}/check-runs`, {
+    headers: headers(token)
+  })
+  if (!res.ok) throw new Error(`Error cargando checks (${res.status})`)
+  const data = await res.json()
+  return (data.check_runs || []).map(cr => ({
+    id: String(cr.id),
+    name: cr.name,
+    status: cr.status,
+    conclusion: cr.conclusion,
+    detailsUrl: cr.html_url
+  }))
+}
+
+export async function getPRFiles(token, owner, repo, prNumber) {
+  const res = await fetch(`${BASE}/repos/${owner}/${repo}/pulls/${prNumber}/files?per_page=100`, {
+    headers: headers(token)
+  })
+  if (!res.ok) throw new Error(`Error cargando archivos del PR (${res.status})`)
+  const data = await res.json()
+  return data.map(f => ({
+    sha: f.sha,
+    filename: f.filename,
+    status: f.status,
+    additions: f.additions,
+    deletions: f.deletions,
+    changes: f.changes,
+    patch: f.patch || ''
+  }))
+}
