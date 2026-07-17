@@ -276,3 +276,113 @@ export async function getPRFiles(token, owner, repo, prNumber) {
     patch: f.patch || ''
   }))
 }
+
+// ── Issues ──────────────────────────────────────────────────────────────────
+
+export async function getIssues(token, owner, repo, state = 'open', labels = '') {
+  const params = new URLSearchParams({ state, per_page: '100' })
+  if (labels) params.set('labels', labels)
+  const res = await fetch(`${BASE}/repos/${owner}/${repo}/issues?${params}`, {
+    headers: headers(token)
+  })
+  if (!res.ok) throw new Error(`Error cargando issues (${res.status})`)
+  const data = await res.json()
+  // GitHub returns PRs as issues too — filter them out
+  return data
+    .filter(i => !i.pull_request)
+    .map(i => ({
+      id: String(i.id),
+      number: i.number,
+      title: i.title,
+      body: i.body || '',
+      state: i.state,
+      author: i.user?.login || '',
+      authorAvatar: i.user?.avatar_url || '',
+      assignee: i.assignee?.login || null,
+      assigneeAvatar: i.assignee?.avatar_url || null,
+      labels: i.labels.map(l => ({ id: String(l.id), name: l.name, color: `#${l.color}` })),
+      createdAt: i.created_at,
+      updatedAt: i.updated_at,
+      htmlUrl: i.html_url,
+      commentsCount: i.comments,
+    }))
+}
+
+export async function createIssue(token, owner, repo, { title, body, labels, assignee }) {
+  const payload = { title, body }
+  if (labels && labels.length) payload.labels = labels
+  if (assignee) payload.assignees = [assignee]
+  const res = await fetch(`${BASE}/repos/${owner}/${repo}/issues`, {
+    method: 'POST',
+    headers: headers(token),
+    body: JSON.stringify(payload)
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.message || `Error creando issue (${res.status})`)
+  }
+  return res.json()
+}
+
+export async function updateIssueState(token, owner, repo, issueNumber, state) {
+  const res = await fetch(`${BASE}/repos/${owner}/${repo}/issues/${issueNumber}`, {
+    method: 'PATCH',
+    headers: headers(token),
+    body: JSON.stringify({ state })
+  })
+  if (!res.ok) throw new Error(`Error actualizando issue (${res.status})`)
+  return res.json()
+}
+
+export async function updateIssueAssignee(token, owner, repo, issueNumber, assignees) {
+  const res = await fetch(`${BASE}/repos/${owner}/${repo}/issues/${issueNumber}`, {
+    method: 'PATCH',
+    headers: headers(token),
+    body: JSON.stringify({ assignees })
+  })
+  if (!res.ok) throw new Error(`Error asignando issue (${res.status})`)
+  return res.json()
+}
+
+export async function getIssueComments(token, owner, repo, issueNumber) {
+  const res = await fetch(`${BASE}/repos/${owner}/${repo}/issues/${issueNumber}/comments?per_page=100`, {
+    headers: headers(token)
+  })
+  if (!res.ok) throw new Error(`Error cargando comentarios (${res.status})`)
+  const data = await res.json()
+  return data.map(c => ({
+    id: String(c.id),
+    author: c.user?.login || '',
+    authorAvatar: c.user?.avatar_url || '',
+    body: c.body,
+    createdAt: c.created_at,
+  }))
+}
+
+export async function createIssueComment(token, owner, repo, issueNumber, body) {
+  const res = await fetch(`${BASE}/repos/${owner}/${repo}/issues/${issueNumber}/comments`, {
+    method: 'POST',
+    headers: headers(token),
+    body: JSON.stringify({ body })
+  })
+  if (!res.ok) throw new Error(`Error creando comentario (${res.status})`)
+  return res.json()
+}
+
+export async function getRepoLabels(token, owner, repo) {
+  const res = await fetch(`${BASE}/repos/${owner}/${repo}/labels?per_page=100`, {
+    headers: headers(token)
+  })
+  if (!res.ok) throw new Error(`Error cargando etiquetas (${res.status})`)
+  const data = await res.json()
+  return data.map(l => ({ id: String(l.id), name: l.name, color: `#${l.color}` }))
+}
+
+export async function getRepoCollaborators(token, owner, repo) {
+  const res = await fetch(`${BASE}/repos/${owner}/${repo}/collaborators?per_page=100`, {
+    headers: headers(token)
+  })
+  if (!res.ok) return []
+  const data = await res.json()
+  return data.map(u => ({ id: String(u.id), login: u.login, avatar: u.avatar_url }))
+}

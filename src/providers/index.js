@@ -196,3 +196,69 @@ export async function fetchPRFiles(providerId, creds, owner, repo, prNumber, met
     default: return []
   }
 }
+
+// ── Issues ──────────────────────────────────────────────────────────────────
+
+export async function fetchIssues(providerId, creds, owner, repo, state, labels, meta = {}) {
+  switch (providerId) {
+    case 'github': return github.getIssues(creds.token, owner, repo, state, labels)
+    case 'gitlab': return gitlab.getIssues(creds.token, owner, repo, state, labels, meta.projectId)
+    default: return []
+  }
+}
+
+export async function createNewIssue(providerId, creds, owner, repo, details, meta = {}) {
+  switch (providerId) {
+    case 'github': return github.createIssue(creds.token, owner, repo, details)
+    case 'gitlab': return gitlab.createIssue(creds.token, owner, repo, details, meta.projectId)
+    default: throw new Error(`Operación no soportada por el proveedor: ${providerId}`)
+  }
+}
+
+export async function updateIssueState(providerId, creds, owner, repo, issueNumber, state, meta = {}) {
+  switch (providerId) {
+    case 'github': return github.updateIssueState(creds.token, owner, repo, issueNumber, state)
+    case 'gitlab': return gitlab.updateIssueState(creds.token, owner, repo, issueNumber, state, meta.projectId)
+    default: throw new Error(`Operación no soportada por el proveedor: ${providerId}`)
+  }
+}
+
+export async function updateIssueAssignee(providerId, creds, owner, repo, issueNumber, assignees, meta = {}) {
+  switch (providerId) {
+    case 'github': return github.updateIssueAssignee(creds.token, owner, repo, issueNumber, assignees)
+    case 'gitlab': return gitlab.updateIssueAssignee(creds.token, owner, repo, issueNumber, assignees, meta.projectId)
+    default: throw new Error(`Operación no soportada por el proveedor: ${providerId}`)
+  }
+}
+
+export async function fetchIssueComments(providerId, creds, owner, repo, issueNumber, meta = {}) {
+  switch (providerId) {
+    case 'github': return github.getIssueComments(creds.token, owner, repo, issueNumber)
+    case 'gitlab': return gitlab.getIssueComments(creds.token, owner, repo, issueNumber, meta.projectId)
+    default: return []
+  }
+}
+
+export async function createNewIssueComment(providerId, creds, owner, repo, issueNumber, body, meta = {}) {
+  switch (providerId) {
+    case 'github': return github.createIssueComment(creds.token, owner, repo, issueNumber, body)
+    case 'gitlab': return gitlab.createIssueComment(creds.token, owner, repo, issueNumber, body, meta.projectId)
+    default: throw new Error(`Operación no soportada por el proveedor: ${providerId}`)
+  }
+}
+
+export async function fetchRepoLabels(providerId, creds, owner, repo, meta = {}) {
+  switch (providerId) {
+    case 'github': return github.getRepoLabels(creds.token, owner, repo)
+    case 'gitlab': return gitlab.getRepoLabels(creds.token, owner, repo, meta.projectId)
+    default: return []
+  }
+}
+
+export async function fetchRepoCollaborators(providerId, creds, owner, repo, meta = {}) {
+  switch (providerId) {
+    case 'github': return github.getRepoCollaborators(creds.token, owner, repo)
+    case 'gitlab': return gitlab.getRepoCollaborators(creds.token, owner, repo, meta.projectId)
+    default: return []
+  }
+}

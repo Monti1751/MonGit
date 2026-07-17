@@ -27,7 +27,8 @@
       "merge": "Merge & Conflicts",
       "advanced": "Advanced",
       "analysis": "Analysis",
-      "collaboration": "Collaboration"
+      "collaboration": "Collaboration",
+      "issues": "Issues"
     },
     "sidebar": {
       "myBranches": "My Branches",
@@ -628,6 +629,50 @@
       "prDesc": "Description",
       "descPlaceholder": "Describe the changes introduced by this PR...",
       "submitBtn": "Create Pull Request"
+    }
+  },
+  "issues": {
+    "title": "Issues",
+    "filterOpen": "🟢 Open",
+    "filterClosed": "🟣 Closed",
+    "filterAll": "All",
+    "refresh": "Refresh",
+    "createBtn": "Create Issue",
+    "loading": "Loading issues...",
+    "noResults": "No issues found.",
+    "noLinkedTitle": "Repository not linked to cloud account",
+    "noLinkedDesc": "To manage Issues, you must add your account (GitHub/GitLab) in the Providers panel and clone or open a repository that matches your remote repositories.",
+    "stateOpen": "Open",
+    "stateClosed": "Closed",
+    "errorLoading": "Failed to load issues.",
+    "successCreated": "Issue created successfully.",
+    "errorCreating": "Error creating issue.",
+    "viewList": "List",
+    "viewBoard": "Board",
+    "create": {
+      "title": "Create new Issue",
+      "titleLabel": "Title",
+      "titlePlaceholder": "e.g., Error saving configuration",
+      "descLabel": "Description",
+      "descPlaceholder": "Describe the issue in detail...",
+      "labelsLabel": "Labels",
+      "submitBtn": "Create Issue"
+    },
+    "detail": {
+      "comments": "Comments",
+      "noComments": "No comments yet.",
+      "writeComment": "Write a comment...",
+      "commentBtn": "Comment",
+      "closeIssue": "Close Issue",
+      "reopenIssue": "Reopen Issue",
+      "assignee": "Assigned to",
+      "unassigned": "Unassigned",
+      "description": "Description"
+    },
+    "board": {
+      "open": "Open",
+      "inProgress": "In Progress",
+      "closed": "Closed"
     }
   }
 }
