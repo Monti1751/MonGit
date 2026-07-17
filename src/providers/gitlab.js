@@ -264,3 +264,112 @@ export async function getPRFiles(token, _owner, _repo, mrIid, projectId) {
     patch: c.diff || ''
   }))
 }
+
+// ── Issues ──────────────────────────────────────────────────────────────────
+
+export async function getIssues(token, _owner, _repo, state = 'opened', labels = '', projectId) {
+  const glState = state === 'open' ? 'opened' : state === 'closed' ? 'closed' : state
+  const params = new URLSearchParams({ state: glState, per_page: '100' })
+  if (labels) params.set('labels', labels)
+  const res = await fetch(`${BASE}/projects/${projectId}/issues?${params}`, {
+    headers: headers(token)
+  })
+  if (!res.ok) throw new Error(`Error cargando issues (${res.status})`)
+  const data = await res.json()
+  return data.map(i => ({
+    id: String(i.id),
+    number: i.iid,
+    title: i.title,
+    body: i.description || '',
+    state: i.state === 'opened' ? 'open' : 'closed',
+    author: i.author?.username || '',
+    authorAvatar: i.author?.avatar_url || '',
+    assignee: i.assignee?.username || null,
+    assigneeAvatar: i.assignee?.avatar_url || null,
+    labels: i.labels.map(name => ({ id: name, name, color: '#6b7280' })),
+    createdAt: i.created_at,
+    updatedAt: i.updated_at,
+    htmlUrl: i.web_url,
+    commentsCount: i.user_notes_count || 0,
+  }))
+}
+
+export async function createIssue(token, _owner, _repo, { title, body, labels, assignee }, projectId) {
+  const payload = { title, description: body }
+  if (labels && labels.length) payload.labels = labels.join(',')
+  if (assignee) payload.assignee_ids = [assignee]
+  const res = await fetch(`${BASE}/projects/${projectId}/issues`, {
+    method: 'POST',
+    headers: headers(token),
+    body: JSON.stringify(payload)
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.message || `Error creando issue (${res.status})`)
+  }
+  return res.json()
+}
+
+export async function updateIssueState(token, _owner, _repo, issueIid, state, projectId) {
+  const glState = state === 'closed' ? 'close' : 'reopen'
+  const res = await fetch(`${BASE}/projects/${projectId}/issues/${issueIid}`, {
+    method: 'PUT',
+    headers: headers(token),
+    body: JSON.stringify({ state_event: glState })
+  })
+  if (!res.ok) throw new Error(`Error actualizando issue (${res.status})`)
+  return res.json()
+}
+
+export async function updateIssueAssignee(token, _owner, _repo, issueIid, assigneeIds, projectId) {
+  const res = await fetch(`${BASE}/projects/${projectId}/issues/${issueIid}`, {
+    method: 'PUT',
+    headers: headers(token),
+    body: JSON.stringify({ assignee_ids: assigneeIds })
+  })
+  if (!res.ok) throw new Error(`Error asignando issue (${res.status})`)
+  return res.json()
+}
+
+export async function getIssueComments(token, _owner, _repo, issueIid, projectId) {
+  const res = await fetch(`${BASE}/projects/${projectId}/issues/${issueIid}/notes?per_page=100&sort=asc`, {
+    headers: headers(token)
+  })
+  if (!res.ok) throw new Error(`Error cargando comentarios (${res.status})`)
+  const data = await res.json()
+  return data.filter(n => !n.system).map(c => ({
+    id: String(c.id),
+    author: c.author?.username || '',
+    authorAvatar: c.author?.avatar_url || '',
+    body: c.body,
+    createdAt: c.created_at,
+  }))
+}
+
+export async function createIssueComment(token, _owner, _repo, issueIid, body, projectId) {
+  const res = await fetch(`${BASE}/projects/${projectId}/issues/${issueIid}/notes`, {
+    method: 'POST',
+    headers: headers(token),
+    body: JSON.stringify({ body })
+  })
+  if (!res.ok) throw new Error(`Error creando comentario (${res.status})`)
+  return res.json()
+}
+
+export async function getRepoLabels(token, _owner, _repo, projectId) {
+  const res = await fetch(`${BASE}/projects/${projectId}/labels?per_page=100`, {
+    headers: headers(token)
+  })
+  if (!res.ok) throw new Error(`Error cargando etiquetas (${res.status})`)
+  const data = await res.json()
+  return data.map(l => ({ id: String(l.id), name: l.name, color: l.color || '#6b7280' }))
+}
+
+export async function getRepoCollaborators(token, _owner, _repo, projectId) {
+  const res = await fetch(`${BASE}/projects/${projectId}/members/all?per_page=100`, {
+    headers: headers(token)
+  })
+  if (!res.ok) return []
+  const data = await res.json()
+  return data.map(u => ({ id: String(u.id), login: u.username, avatar: u.avatar_url }))
+}

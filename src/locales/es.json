@@ -26,7 +26,8 @@
       "merge": "Fusión y Conflictos",
       "advanced": "Avanzado",
       "analysis": "Análisis",
-      "collaboration": "Colaboración"
+      "collaboration": "Colaboración",
+      "issues": "Issues"
     },
     "sidebar": {
       "myBranches": "Mis Ramas",
@@ -627,6 +628,50 @@
       "prDesc": "Descripción",
       "descPlaceholder": "Detalla los cambios introducidos por este PR...",
       "submitBtn": "Crear Pull Request"
+    }
+  },
+  "issues": {
+    "title": "Issues",
+    "filterOpen": "🟢 Abiertos",
+    "filterClosed": "🟣 Cerrados",
+    "filterAll": "Todos",
+    "refresh": "Actualizar",
+    "createBtn": "Crear Issue",
+    "loading": "Cargando issues...",
+    "noResults": "No se encontraron issues.",
+    "noLinkedTitle": "Repositorio no vinculado a cuenta cloud",
+    "noLinkedDesc": "Para gestionar Issues, debes añadir tu cuenta (GitHub/GitLab) en el panel de Proveedores y clonar o abrir un repositorio que coincida con tus repositorios remotos.",
+    "stateOpen": "Abierto",
+    "stateClosed": "Cerrado",
+    "errorLoading": "No se pudieron cargar los issues.",
+    "successCreated": "Issue creado correctamente.",
+    "errorCreating": "Error al crear el issue.",
+    "viewList": "Lista",
+    "viewBoard": "Tablero",
+    "create": {
+      "title": "Crear nuevo Issue",
+      "titleLabel": "Título",
+      "titlePlaceholder": "ej: Error al guardar configuración",
+      "descLabel": "Descripción",
+      "descPlaceholder": "Describe el issue en detalle...",
+      "labelsLabel": "Etiquetas",
+      "submitBtn": "Crear Issue"
+    },
+    "detail": {
+      "comments": "Comentarios",
+      "noComments": "Sin comentarios aún.",
+      "writeComment": "Escribe un comentario...",
+      "commentBtn": "Comentar",
+      "closeIssue": "Cerrar Issue",
+      "reopenIssue": "Reabrir Issue",
+      "assignee": "Asignado a",
+      "unassigned": "Sin asignar",
+      "description": "Descripción"
+    },
+    "board": {
+      "open": "Abiertos",
+      "inProgress": "En Progreso",
+      "closed": "Cerrados"
     }
   }
 }

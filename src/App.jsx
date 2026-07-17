@@ -15,6 +15,7 @@ import MergePanel from './components/MergePanel'
 import GitOperationsPanel from './components/GitOperationsPanel'
 import AnalysisPanel from './components/AnalysisPanel'
 import PRPanel from './components/PRPanel'
+import IssuesPanel from './components/IssuesPanel'
 import CloneRepoModal from './components/CloneRepoModal'
 import MultiRepoManager from './components/MultiRepoManager'
 
@@ -240,6 +241,14 @@ export default function App() {
     createPRComment,
     getPRCheckRuns,
     getPRFiles,
+    getIssues,
+    createIssue,
+    changeIssueState,
+    assignIssue,
+    getIssueComments,
+    createIssueComment,
+    getLabels,
+    getCollaborators,
     hasProviders
   } = useProviders()
 
@@ -822,6 +831,17 @@ export default function App() {
                   <GitPullRequest size={15} />
                   {t('app.tabs.collaboration', 'Colaboración')}
                 </button>
+                <button
+                  onClick={() => setActiveTab('issues')}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${
+                    activeTab === 'issues'
+                      ? 'bg-slate-700 text-white shadow-lg'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <AlertCircle size={15} />
+                  {t('app.tabs.issues', 'Issues')}
+                </button>
               </div>
               
               {activeTab === 'history' && (
@@ -1055,6 +1075,25 @@ export default function App() {
                   createPRComment={createPRComment}
                   getPRCheckRuns={getPRCheckRuns}
                   getPRFiles={getPRFiles}
+                  showToast={showToast}
+                />
+              </div>
+            )}
+
+            {activeTab === 'issues' && (
+              <div className="h-full p-0">
+                <IssuesPanel
+                  folderPath={localFolderPath}
+                  providers={providers}
+                  allRepos={allRepos}
+                  getIssues={getIssues}
+                  createIssue={createIssue}
+                  changeIssueState={changeIssueState}
+                  assignIssue={assignIssue}
+                  getIssueComments={getIssueComments}
+                  createIssueComment={createIssueComment}
+                  getLabels={getLabels}
+                  getCollaborators={getCollaborators}
                   showToast={showToast}
                 />
               </div>
