@@ -777,8 +777,8 @@ export default function App() {
         <main className="flex-1 flex flex-col overflow-hidden border-r border-slate-700/50 relative">
           <div className="flex items-center justify-between px-5 py-3 border-b border-slate-700/30 flex-shrink-0">
             {/* Tab Selector */}
-            <div className="flex items-center gap-2">
-              <div className="inline-flex items-center p-0.5 rounded-lg bg-slate-800/60 border border-slate-700/50">
+            <div className="flex items-center gap-2 overflow-x-auto max-w-full custom-scrollbar">
+              <div className="inline-flex items-center p-0.5 rounded-lg bg-slate-800/60 border border-slate-700/50 flex-shrink-0">
                 <button
                   onClick={() => setActiveTab('history')}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${
