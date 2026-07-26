@@ -4,8 +4,11 @@ import { fileURLToPath } from 'url'
 import { exec } from 'child_process'
 import { promisify } from 'util'
 import fs from 'fs/promises'
+import http from 'http'
 
 const execAsync = promisify(exec)
+
+let webhookServer = null
 
 // Setup IPC handlers
 ipcMain.handle('select-folder', async () => {
@@ -894,6 +897,110 @@ ipcMain.handle('open-external-url', async (event, url) => {
     return { success: true }
   } catch (err) {
     console.error('open-external-url error:', err)
+    return { success: false, error: err.message }
+  }
+})
+
+// ── Webhooks Server ──────────────────────────────────────────────────────────
+ipcMain.handle('start-webhook-server', async (event, port) => {
+  if (webhookServer) {
+    return { success: true, message: 'Server already running', port }
+  }
+  return new Promise((resolve) => {
+    try {
+      webhookServer = http.createServer((req, res) => {
+        if (req.method === 'POST') {
+          let body = ''
+          req.on('data', chunk => { body += chunk })
+          req.on('end', () => {
+            let payload = {}
+            try {
+              payload = JSON.parse(body)
+            } catch {
+              // Ignore invalid payload JSON
+            }
+            
+            const githubEvent = req.headers['x-github-event']
+            const gitlabEvent = req.headers['x-gitlab-event']
+            
+            if (win) {
+              if (githubEvent) {
+                win.webContents.send('webhook-event', { provider: 'github', event: githubEvent, payload })
+              } else if (gitlabEvent) {
+                win.webContents.send('webhook-event', { provider: 'gitlab', event: gitlabEvent, payload })
+              }
+            }
+            res.writeHead(200, { 'Content-Type': 'text/plain' })
+            res.end('OK')
+          })
+        } else {
+          res.writeHead(404)
+          res.end()
+        }
+      })
+
+      webhookServer.listen(port, () => {
+        console.log(`Webhook server listening on port ${port}`)
+        resolve({ success: true, port })
+      })
+
+      webhookServer.on('error', (err) => {
+        console.error('Webhook server error:', err)
+        webhookServer = null
+        resolve({ success: false, error: err.message })
+      })
+    } catch (err) {
+      resolve({ success: false, error: err.message })
+    }
+  })
+})
+
+ipcMain.handle('stop-webhook-server', async () => {
+  if (!webhookServer) return { success: true }
+  return new Promise((resolve) => {
+    webhookServer.close(() => {
+      webhookServer = null
+      console.log('Webhook server stopped')
+      resolve({ success: true })
+    })
+  })
+})
+
+ipcMain.handle('get-webhook-server-status', async () => {
+  return { running: !!webhookServer }
+})
+
+// ── Automation Rules Execution ────────────────────────────────────────────────
+ipcMain.handle('run-automation-script', async (event, folderPath, script) => {
+  try {
+    const { stdout, stderr } = await execAsync(script, { cwd: folderPath })
+    return { success: true, stdout, stderr }
+  } catch (err) {
+    return { success: false, error: err.message, stderr: err.stderr }
+  }
+})
+
+// ── External Notifications Sender ─────────────────────────────────────────────
+ipcMain.handle('send-external-notification', async (event, webhookUrl, message) => {
+  try {
+    // Determine target based on URL
+    let payload = {}
+    if (webhookUrl.includes('discord.com')) {
+      payload = { content: message }
+    } else {
+      // Slack or generic webhook
+      payload = { text: message }
+    }
+
+    const res = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    return { success: true }
+  } catch (err) {
     return { success: false, error: err.message }
   }
 })

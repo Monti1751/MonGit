@@ -16,6 +16,7 @@ import GitOperationsPanel from './components/GitOperationsPanel'
 import AnalysisPanel from './components/AnalysisPanel'
 import PRPanel from './components/PRPanel'
 import IssuesPanel from './components/IssuesPanel'
+import IntegrationsPanel from './components/IntegrationsPanel'
 import CloneRepoModal from './components/CloneRepoModal'
 import MultiRepoManager from './components/MultiRepoManager'
 
@@ -415,6 +416,8 @@ export default function App() {
       }
 
       showToast(t('app.messages.syncedSuccessfully'), 'success')
+      window.dispatchEvent(new CustomEvent('mongit-git-event', { detail: { eventType: 'post-pull', folderPath: localFolderPath } }))
+      window.dispatchEvent(new CustomEvent('mongit-git-event', { detail: { eventType: 'post-push', folderPath: localFolderPath } }))
       loadLocalRepoData(localFolderPath, activeBranch)
     } catch (err) {
       showToast(t('app.errors.syncFailed'), 'error')
@@ -842,6 +845,17 @@ export default function App() {
                   <AlertCircle size={15} />
                   {t('app.tabs.issues', 'Issues')}
                 </button>
+                <button
+                  onClick={() => setActiveTab('integrations')}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${
+                    activeTab === 'integrations'
+                      ? 'bg-slate-700 text-white shadow-lg'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Globe size={15} />
+                  {t('app.tabs.integrations', 'Integraciones')}
+                </button>
               </div>
               
               {activeTab === 'history' && (
@@ -1098,6 +1112,16 @@ export default function App() {
                 />
               </div>
             )}
+
+            {activeTab === 'integrations' && (
+              <div className="h-full p-0">
+                <IntegrationsPanel
+                  folderPath={localFolderPath}
+                  providers={providers}
+                  showToast={showToast}
+                />
+              </div>
+            )}
           </div>
         </main>
 
@@ -1106,7 +1130,10 @@ export default function App() {
           <LocalRepoPanel 
             folderPath={localFolderPath} 
             refreshTrigger={refreshTrigger}
-            onCommitSuccess={() => loadLocalRepoData(localFolderPath, activeBranch)}
+            onCommitSuccess={() => {
+              window.dispatchEvent(new CustomEvent('mongit-git-event', { detail: { eventType: 'post-commit', folderPath: localFolderPath } }))
+              loadLocalRepoData(localFolderPath, activeBranch)
+            }}
           />
         </aside>
       </div>
