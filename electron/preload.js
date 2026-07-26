@@ -65,5 +65,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     const listener = (event, data) => callback(data)
     ipcRenderer.on('webhook-event', listener)
     return () => ipcRenderer.removeListener('webhook-event', listener)
-  }
+  },
+  // ── Security & Authentication ─────────────────────────────────────────────
+  getSSHKeys: () => ipcRenderer.invoke('get-ssh-keys'),
+  generateSSHKey: (params) => ipcRenderer.invoke('generate-ssh-key', params),
+  deleteSSHKey: (keyId) => ipcRenderer.invoke('delete-ssh-key', keyId),
+  getGPGKeys: () => ipcRenderer.invoke('get-gpg-keys'),
+  configureGitGPG: (params) => ipcRenderer.invoke('configure-git-gpg', params),
+  scanForSecrets: (folderPath) => ipcRenderer.invoke('scan-for-secrets', folderPath)
 })

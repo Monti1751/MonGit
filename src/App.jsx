@@ -5,7 +5,7 @@ import {
   Plus, ChevronDown, RotateCcw,
   Code2, Folder, FolderPlus, X, Check,
   AlertCircle, Clock, Layers,
-  RefreshCw, Terminal, Eye, Info, UserPlus, Trash2, Globe, Zap, PieChart
+  RefreshCw, Terminal, Eye, Info, UserPlus, Trash2, Globe, Zap, PieChart, Shield
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useProviders } from './hooks/useProviders'
@@ -17,6 +17,7 @@ import AnalysisPanel from './components/AnalysisPanel'
 import PRPanel from './components/PRPanel'
 import IssuesPanel from './components/IssuesPanel'
 import IntegrationsPanel from './components/IntegrationsPanel'
+import SecurityPanel from './components/SecurityPanel'
 import CloneRepoModal from './components/CloneRepoModal'
 import MultiRepoManager from './components/MultiRepoManager'
 
@@ -856,6 +857,17 @@ export default function App() {
                   <Globe size={15} />
                   {t('app.tabs.integrations', 'Integraciones')}
                 </button>
+                <button
+                  onClick={() => setActiveTab('security')}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${
+                    activeTab === 'security'
+                      ? 'bg-slate-700 text-white shadow-lg'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Shield size={15} />
+                  {t('app.tabs.security', 'Seguridad')}
+                </button>
               </div>
               
               {activeTab === 'history' && (
@@ -1116,6 +1128,16 @@ export default function App() {
             {activeTab === 'integrations' && (
               <div className="h-full p-0">
                 <IntegrationsPanel
+                  folderPath={localFolderPath}
+                  providers={providers}
+                  showToast={showToast}
+                />
+              </div>
+            )}
+
+            {activeTab === 'security' && (
+              <div className="h-full p-0">
+                <SecurityPanel
                   folderPath={localFolderPath}
                   providers={providers}
                   showToast={showToast}
