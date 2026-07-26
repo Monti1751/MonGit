@@ -56,4 +56,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   gitSearchLog: (folderPath, filters) => ipcRenderer.invoke('git-search-log', folderPath, filters),
   gitBlame: (folderPath, filePath) => ipcRenderer.invoke('git-blame', folderPath, filePath),
   gitFileHistory: (folderPath, filePath) => ipcRenderer.invoke('git-file-history', folderPath, filePath),
+  startWebhookServer: (port) => ipcRenderer.invoke('start-webhook-server', port),
+  stopWebhookServer: () => ipcRenderer.invoke('stop-webhook-server'),
+  getWebhookServerStatus: () => ipcRenderer.invoke('get-webhook-server-status'),
+  runAutomationScript: (folderPath, script) => ipcRenderer.invoke('run-automation-script', folderPath, script),
+  sendExternalNotification: (webhookUrl, message) => ipcRenderer.invoke('send-external-notification', webhookUrl, message),
+  onWebhookEvent: (callback) => {
+    const listener = (event, data) => callback(data)
+    ipcRenderer.on('webhook-event', listener)
+    return () => ipcRenderer.removeListener('webhook-event', listener)
+  }
 })

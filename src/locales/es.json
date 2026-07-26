@@ -27,7 +27,8 @@
       "advanced": "Avanzado",
       "analysis": "Análisis",
       "collaboration": "Colaboración",
-      "issues": "Issues"
+      "issues": "Issues",
+      "integrations": "Integraciones"
     },
     "sidebar": {
       "myBranches": "Mis Ramas",
@@ -673,5 +674,43 @@
       "inProgress": "En Progreso",
       "closed": "Cerrados"
     }
+  },
+  "integrations": {
+    "title": "Integraciones",
+    "webhooks": {
+      "title": "Servidor de Webhooks Local",
+      "port": "Puerto",
+      "start": "Iniciar Servidor",
+      "stop": "Detener Servidor",
+      "running": "Servidor escuchando en el puerto",
+      "stopped": "Servidor apagado",
+      "urlInfo": "Configura esta URL de carga (Payload URL) en GitHub o GitLab:",
+      "notifyToggle": "Mostrar notificaciones de escritorio al recibir eventos",
+      "history": "Eventos de Webhooks Recibidos",
+      "emptyHistory": "Aún no se han recibido eventos de webhooks."
+    },
+    "channels": {
+      "title": "Canales de Notificación (Slack / Discord)",
+      "webhookUrl": "URL del Webhook",
+      "events": "Eventos que notifican",
+      "test": "Probar Canal",
+      "save": "Guardar Canal",
+      "slack": "Configurar Slack",
+      "discord": "Configurar Discord"
+    },
+    "automation": {
+      "title": "Reglas de Automatización",
+      "addRule": "Nueva Regla",
+      "ruleName": "Nombre de la regla",
+      "trigger": "Evento Git Disparador",
+      "command": "Comando / Script a ejecutar",
+      "rulesList": "Reglas Activas",
+      "logs": "Registro de Ejecución",
+      "noRules": "No hay reglas de automatización configuradas.",
+      "noLogs": "No hay registros de ejecución."
+    },
+    "successSaved": "Configuración guardada correctamente.",
+    "successSent": "Mensaje de prueba enviado con éxito.",
+    "errorSent": "No se pudo enviar el mensaje de prueba."
   }
 }

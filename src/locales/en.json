@@ -28,7 +28,8 @@
       "advanced": "Advanced",
       "analysis": "Analysis",
       "collaboration": "Collaboration",
-      "issues": "Issues"
+      "issues": "Issues",
+      "integrations": "Integrations"
     },
     "sidebar": {
       "myBranches": "My Branches",
@@ -674,5 +675,43 @@
       "inProgress": "In Progress",
       "closed": "Closed"
     }
+  },
+  "integrations": {
+    "title": "Integrations",
+    "webhooks": {
+      "title": "Local Webhook Server",
+      "port": "Port",
+      "start": "Start Server",
+      "stop": "Stop Server",
+      "running": "Server listening on port",
+      "stopped": "Server stopped",
+      "urlInfo": "Configure this Payload URL in GitHub or GitLab:",
+      "notifyToggle": "Show desktop notifications on webhook events",
+      "history": "Received Webhook Events",
+      "emptyHistory": "No webhook events received yet."
+    },
+    "channels": {
+      "title": "Notification Channels (Slack / Discord)",
+      "webhookUrl": "Webhook URL",
+      "events": "Notify on Events",
+      "test": "Test Channel",
+      "save": "Save Channel",
+      "slack": "Configure Slack",
+      "discord": "Configure Discord"
+    },
+    "automation": {
+      "title": "Automation Rules",
+      "addRule": "Add New Rule",
+      "ruleName": "Rule name",
+      "trigger": "Git Event Trigger",
+      "command": "Command / Script to run",
+      "rulesList": "Active Rules",
+      "logs": "Execution Logs",
+      "noRules": "No automation rules configured.",
+      "noLogs": "No execution logs yet."
+    },
+    "successSaved": "Configuration saved successfully.",
+    "successSent": "Test message sent successfully.",
+    "errorSent": "Failed to send test message."
   }
 }
