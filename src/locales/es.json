@@ -28,7 +28,8 @@
       "analysis": "Análisis",
       "collaboration": "Colaboración",
       "issues": "Issues",
-      "integrations": "Integraciones"
+      "integrations": "Integraciones",
+      "security": "Seguridad"
     },
     "sidebar": {
       "myBranches": "Mis Ramas",
@@ -712,5 +713,69 @@
     "successSaved": "Configuración guardada correctamente.",
     "successSent": "Mensaje de prueba enviado con éxito.",
     "errorSent": "No se pudo enviar el mensaje de prueba."
+  },
+  "security": {
+    "title": "Seguridad y Autenticación",
+    "tabs": {
+      "ssh": "Claves SSH",
+      "gpg": "Firma GPG",
+      "scanner": "Escáner de Secretos",
+      "2fa": "Estado 2FA"
+    },
+    "ssh": {
+      "title": "Gestión de Claves SSH",
+      "subtitle": "Administra tus claves de autenticación SSH almacenadas en ~/.ssh",
+      "generateBtn": "Generar SSH Key",
+      "noKeys": "No se encontraron claves SSH en ~/.ssh",
+      "copyPubBtn": "Copiar Clave Pública",
+      "modalTitle": "Generar Nueva Clave SSH",
+      "keyName": "Nombre de la clave",
+      "keyNamePlaceholder": "ej. id_ed25519_mongit",
+      "keyType": "Tipo de Clave",
+      "keyTypeEd25519": "Ed25519 (Recomendado - Ultra Seguro)",
+      "keyTypeRsa": "RSA 4096-bit (Compatibilidad)",
+      "passphrase": "Contraseña (opcional)",
+      "passphrasePlaceholder": "Dejar en blanco si no deseas passphrase",
+      "cancelBtn": "Cancelar",
+      "generateSubmitBtn": "Generar",
+      "successGenerated": "Clave SSH generada correctamente.",
+      "errorGenerating": "Error al generar la clave SSH.",
+      "successDeleted": "Clave SSH eliminada.",
+      "successCopied": "Clave pública copiada al portapapeles.",
+      "confirmDelete": "¿Eliminar esta clave SSH?"
+    },
+    "gpg": {
+      "title": "Firmado GPG de Commits",
+      "subtitle": "Firma digitalmente tus commits con claves GPG para verificar tu identidad en GitHub/GitLab.",
+      "autoSignLabel": "Firmar commits automáticamente",
+      "availableKeys": "Claves GPG Disponibles",
+      "noKeysFound": "No se encontraron claves GPG en el llavero de GPG.",
+      "activeKey": "Activa",
+      "successConfigured": "Configuración GPG actualizada."
+    },
+    "scanner": {
+      "title": "Escáner de Secretos Expuestos",
+      "subtitle": "Escanea el repositorio local en busca de API Keys, Tokens de GitHub/GitLab, AWS Keys y Claves Privadas antes de hacer push.",
+      "scanBtn": "Escanear Repositorio",
+      "scanning": "Escaneando...",
+      "resultsTitle": "Resultados del Análisis",
+      "promptScan": "Haz clic en 'Escanear Repositorio' para analizar el código en busca de posibles fugas de seguridad.",
+      "cleanState": "¡Repositorio Limpio!",
+      "noSecretsSubtitle": "No se detectaron claves ni tokens expuestos en el código fuente.",
+      "line": "línea",
+      "noFolder": "Selecciona un repositorio primero.",
+      "noSecretsFound": "¡No se encontraron secretos expuestos!",
+      "secretsFound": "Atención: Se encontraron secretos expuestos",
+      "metrics": {
+        "files": "Archivos Escaneados",
+        "secrets": "Secretos Hallados",
+        "lastScan": "Último Escaneo"
+      }
+    },
+    "2fa": {
+      "title": "Estado de Autenticación de Dos Factores (2FA)",
+      "subtitle": "Verifica la seguridad y tipo de autenticación de tus cuentas de proveedor cloud vinculadas.",
+      "noProviders": "No hay cuentas de GitHub o GitLab conectadas."
+    }
   }
 }

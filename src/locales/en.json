@@ -29,7 +29,8 @@
       "analysis": "Analysis",
       "collaboration": "Collaboration",
       "issues": "Issues",
-      "integrations": "Integrations"
+      "integrations": "Integrations",
+      "security": "Security"
     },
     "sidebar": {
       "myBranches": "My Branches",
@@ -713,5 +714,69 @@
     "successSaved": "Configuration saved successfully.",
     "successSent": "Test message sent successfully.",
     "errorSent": "Failed to send test message."
+  },
+  "security": {
+    "title": "Security & Authentication",
+    "tabs": {
+      "ssh": "SSH Keys",
+      "gpg": "GPG Signing",
+      "scanner": "Secret Scanner",
+      "2fa": "2FA Status"
+    },
+    "ssh": {
+      "title": "SSH Key Management",
+      "subtitle": "Manage your SSH authentication keys stored in ~/.ssh",
+      "generateBtn": "Generate SSH Key",
+      "noKeys": "No SSH keys found in ~/.ssh",
+      "copyPubBtn": "Copy Public Key",
+      "modalTitle": "Generate New SSH Key",
+      "keyName": "Key name",
+      "keyNamePlaceholder": "e.g. id_ed25519_mongit",
+      "keyType": "Key Type",
+      "keyTypeEd25519": "Ed25519 (Recommended - Ultra Secure)",
+      "keyTypeRsa": "RSA 4096-bit (Compatibility)",
+      "passphrase": "Passphrase (optional)",
+      "passphrasePlaceholder": "Leave blank if you don't want a passphrase",
+      "cancelBtn": "Cancel",
+      "generateSubmitBtn": "Generate",
+      "successGenerated": "SSH Key generated successfully.",
+      "errorGenerating": "Error generating SSH key.",
+      "successDeleted": "SSH Key deleted.",
+      "successCopied": "Public key copied to clipboard.",
+      "confirmDelete": "Delete this SSH key?"
+    },
+    "gpg": {
+      "title": "GPG Commit Signing",
+      "subtitle": "Digitally sign your commits with GPG keys to verify your identity on GitHub/GitLab.",
+      "autoSignLabel": "Sign commits automatically",
+      "availableKeys": "Available GPG Keys",
+      "noKeysFound": "No GPG keys found in GPG keyring.",
+      "activeKey": "Active",
+      "successConfigured": "GPG configuration updated."
+    },
+    "scanner": {
+      "title": "Exposed Secrets Scanner",
+      "subtitle": "Scan local repository for API Keys, GitHub/GitLab Tokens, AWS Keys, and Private Keys before pushing.",
+      "scanBtn": "Scan Repository",
+      "scanning": "Scanning...",
+      "resultsTitle": "Scan Results",
+      "promptScan": "Click 'Scan Repository' to analyze code for security leaks.",
+      "cleanState": "Repository Clean!",
+      "noSecretsSubtitle": "No keys or tokens found exposed in the source code.",
+      "line": "line",
+      "noFolder": "Select a repository first.",
+      "noSecretsFound": "No exposed secrets found!",
+      "secretsFound": "Warning: Exposed secrets detected",
+      "metrics": {
+        "files": "Files Scanned",
+        "secrets": "Secrets Found",
+        "lastScan": "Last Scan"
+      }
+    },
+    "2fa": {
+      "title": "Two-Factor Authentication (2FA) Status",
+      "subtitle": "Verify the security and authentication type of connected cloud provider accounts.",
+      "noProviders": "No GitHub or GitLab accounts connected."
+    }
   }
 }

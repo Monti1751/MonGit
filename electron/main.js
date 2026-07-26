@@ -1,10 +1,13 @@
 import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron'
-import { join, dirname } from 'path'
+import path, { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { exec } from 'child_process'
 import { promisify } from 'util'
 import fs from 'fs/promises'
+import fsSync from 'fs'
 import http from 'http'
+import os from 'os'
+import crypto from 'crypto'
 
 const execAsync = promisify(exec)
 
@@ -1002,6 +1005,270 @@ ipcMain.handle('send-external-notification', async (event, webhookUrl, message) 
     return { success: true }
   } catch (err) {
     return { success: false, error: err.message }
+  }
+})
+
+// ── Security & Authentication IPC Handlers ────────────────────────────────────
+
+// SSH Keys Manager
+ipcMain.handle('get-ssh-keys', async () => {
+  try {
+    const homeDir = os.homedir()
+    const sshDir = join(homeDir, '.ssh')
+    if (!fsSync.existsSync(sshDir)) return []
+    
+    const files = await fs.readdir(sshDir)
+    const pubFiles = files.filter(f => f.endsWith('.pub'))
+    const keys = []
+
+    for (const file of pubFiles) {
+      const fullPath = join(sshDir, file)
+      const content = await fs.readFile(fullPath, 'utf-8')
+      const stat = await fs.stat(fullPath)
+      const baseName = file.replace('.pub', '')
+
+      const parts = content.trim().split(/\s+/)
+      const type = parts[0] || 'ssh-key'
+      const comment = parts[2] || baseName
+      const rawKey = parts[1] || ''
+
+      let fingerprint = 'SHA256:...'
+      if (rawKey) {
+        const hash = crypto.createHash('sha256').update(Buffer.from(rawKey, 'base64')).digest('base64').replace(/=/g, '')
+        fingerprint = `SHA256:${hash}`
+      }
+
+      keys.push({
+        id: baseName,
+        name: baseName,
+        type,
+        comment,
+        publicKey: content.trim(),
+        fingerprint,
+        created: stat.birthtime || stat.mtime
+      })
+    }
+    return keys
+  } catch (err) {
+    console.error('Error fetching SSH keys:', err)
+    return []
+  }
+})
+
+ipcMain.handle('generate-ssh-key', async (event, { name, keyType, passphrase }) => {
+  try {
+    const homeDir = os.homedir()
+    const sshDir = join(homeDir, '.ssh')
+    if (!fsSync.existsSync(sshDir)) {
+      await fs.mkdir(sshDir, { recursive: true })
+    }
+
+    const keyName = (name || 'id_ed25519_mongit').trim()
+    const keyPath = join(sshDir, keyName)
+    const type = keyType === 'rsa' ? 'rsa' : 'ed25519'
+    const bits = type === 'rsa' ? '-b 4096' : ''
+
+    const cmd = `ssh-keygen -t ${type} ${bits} -f "${keyPath}" -N "${passphrase || ''}" -C "MonGit"`
+    const { stdout, stderr } = await execAsync(cmd)
+
+    const pubPath = keyPath + '.pub'
+    const publicKey = await fs.readFile(pubPath, 'utf-8')
+
+    return {
+      success: true,
+      name: keyName,
+      publicKey: publicKey.trim(),
+      output: stdout || stderr
+    }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('delete-ssh-key', async (event, keyId) => {
+  try {
+    const homeDir = os.homedir()
+    const sshDir = join(homeDir, '.ssh')
+    const keyPath = join(sshDir, keyId)
+    const pubPath = keyPath + '.pub'
+
+    if (fsSync.existsSync(keyPath)) await fs.unlink(keyPath)
+    if (fsSync.existsSync(pubPath)) await fs.unlink(pubPath)
+
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+// GPG Signing Manager
+ipcMain.handle('get-gpg-keys', async () => {
+  try {
+    const { stdout } = await execAsync('gpg --list-secret-keys --keyid-format=long')
+    const lines = stdout.split('\n')
+    const keys = []
+    let currentKey = null
+
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (trimmed.startsWith('sec') || trimmed.startsWith('sec#')) {
+        const parts = trimmed.split(/\s+/)
+        const keyInfo = parts[1] || ''
+        const keyId = keyInfo.includes('/') ? keyInfo.split('/')[1] : keyInfo
+        currentKey = { id: keyId, keyid: keyId, type: keyInfo.split('/')[0] || 'sec', uids: [] }
+        keys.push(currentKey)
+      } else if (trimmed.startsWith('uid') && currentKey) {
+        const uidMatch = trimmed.match(/uid\s+\[.*?\]\s+(.*)/)
+        if (uidMatch) {
+          const fullUid = uidMatch[1]
+          const nameMatch = fullUid.match(/^([^<]+)/)
+          const emailMatch = fullUid.match(/<([^>]+)>/)
+          currentKey.uids.push({
+            name: nameMatch ? nameMatch[1].trim() : fullUid,
+            email: emailMatch ? emailMatch[1] : ''
+          })
+        }
+      }
+    }
+
+    let activeSigningKey = ''
+    let gpgSignEnabled = false
+    try {
+      const { stdout: keyOut } = await execAsync('git config --global user.signingkey')
+      activeSigningKey = keyOut.trim()
+    } catch (e) {}
+
+    try {
+      const { stdout: signOut } = await execAsync('git config --global commit.gpgsign')
+      gpgSignEnabled = signOut.trim().toLowerCase() === 'true'
+    } catch (e) {}
+
+    return {
+      keys,
+      activeSigningKey,
+      gpgSignEnabled
+    }
+  } catch (err) {
+    return { keys: [], activeSigningKey: '', gpgSignEnabled: false, error: err.message }
+  }
+})
+
+ipcMain.handle('configure-git-gpg', async (event, { keyId, enableSigning }) => {
+  try {
+    if (keyId) {
+      await execAsync(`git config --global user.signingkey "${keyId}"`)
+    }
+    await execAsync(`git config --global commit.gpgsign "${enableSigning ? 'true' : 'false'}"`)
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+// Secret Scanner Engine
+ipcMain.handle('scan-for-secrets', async (event, folderPath) => {
+  try {
+    if (!folderPath || !fsSync.existsSync(folderPath)) {
+      return { success: false, secrets: [], error: 'Invalid folder path' }
+    }
+
+    const SECRET_PATTERNS = [
+      { type: 'GitHub Token', pattern: /ghp_[a-zA-Z0-9]{36}|github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59}/g, severity: 'critical' },
+      { type: 'GitLab Token', pattern: /glpat-[a-zA-Z0-9\-]{20}/g, severity: 'critical' },
+      { type: 'AWS Key ID', pattern: /AKIA[0-9A-Z]{16}/g, severity: 'high' },
+      { type: 'AWS Secret Key', pattern: /(aws_secret_access_key|aws_secret_key)\s*[:=]\s*["']?([A-Za-z0-9\/+=]{40})["']?/gi, severity: 'critical' },
+      { type: 'Private Key', pattern: /-----BEGIN (RSA|OPENSSH|DSA|EC|PGP) PRIVATE KEY-----/g, severity: 'critical' },
+      { type: 'JWT Token', pattern: /eyJ[a-zA-Z0-9_-]{10,}\.eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}/g, severity: 'medium' },
+      { type: 'Generic Secret', pattern: /(api_key|apikey|secret_key|client_secret|db_password)\s*[:=]\s*["'][a-zA-Z0-9_\-\.]{16,}["']/gi, severity: 'high' },
+      { type: 'Slack Webhook', pattern: /https:\/\/hooks\.slack\.com\/services\/T[a-zA-Z0-9_]+\/B[a-zA-Z0-9_]+\/[a-zA-Z0-9_]+/g, severity: 'high' },
+      { type: 'Discord Webhook', pattern: /https:\/\/discord\.com\/api\/webhooks\/[0-9]+\/[a-zA-Z0-9_\-]+/g, severity: 'medium' }
+    ]
+
+    const detectedSecrets = []
+    const MAX_FILES = 400
+    let fileCount = 0
+
+    // Filter out common false positives: placeholder values, example tokens, test data
+    function isFalsePositive(matchStr, lineContent) {
+      // Skip if the matched value is clearly a placeholder (>40% repetitive chars like x, X, 0, *, -)
+      const value = matchStr.replace(/[^a-zA-Z0-9]/g, '')
+      if (value.length > 4) {
+        const freq = {}
+        for (const c of value.toLowerCase()) freq[c] = (freq[c] || 0) + 1
+        const maxFreq = Math.max(...Object.values(freq))
+        if (maxFreq / value.length > 0.5) return true   // >50% same char → placeholder
+      }
+      // Skip lines that reference obvious placeholder/test contexts
+      const lowerLine = lineContent.toLowerCase()
+      const placeholderWords = ['placeholder', 'example', 'sample', 'your_token', 'your-token', 'your_key',
+        'fake', 'dummy', 'test', 'xxx', 'yyy', 'replace_me', 'changeme', '<token>', '<key>', 'insert_here',
+        'todo', 'fixme', 'put_your']
+      if (placeholderWords.some(w => lowerLine.includes(w))) return true
+      return false
+    }
+
+
+    const IGNORE_DIRS = new Set(['.git', 'node_modules', 'dist', 'dist-electron', 'dist-package', 'build', '.vs', '.idea', '.vscode'])
+    const BINARY_EXTS = new Set(['.exe', '.dll', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.pdf', '.zip', '.tar', '.gz', '.mp4', '.mp3', '.woff', '.ttf', '.eot', '.asar'])
+
+    async function walk(dir) {
+      if (fileCount >= MAX_FILES) return
+      let entries
+      try {
+        entries = await fs.readdir(dir, { withFileTypes: true })
+      } catch (e) {
+        return
+      }
+
+      for (const entry of entries) {
+        if (fileCount >= MAX_FILES) break
+        const fullPath = join(dir, entry.name)
+        const relPath = fullPath.replace(folderPath, '').replace(/^[\\\/]/, '')
+
+        if (entry.isDirectory()) {
+          if (!IGNORE_DIRS.has(entry.name)) {
+            await walk(fullPath)
+          }
+        } else if (entry.isFile()) {
+          const ext = path.extname(entry.name).toLowerCase()
+          if (BINARY_EXTS.has(ext)) continue
+
+          fileCount++
+          try {
+            const stat = await fs.stat(fullPath)
+            if (stat.size > 1024 * 1024) continue
+
+            const content = await fs.readFile(fullPath, 'utf-8')
+            const lines = content.split('\n')
+
+            lines.forEach((line, idx) => {
+              SECRET_PATTERNS.forEach(spec => {
+                const matches = line.match(spec.pattern)
+                if (matches) {
+                  matches.forEach(m => {
+                    if (isFalsePositive(m, line)) return   // skip placeholders/examples
+                    const masked = m.length > 10 ? m.substring(0, 4) + '...' + m.substring(m.length - 4) : '******'
+                    detectedSecrets.push({
+                      type: spec.type,
+                      file: relPath,
+                      line: idx + 1,
+                      snippet: line.trim().substring(0, 120),
+                      masked,
+                      severity: spec.severity
+                    })
+                  })
+                }
+              })
+            })
+          } catch (e) {}
+        }
+      }
+    }
+
+    await walk(folderPath)
+    return { success: true, secrets: detectedSecrets, totalScannedFiles: fileCount }
+  } catch (err) {
+    return { success: false, secrets: [], error: err.message }
   }
 })
 
