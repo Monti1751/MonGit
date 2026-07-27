@@ -5,7 +5,7 @@ import {
   Plus, ChevronDown, RotateCcw,
   Code2, Folder, FolderPlus, X, Check,
   AlertCircle, Clock, Layers,
-  RefreshCw, Terminal, Eye, Info, UserPlus, Trash2, Globe, Zap, PieChart, Shield
+  RefreshCw, Terminal, Eye, Info, UserPlus, Trash2, Globe, Zap, PieChart, Shield, Command
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useProviders } from './hooks/useProviders'
@@ -18,6 +18,8 @@ import PRPanel from './components/PRPanel'
 import IssuesPanel from './components/IssuesPanel'
 import IntegrationsPanel from './components/IntegrationsPanel'
 import SecurityPanel from './components/SecurityPanel'
+import SettingsPanel from './components/SettingsPanel'
+import CommandPalette from './components/CommandPalette'
 import CloneRepoModal from './components/CloneRepoModal'
 import MultiRepoManager from './components/MultiRepoManager'
 
@@ -290,6 +292,29 @@ export default function App() {
   const [syncLoading, setSyncLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('history')
   const [repoSearch, setRepoSearch] = useState('')
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false)
+
+  // Global Keyboard Shortcut Ctrl+K
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setIsCommandPaletteOpen(prev => !prev)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  const handleCommandSelect = (cmdId) => {
+    if (['history', 'merge', 'advanced', 'analysis', 'collaboration', 'issues', 'integrations', 'security', 'settings'].includes(cmdId)) {
+      setActiveTab(cmdId)
+    } else if (cmdId === 'sync') {
+      handleSync()
+    } else if (cmdId === 'newBranch') {
+      setShowNewBranchModal(true)
+    }
+  }
 
   const [diffModalCommit, setDiffModalCommit] = useState(null)
   const [diffModalContent, setDiffModalContent] = useState(null)
@@ -868,6 +893,17 @@ export default function App() {
                   <Shield size={15} />
                   {t('app.tabs.security', 'Seguridad')}
                 </button>
+                <button
+                  onClick={() => setActiveTab('settings')}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${
+                    activeTab === 'settings'
+                      ? 'bg-slate-700 text-white shadow-lg'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Settings size={15} />
+                  {t('app.tabs.settings', 'Configuración')}
+                </button>
               </div>
               
               {activeTab === 'history' && (
@@ -875,16 +911,28 @@ export default function App() {
               )}
             </div>
             
-            {localFolderPath && activeTab === 'history' && (
+            <div className="flex items-center gap-2">
               <button
-                onClick={() => loadLocalRepoData(localFolderPath, activeBranch)}
-                disabled={loadingData}
-                className="p-1.5 rounded-lg bg-slate-800/40 border border-slate-700/60 text-slate-400 hover:text-white hover:border-slate-500 hover:bg-slate-700/40 transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed group"
-                title={t('app.buttons.refreshHistory')}
+                onClick={() => setIsCommandPaletteOpen(true)}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700/60 text-slate-300 hover:text-white hover:border-slate-500 hover:bg-slate-700/60 transition-all text-xs font-medium"
+                title="Paleta de Comandos (Ctrl+K)"
               >
-                <RefreshCw size={14} className={`transition-transform duration-500 ${loadingData ? 'animate-spin' : 'group-hover:rotate-180'}`} />
+                <Command size={13} className="text-teal-400" />
+                <span className="hidden sm:inline">Comandos</span>
+                <kbd className="px-1 py-0.2 bg-slate-900 rounded border border-slate-700 text-[10px] font-mono text-slate-400">Ctrl+K</kbd>
               </button>
-            )}
+
+              {localFolderPath && activeTab === 'history' && (
+                <button
+                  onClick={() => loadLocalRepoData(localFolderPath, activeBranch)}
+                  disabled={loadingData}
+                  className="p-1.5 rounded-lg bg-slate-800/40 border border-slate-700/60 text-slate-400 hover:text-white hover:border-slate-500 hover:bg-slate-700/40 transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed group"
+                  title={t('app.buttons.refreshHistory')}
+                >
+                  <RefreshCw size={14} className={`transition-transform duration-500 ${loadingData ? 'animate-spin' : 'group-hover:rotate-180'}`} />
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-0">
@@ -1144,6 +1192,15 @@ export default function App() {
                 />
               </div>
             )}
+
+            {activeTab === 'settings' && (
+              <div className="h-full p-0">
+                <SettingsPanel
+                  folderPath={localFolderPath}
+                  showToast={showToast}
+                />
+              </div>
+            )}
           </div>
         </main>
 
@@ -1300,6 +1357,12 @@ export default function App() {
       {showMultiRepoManager && (
         <MultiRepoManager onClose={() => setShowMultiRepoManager(false)} />
       )}
+
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onSelectCommand={handleCommandSelect}
+      />
     </div>
   )
 }

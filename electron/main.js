@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, shell, Notification } from 'electron'
 import path, { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { exec } from 'child_process'
@@ -8,6 +8,7 @@ import fsSync from 'fs'
 import http from 'http'
 import os from 'os'
 import crypto from 'crypto'
+import zlib from 'zlib'
 
 const execAsync = promisify(exec)
 
@@ -1160,6 +1161,132 @@ ipcMain.handle('configure-git-gpg', async (event, { keyId, enableSigning }) => {
     }
     await execAsync(`git config --global commit.gpgsign "${enableSigning ? 'true' : 'false'}"`)
     return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+// ── Settings & Configuration ──────────────────────────────────────────────
+
+ipcMain.handle('get-app-settings', async () => {
+  try {
+    const settingsPath = join(app.getPath('userData'), 'mongit-settings.json')
+    if (!fsSync.existsSync(settingsPath)) {
+      return { success: true, settings: {} }
+    }
+    const raw = await fs.readFile(settingsPath, 'utf-8')
+    return { success: true, settings: JSON.parse(raw) }
+  } catch (err) {
+    return { success: false, settings: {}, error: err.message }
+  }
+})
+
+ipcMain.handle('save-app-settings', async (event, settings) => {
+  try {
+    const settingsPath = join(app.getPath('userData'), 'mongit-settings.json')
+    await fs.writeFile(settingsPath, JSON.stringify(settings, null, 2), 'utf-8')
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('get-git-hooks', async (event, folderPath) => {
+  try {
+    const hooksDir = join(folderPath, '.git', 'hooks')
+    const HOOK_NAMES = ['pre-commit', 'commit-msg', 'post-commit', 'pre-push']
+    const hooks = {}
+    for (const name of HOOK_NAMES) {
+      const hookPath = join(hooksDir, name)
+      try {
+        hooks[name] = await fs.readFile(hookPath, 'utf-8')
+      } catch {
+        hooks[name] = ''
+      }
+    }
+    return { success: true, hooks }
+  } catch (err) {
+    return { success: false, hooks: {}, error: err.message }
+  }
+})
+
+ipcMain.handle('save-git-hook', async (event, folderPath, hookName, content) => {
+  try {
+    const hooksDir = join(folderPath, '.git', 'hooks')
+    await fs.mkdir(hooksDir, { recursive: true })
+    const hookPath = join(hooksDir, hookName)
+    await fs.writeFile(hookPath, content, 'utf-8')
+    // Make executable on Unix-like systems
+    try { await fs.chmod(hookPath, 0o755) } catch {}
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('delete-git-hook', async (event, folderPath, hookName) => {
+  try {
+    const hookPath = join(folderPath, '.git', 'hooks', hookName)
+    await fs.unlink(hookPath)
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+// ── System Notifications ──────────────────────────────────────────────────────
+ipcMain.handle('show-notification', async (event, { title, body }) => {
+  try {
+    if (Notification.isSupported()) {
+      new Notification({ title: title || 'MonGit', body: body || '' }).show()
+      return { success: true }
+    }
+    return { success: false, error: 'Notifications not supported' }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+// ── Performance & Optimization ───────────────────────────────────────────────
+
+ipcMain.handle('compress-data', async (event, data) => {
+  return new Promise((resolve, reject) => {
+    zlib.gzip(JSON.stringify(data), (err, compressed) => {
+      if (err) reject(err)
+      else resolve(compressed.toString('base64'))
+    })
+  })
+})
+
+ipcMain.handle('decompress-data', async (event, compressed) => {
+  return new Promise((resolve, reject) => {
+    zlib.gunzip(Buffer.from(compressed, 'base64'), (err, decompressed) => {
+      if (err) reject(err)
+      else resolve(JSON.parse(decompressed.toString()))
+    })
+  })
+})
+
+ipcMain.handle('report-slow-operation', async (event, name, duration) => {
+  console.warn(`[PERF ALERT] Operación lenta detectada: ${name} tomó ${duration.toFixed(2)}ms`)
+  return { success: true }
+})
+
+ipcMain.handle('run-git-worker-task', async (event, operation, folderPath, args = []) => {
+  try {
+    let command = ''
+    switch (operation) {
+      case 'log':
+        command = `git log -n ${args[0] || 100} --pretty=format:"%H|%an|%ae|%ad|%s"`
+        break
+      case 'status':
+        command = 'git status --porcelain'
+        break
+      default:
+        command = `git ${operation} ${args.join(' ')}`
+    }
+    const { stdout } = await execAsync(command, { cwd: folderPath, maxBuffer: 10 * 1024 * 1024 })
+    return { success: true, result: stdout }
   } catch (err) {
     return { success: false, error: err.message }
   }

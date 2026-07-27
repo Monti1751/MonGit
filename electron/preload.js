@@ -72,5 +72,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
   deleteSSHKey: (keyId) => ipcRenderer.invoke('delete-ssh-key', keyId),
   getGPGKeys: () => ipcRenderer.invoke('get-gpg-keys'),
   configureGitGPG: (params) => ipcRenderer.invoke('configure-git-gpg', params),
-  scanForSecrets: (folderPath) => ipcRenderer.invoke('scan-for-secrets', folderPath)
+  scanForSecrets: (folderPath) => ipcRenderer.invoke('scan-for-secrets', folderPath),
+  // ── Settings & Configuration ───────────────────────────────────────────────
+  getAppSettings: () => ipcRenderer.invoke('get-app-settings'),
+  saveAppSettings: (settings) => ipcRenderer.invoke('save-app-settings', settings),
+  getGitHooks: (folderPath) => ipcRenderer.invoke('get-git-hooks', folderPath),
+  saveGitHook: (folderPath, hookName, content) => ipcRenderer.invoke('save-git-hook', folderPath, hookName, content),
+  deleteGitHook: (folderPath, hookName) => ipcRenderer.invoke('delete-git-hook', folderPath, hookName),
+  showNotification: (params) => ipcRenderer.invoke('show-notification', params),
+  // ── Performance & Optimization ──────────────────────────────────────────────
+  compressData: (data) => ipcRenderer.invoke('compress-data', data),
+  decompressData: (compressed) => ipcRenderer.invoke('decompress-data', compressed),
+  reportSlowOperation: (name, duration) => ipcRenderer.invoke('report-slow-operation', name, duration),
+  runGitWorkerTask: (operation, folderPath, args) => ipcRenderer.invoke('run-git-worker-task', operation, folderPath, args)
 })

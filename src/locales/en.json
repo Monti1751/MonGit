@@ -30,7 +30,8 @@
       "collaboration": "Collaboration",
       "issues": "Issues",
       "integrations": "Integrations",
-      "security": "Security"
+      "security": "Security",
+      "settings": "Settings"
     },
     "sidebar": {
       "myBranches": "My Branches",
@@ -778,5 +779,65 @@
       "subtitle": "Verify the security and authentication type of connected cloud provider accounts.",
       "noProviders": "No GitHub or GitLab accounts connected."
     }
+  },
+  "settings": {
+    "title": "Settings & Customization",
+    "subtitle": "Customize the behavior and appearance of MonGit",
+    "sections": {
+      "repo": "Repository",
+      "hooks": "Git Hooks",
+      "theme": "Themes",
+      "shortcuts": "Shortcuts"
+    },
+    "repo": {
+      "title": "Repository Settings",
+      "defaultBranch": "Default branch",
+      "requireReviews": "Require Pull Request reviews",
+      "requiredReviewCount": "Number of required reviews",
+      "requireChecks": "Require CI/CD checks to pass",
+      "autoDelete": "Automatically delete branches after merge",
+      "saveBtn": "Save Settings",
+      "savedBtn": "Saved!",
+      "saved": "✓ Settings saved"
+    },
+    "hooks": {
+      "title": "Git Hooks",
+      "noRepo": "Open a repository to edit Git Hooks",
+      "docTitle": "Documentation",
+      "placeholder": "Write your script here...",
+      "saveBtn": "Save Hook",
+      "savedBtn": "Saved!",
+      "deleteBtn": "Delete",
+      "saved": "✓ Hook saved",
+      "deleted": "✓ Hook deleted",
+      "doc": {
+        "pre-commit": "Runs before creating a commit. Useful for linting, tests, or code formatting.",
+        "commit-msg": "Validates or modifies the commit message before saving.",
+        "post-commit": "Runs after creating a commit. Useful for notifications or deploys.",
+        "pre-push": "Runs before pushing. Ideal for integration tests."
+      }
+    },
+    "theme": {
+      "title": "Visual Theme",
+      "description": "Select a color scheme to customize the interface."
+    },
+    "shortcuts": {
+      "title": "Keyboard Shortcuts",
+      "description": "Quick reference of available keyboard shortcuts in MonGit.",
+      "actions": {
+        "sync": "Sync (Pull & Push)",
+        "commit": "Create commit",
+        "newBranch": "New branch",
+        "switchBranch": "Switch branch",
+        "search": "Search"
+      }
+    }
+  },
+  "ux": {
+    "commandPalette": {
+      "placeholder": "Type a command or search a tab... (Ctrl+K)",
+      "noResults": "No commands found."
+    }
   }
 }
+
