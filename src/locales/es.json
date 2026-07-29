@@ -29,7 +29,8 @@
       "collaboration": "Colaboración",
       "issues": "Issues",
       "integrations": "Integraciones",
-      "security": "Seguridad"
+      "security": "Seguridad",
+      "settings": "Configuración"
     },
     "sidebar": {
       "myBranches": "Mis Ramas",
@@ -777,5 +778,65 @@
       "subtitle": "Verifica la seguridad y tipo de autenticación de tus cuentas de proveedor cloud vinculadas.",
       "noProviders": "No hay cuentas de GitHub o GitLab conectadas."
     }
+  },
+  "settings": {
+    "title": "Configuración y Personalización",
+    "subtitle": "Personaliza el comportamiento y la apariencia de MonGit",
+    "sections": {
+      "repo": "Repositorio",
+      "hooks": "Git Hooks",
+      "theme": "Temas",
+      "shortcuts": "Atajos"
+    },
+    "repo": {
+      "title": "Configuración del Repositorio",
+      "defaultBranch": "Rama por defecto",
+      "requireReviews": "Requerir reviews en Pull Requests",
+      "requiredReviewCount": "Número de reviews requeridas",
+      "requireChecks": "Requerir que pasen los checks de CI/CD",
+      "autoDelete": "Eliminar ramas automáticamente después de merge",
+      "saveBtn": "Guardar Configuración",
+      "savedBtn": "¡Guardado!",
+      "saved": "✓ Configuración guardada"
+    },
+    "hooks": {
+      "title": "Git Hooks",
+      "noRepo": "Abre un repositorio para editar los Git Hooks",
+      "docTitle": "Documentación",
+      "placeholder": "Escribe tu script aquí...",
+      "saveBtn": "Guardar Hook",
+      "savedBtn": "¡Guardado!",
+      "deleteBtn": "Eliminar",
+      "saved": "✓ Hook guardado",
+      "deleted": "✓ Hook eliminado",
+      "doc": {
+        "pre-commit": "Se ejecuta antes de crear un commit. Útil para linting, tests, o formateo de código.",
+        "commit-msg": "Valida o modifica el mensaje del commit antes de guardarlo.",
+        "post-commit": "Se ejecuta después de crear un commit. Útil para notificaciones o deploys.",
+        "pre-push": "Se ejecuta antes de hacer push. Ideal para tests de integración."
+      }
+    },
+    "theme": {
+      "title": "Tema Visual",
+      "description": "Selecciona un esquema de colores para personalizar la interfaz."
+    },
+    "shortcuts": {
+      "title": "Atajos de Teclado",
+      "description": "Referencia rápida de los atajos de teclado disponibles en MonGit.",
+      "actions": {
+        "sync": "Sincronizar (Pull & Push)",
+        "commit": "Crear commit",
+        "newBranch": "Nueva rama",
+        "switchBranch": "Cambiar rama",
+        "search": "Buscar"
+      }
+    }
+  },
+  "ux": {
+    "commandPalette": {
+      "placeholder": "Escribe un comando o busca una pestaña... (Ctrl+K)",
+      "noResults": "No se encontraron comandos."
+    }
   }
 }
+
