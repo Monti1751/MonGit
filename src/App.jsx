@@ -22,6 +22,7 @@ import SettingsPanel from './components/SettingsPanel'
 import CommandPalette from './components/CommandPalette'
 import CloneRepoModal from './components/CloneRepoModal'
 import MultiRepoManager from './components/MultiRepoManager'
+import { applyTheme } from './utils/theme'
 
 // ─── Initial mock data (Fallback) ─────────────────────────────────────────────
 
@@ -294,6 +295,12 @@ export default function App() {
   const [repoSearch, setRepoSearch] = useState('')
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false)
 
+  // Restore theme on load
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('mongit-theme') || 'dark-default'
+    applyTheme(savedTheme)
+  }, [])
+
   // Global Keyboard Shortcut Ctrl+K
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -562,7 +569,7 @@ export default function App() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="h-screen flex flex-col bg-[#080d18] text-slate-200 overflow-hidden font-sans">
+    <div className="h-screen flex flex-col text-slate-200 overflow-hidden font-sans transition-colors duration-300" style={{ backgroundColor: 'var(--color-bg-base, #080d18)' }}>
       {/* ── TOP BAR ─────────────────────────────────────────────────────────── */}
       <header className="flex items-center gap-3 px-4 py-2.5 border-b border-slate-700/50 glass z-20 flex-shrink-0">
         <div className="flex items-center gap-2 mr-2">
@@ -576,11 +583,6 @@ export default function App() {
         <div className="flex items-center gap-2">
           <button
             onClick={handleSelectFolder}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/70 border border-slate-700/60 hover:border-slate-600 hover:bg-slate-700/80 transition-all text-sm text-slate-200 font-medium"
-            title={localFolderPath || t('app.buttons.openFolder')}
-          >
-            <Folder size={14} className="text-brand-400" />
-            <span>{localFolderPath ? t('app.buttons.openOtherFolder') : t('app.buttons.openFolder')}</span>
           </button>
           
           <button

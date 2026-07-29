@@ -4,6 +4,60 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-brand-500: #14b8a6;
+  --color-brand-600: #0d9488;
+  --color-brand-400: #2dd4bf;
+  --color-brand-300: #5eead4;
+  --color-bg-base: #080d18;
+  --color-bg-surface: #0a0f1c;
+}
+
+[data-theme='dark-default'] {
+  --color-brand-500: #14b8a6;
+  --color-brand-600: #0d9488;
+  --color-brand-400: #2dd4bf;
+  --color-brand-300: #5eead4;
+  --color-bg-base: #080d18;
+  --color-bg-surface: #0a0f1c;
+}
+
+[data-theme='neon-pink'] {
+  --color-brand-500: #ec4899;
+  --color-brand-600: #db2777;
+  --color-brand-400: #f472b6;
+  --color-brand-300: #fbcfe8;
+  --color-bg-base: #0f0a1a;
+  --color-bg-surface: #1a1025;
+}
+
+[data-theme='ocean'] {
+  --color-brand-500: #0ea5e9;
+  --color-brand-600: #0284c7;
+  --color-brand-400: #38bdf8;
+  --color-brand-300: #7dd3fc;
+  --color-bg-base: #001a33;
+  --color-bg-surface: #002244;
+}
+
+[data-theme='forest'] {
+  --color-brand-500: #22c55e;
+  --color-brand-600: #16a34a;
+  --color-brand-400: #4ade80;
+  --color-brand-300: #86efac;
+  --color-bg-base: #0a1a0a;
+  --color-bg-surface: #0f2a0f;
+}
+
+[data-theme='sunset'] {
+  --color-brand-500: #f97316;
+  --color-brand-600: #ea580c;
+  --color-brand-400: #fb923c;
+  --color-brand-300: #fdba74;
+  --color-bg-base: #1a0a00;
+  --color-bg-surface: #2a1500;
+}
+
 @layer base {
   * {
     box-sizing: border-box;
@@ -14,10 +68,11 @@
     padding: 0;
   }
   body {
-    background-color: #0a0f1a;
+    background-color: var(--color-bg-base, #080d18);
     color: #e2e8f0;
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
   ::-webkit-scrollbar {
     width: 4px;
@@ -47,13 +102,13 @@
     -webkit-backdrop-filter: blur(8px);
   }
   .glow-teal {
-    box-shadow: 0 0 20px rgba(20, 184, 166, 0.3);
+    box-shadow: 0 0 20px var(--color-brand-500, rgba(20, 184, 166, 0.3));
   }
   .glow-teal-sm {
-    box-shadow: 0 0 10px rgba(20, 184, 166, 0.2);
+    box-shadow: 0 0 10px var(--color-brand-500, rgba(20, 184, 166, 0.2));
   }
   .text-gradient {
-    background: linear-gradient(135deg, #14b8a6, #818cf8);
+    background: linear-gradient(135deg, var(--color-brand-500, #14b8a6), #818cf8);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

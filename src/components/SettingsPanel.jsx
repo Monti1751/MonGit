@@ -6,39 +6,7 @@ import {
   Terminal, FileCode, Zap, Eye
 } from 'lucide-react'
 
-// ── Theme Definitions ────────────────────────────────────────────────────────
-const THEMES = [
-  {
-    id: 'dark-default',
-    name: 'Dark (Default)',
-    colors: { primary: '#14b8a6', bg: '#0b1121', surface: '#0f172a', text: '#e2e8f0' },
-    preview: 'linear-gradient(135deg, #0b1121, #14b8a6)'
-  },
-  {
-    id: 'neon-pink',
-    name: 'Neon Pink',
-    colors: { primary: '#ec4899', bg: '#0f0a1a', surface: '#1a1025', text: '#f0e6f6' },
-    preview: 'linear-gradient(135deg, #0f0a1a, #ec4899)'
-  },
-  {
-    id: 'ocean',
-    name: 'Ocean',
-    colors: { primary: '#0ea5e9', bg: '#001a33', surface: '#002244', text: '#e0f2fe' },
-    preview: 'linear-gradient(135deg, #001a33, #0ea5e9)'
-  },
-  {
-    id: 'forest',
-    name: 'Forest',
-    colors: { primary: '#22c55e', bg: '#0a1a0a', surface: '#0f2a0f', text: '#dcfce7' },
-    preview: 'linear-gradient(135deg, #0a1a0a, #22c55e)'
-  },
-  {
-    id: 'sunset',
-    name: 'Sunset',
-    colors: { primary: '#f97316', bg: '#1a0a00', surface: '#2a1500', text: '#fff7ed' },
-    preview: 'linear-gradient(135deg, #1a0a00, #f97316)'
-  }
-]
+import { THEMES, applyTheme } from '../utils/theme'
 
 // ── Hook Descriptions ────────────────────────────────────────────────────────
 const HOOK_DOCS = {
@@ -161,13 +129,9 @@ export default function SettingsPanel({ folderPath, showToast }) {
     }
   }
 
-  const applyTheme = (theme) => {
-    const root = document.documentElement
-    root.style.setProperty('--color-brand', theme.colors.primary)
-    root.style.setProperty('--color-bg-base', theme.colors.bg)
-    root.style.setProperty('--color-bg-surface', theme.colors.surface)
+  const handleSelectTheme = (theme) => {
+    applyTheme(theme.id)
     setCurrentTheme(theme.id)
-    localStorage.setItem('mongit-theme', theme.id)
   }
 
   const sections = [
@@ -408,7 +372,7 @@ export default function SettingsPanel({ folderPath, showToast }) {
                 {THEMES.map(theme => (
                   <button
                     key={theme.id}
-                    onClick={() => applyTheme(theme)}
+                    onClick={() => handleSelectTheme(theme)}
                     className={`group relative p-4 rounded-xl border-2 transition-all duration-300 text-left ${
                       currentTheme === theme.id
                         ? 'border-teal-400 bg-teal-500/10 shadow-lg shadow-teal-500/10'
