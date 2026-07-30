@@ -115,7 +115,49 @@ La pestaña **Avanzado** te proporciona herramientas profesionales para el contr
 * **Persistencia**: Los repositorios agregados se recuerdan entre sesiones gracias a `localStorage`.
 * **Acceso rápido**: Botón dedicado en la barra superior para abrir el workspace multirepo.
 
-### 9. 🌍 Internacionalización (i18n)
+### 9. 🛠️ Configuración y Personalización
+* **Panel de configuración completo**: Ajusta reglas de repositorio, defaults y opciones de flujo de trabajo.
+* **Editor de Git Hooks**: Edita `pre-commit`, `commit-msg`, `post-commit` y `pre-push` desde la interfaz.
+* **Selector de temas**: Cambia entre esquemas de colores como `Neon Pink`, `Ocean`, `Forest` y `Dark`.
+* **Atajos de teclado**: Soporte para comandos rápidos como `Ctrl+K`, `Ctrl+Shift+S`, `Ctrl+B` y más.
+
+### 10. 🤝 Colaboración y Pull Requests
+* **Gestión de PRs/MRs**: Ver, filtrar y crear Pull Requests o Merge Requests desde la aplicación.
+* **Revisión integrada**: Leer comentarios, enviar feedback y mergear PRs sin salir de MonGit.
+* **Estado de checks CI/CD**: Consultar resultados de pipelines y checks antes de aprobar un merge.
+* **Notificaciones de PR**: Alertas para PRs asignadas, comentarios pendientes y estados críticos.
+
+### 11. 🧾 Gestión de Issues
+* **Tablero Kanban**: Organiza issues por estado con una vista de columnas drag-and-drop.
+* **Etiquetas dinámicas**: Filtra issues por labels y categorías con un selector visual.
+* **Asignaciones**: Administra responsables y asigna issues a usuarios directamente en la UI.
+* **Vinculación con commits**: Relaciona issues con commits y PRs para trazar el trabajo.
+
+### 12. 🔗 Integraciones Externas
+* **Webhooks**: Recibe eventos de GitHub y GitLab en tiempo real dentro de MonGit.
+* **Estado de CI/CD**: Visualiza pipelines de GitHub Actions y GitLab CI en un panel dedicado.
+* **Notificaciones externas**: Conecta Slack, Discord o email para recibir alertas de repositorio.
+* **Automatización**: Crea reglas de eventos para ejecutar scripts y flujos de trabajo automáticos.
+
+### 13. 🛡️ Seguridad y Autenticación
+* **SSH Keys**: Genera, copia y administra claves SSH desde el escritorio.
+* **GPG Signing**: Firma commits con GPG y habilita firmas automáticas de forma segura.
+* **Soporte 2FA**: Detecta proveedores con autenticación de dos factores y guía la verificación.
+* **Secret Scanning**: Escanea posibles credenciales o secretos expuestos en el repositorio.
+
+### 14. ⚡ Rendimiento y Escalabilidad
+* **Virtualización de listas**: Maneja miles de commits sin pérdida de rendimiento.
+* **Caché local inteligente**: Reduce llamadas innecesarias a Git mediante almacenamiento temporal.
+* **Worker threads para Git**: Ejecuta operaciones pesadas en background sin bloquear la UI.
+* **Lazy loading**: Carga solo los paneles y datos visibles cuando el usuario los necesita.
+
+### 15. 📊 Visualización y Análisis
+* **Estadísticas del repositorio**: Métricas de commits, contribuyentes, líneas cambiadas y actividad.
+* **Búsqueda avanzada**: Filtra commits por autor, mensaje, fecha y rama.
+* **Git Blame**: Consulta quién cambió cada línea de un archivo y cuándo.
+* **Historial de archivos**: Revisa versiones anteriores y diff de archivos específicos.
+
+### 16. 🌍 Internacionalización (i18n)
 * **Soporte Multiidioma**: Interfaz completa en español e inglés.
 * **Detección Automática**: Se adapta al idioma del sistema operativo.
 * **Fácil de Extender**: Estructura lista para agregar más idiomas.
