@@ -62,6 +62,10 @@ export default function SettingsPanel({ folderPath, showToast }) {
     if (folderPath) loadHooks()
   }, [folderPath])
 
+  useEffect(() => {
+    applyTheme(currentTheme)
+  }, [currentTheme])
+
   const loadSettings = async () => {
     try {
       setSettingsLoading(true)
@@ -142,12 +146,12 @@ export default function SettingsPanel({ folderPath, showToast }) {
   ]
 
   return (
-    <div className="h-full flex flex-col" style={{ background: 'linear-gradient(180deg, rgba(14,165,233,0.03) 0%, transparent 40%)' }}>
+    <div className="h-full flex flex-col" style={{ background: 'linear-gradient(180deg, rgba(20,184,166,0.08) 0%, transparent 40%)' }}>
       {/* Header */}
       <div className="px-5 py-4 border-b border-slate-700/50">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-teal-500/20 to-cyan-500/20 border border-teal-500/30">
-            <Settings size={20} className="text-teal-400" />
+          <div className="p-2 rounded-lg bg-gradient-to-br from-brand-500/20 to-brand-500/10 border border-brand-500/30">
+            <Settings size={20} className="text-brand-400" />
           </div>
           <div>
             <h2 className="text-lg font-bold text-white">{t('settings.title', 'Configuración y Personalización')}</h2>
@@ -163,7 +167,7 @@ export default function SettingsPanel({ folderPath, showToast }) {
               onClick={() => setActiveSection(s.id)}
               className={`flex items-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition-all flex-1 justify-center ${
                 activeSection === s.id
-                  ? 'bg-teal-500/20 text-teal-300 border border-teal-500/30 shadow-lg shadow-teal-500/10'
+                  ? 'bg-brand-500/20 text-brand-300 border border-brand-500/30 shadow-lg shadow-brand-500/10'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 border border-transparent'
               }`}
             >
@@ -182,7 +186,7 @@ export default function SettingsPanel({ folderPath, showToast }) {
           <div className="space-y-4 max-w-2xl">
             <div className="bg-slate-800/40 rounded-xl border border-slate-700/40 p-5 space-y-5">
               <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                <GitBranch size={16} className="text-teal-400" />
+                <GitBranch size={16} className="text-brand-400" />
                 {t('settings.repo.title', 'Configuración del Repositorio')}
               </h3>
 
@@ -194,7 +198,7 @@ export default function SettingsPanel({ folderPath, showToast }) {
                 <select
                   value={repoSettings.defaultBranch}
                   onChange={e => setRepoSettings({ ...repoSettings, defaultBranch: e.target.value })}
-                  className="w-full bg-slate-900/60 border border-slate-600/50 rounded-lg px-3 py-2.5 text-sm text-white focus:border-teal-500/50 focus:outline-none transition-colors"
+                  className="w-full bg-slate-900/60 border border-slate-600/50 rounded-lg px-3 py-2.5 text-sm text-white focus:border-brand-500/50 focus:outline-none transition-colors"
                 >
                   <option value="main">main</option>
                   <option value="master">master</option>
@@ -209,7 +213,7 @@ export default function SettingsPanel({ folderPath, showToast }) {
                     type="checkbox"
                     checked={repoSettings.requirePRReviews}
                     onChange={e => setRepoSettings({ ...repoSettings, requirePRReviews: e.target.checked })}
-                    className="w-4 h-4 rounded accent-teal-500"
+                    className="w-4 h-4 rounded accent-brand-500"
                   />
                   {t('settings.repo.requireReviews', 'Requerir reviews en Pull Requests')}
                 </label>
@@ -225,7 +229,7 @@ export default function SettingsPanel({ folderPath, showToast }) {
                       max="10"
                       value={repoSettings.requiredReviews}
                       onChange={e => setRepoSettings({ ...repoSettings, requiredReviews: parseInt(e.target.value) || 1 })}
-                      className="w-24 bg-slate-900/60 border border-slate-600/50 rounded-lg px-3 py-2 text-sm text-white focus:border-teal-500/50 focus:outline-none"
+                      className="w-24 bg-slate-900/60 border border-slate-600/50 rounded-lg px-3 py-2 text-sm text-white focus:border-brand-500/50 focus:outline-none"
                     />
                   </div>
                 )}
@@ -235,7 +239,7 @@ export default function SettingsPanel({ folderPath, showToast }) {
                     type="checkbox"
                     checked={repoSettings.requireStatusChecks}
                     onChange={e => setRepoSettings({ ...repoSettings, requireStatusChecks: e.target.checked })}
-                    className="w-4 h-4 rounded accent-teal-500"
+                    className="w-4 h-4 rounded accent-brand-500"
                   />
                   {t('settings.repo.requireChecks', 'Requerir que pasen los checks de CI/CD')}
                 </label>
@@ -245,7 +249,7 @@ export default function SettingsPanel({ folderPath, showToast }) {
                     type="checkbox"
                     checked={repoSettings.autoDeleteBranch}
                     onChange={e => setRepoSettings({ ...repoSettings, autoDeleteBranch: e.target.checked })}
-                    className="w-4 h-4 rounded accent-teal-500"
+                    className="w-4 h-4 rounded accent-brand-500"
                   />
                   {t('settings.repo.autoDelete', 'Eliminar ramas automáticamente después de merge')}
                 </label>
@@ -256,8 +260,8 @@ export default function SettingsPanel({ folderPath, showToast }) {
                 onClick={saveSettings}
                 className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg font-medium text-sm transition-all ${
                   settingsSaved
-                    ? 'bg-green-500/20 text-green-300 border border-green-500/30'
-                    : 'bg-teal-500/20 text-teal-300 border border-teal-500/30 hover:bg-teal-500/30'
+                    ? 'bg-brand-500/20 text-brand-300 border border-brand-500/30'
+                    : 'bg-brand-500/20 text-brand-300 border border-brand-500/30 hover:bg-brand-500/30'
                 }`}
               >
                 {settingsSaved ? <Check size={16} /> : <Save size={16} />}
@@ -288,14 +292,14 @@ export default function SettingsPanel({ folderPath, showToast }) {
                       onClick={() => setSelectedHook(hookName)}
                       className={`w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
                         selectedHook === hookName
-                          ? 'bg-teal-500/20 text-teal-300 border border-teal-500/30 shadow-lg shadow-teal-500/10'
+                          ? 'bg-brand-500/20 text-brand-300 border border-brand-500/30 shadow-lg shadow-brand-500/10'
                           : 'bg-slate-800/40 text-slate-300 border border-slate-700/30 hover:bg-slate-700/50'
                       }`}
                     >
                       <span>{HOOK_DOCS[hookName]?.icon}</span>
                       <span className="font-mono text-xs">{hookName}</span>
                       {hooks[hookName] && (
-                        <span className="ml-auto w-2 h-2 rounded-full bg-teal-400"></span>
+                        <span className="ml-auto w-2 h-2 rounded-full bg-brand-400"></span>
                       )}
                     </button>
                   ))}
@@ -306,7 +310,7 @@ export default function SettingsPanel({ folderPath, showToast }) {
                   {/* Hook Documentation */}
                   <div className="text-xs text-slate-400 p-3 bg-slate-800/40 rounded-lg border border-slate-700/30">
                     <p className="font-semibold text-slate-300 mb-1 flex items-center gap-2">
-                      <FileCode size={14} className="text-teal-400" />
+                      <FileCode size={14} className="text-brand-400" />
                       {t('settings.hooks.docTitle', 'Documentación')}
                     </p>
                     <p>
@@ -323,7 +327,7 @@ export default function SettingsPanel({ folderPath, showToast }) {
                   <textarea
                     value={hooks[selectedHook]}
                     onChange={e => setHooks({ ...hooks, [selectedHook]: e.target.value })}
-                    className="flex-1 bg-slate-900/60 border border-slate-600/50 rounded-lg px-4 py-3 font-mono text-sm text-white focus:border-teal-500/50 focus:outline-none resize-none transition-colors"
+                    className="flex-1 bg-slate-900/60 border border-slate-600/50 rounded-lg px-4 py-3 font-mono text-sm text-white focus:border-brand-500/50 focus:outline-none resize-none transition-colors"
                     placeholder={`#!/bin/bash\n# ${t('settings.hooks.placeholder', 'Escribe tu script aquí...')}`}
                     spellCheck={false}
                   />
@@ -334,8 +338,8 @@ export default function SettingsPanel({ folderPath, showToast }) {
                       onClick={saveHook}
                       className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-medium text-sm transition-all ${
                         hookSaved
-                          ? 'bg-green-500/20 text-green-300 border border-green-500/30'
-                          : 'bg-teal-500/20 text-teal-300 border border-teal-500/30 hover:bg-teal-500/30'
+                          ? 'bg-brand-500/20 text-brand-300 border border-brand-500/30'
+                          : 'bg-brand-500/20 text-brand-300 border border-brand-500/30 hover:bg-brand-500/30'
                       }`}
                     >
                       {hookSaved ? <Check size={16} /> : <Save size={16} />}
@@ -361,7 +365,7 @@ export default function SettingsPanel({ folderPath, showToast }) {
           <div className="max-w-2xl space-y-4">
             <div className="bg-slate-800/40 rounded-xl border border-slate-700/40 p-5">
               <h3 className="text-sm font-semibold text-white flex items-center gap-2 mb-4">
-                <Palette size={16} className="text-teal-400" />
+                <Palette size={16} className="text-brand-400" />
                 {t('settings.theme.title', 'Tema Visual')}
               </h3>
               <p className="text-xs text-slate-400 mb-5">
@@ -375,7 +379,7 @@ export default function SettingsPanel({ folderPath, showToast }) {
                     onClick={() => handleSelectTheme(theme)}
                     className={`group relative p-4 rounded-xl border-2 transition-all duration-300 text-left ${
                       currentTheme === theme.id
-                        ? 'border-teal-400 bg-teal-500/10 shadow-lg shadow-teal-500/10'
+                        ? 'border-brand-400 bg-brand-500/10 shadow-lg shadow-brand-500/10'
                         : 'border-slate-600/50 bg-slate-800/30 hover:border-slate-500 hover:bg-slate-700/30'
                     }`}
                   >
@@ -394,7 +398,7 @@ export default function SettingsPanel({ folderPath, showToast }) {
                         </div>
                       </div>
                       {currentTheme === theme.id && (
-                        <div className="w-6 h-6 rounded-full bg-teal-500 flex items-center justify-center">
+                        <div className="w-6 h-6 rounded-full bg-brand-500 flex items-center justify-center">
                           <Check size={14} className="text-white" />
                         </div>
                       )}
@@ -411,7 +415,7 @@ export default function SettingsPanel({ folderPath, showToast }) {
           <div className="max-w-2xl space-y-4">
             <div className="bg-slate-800/40 rounded-xl border border-slate-700/40 p-5">
               <h3 className="text-sm font-semibold text-white flex items-center gap-2 mb-4">
-                <Keyboard size={16} className="text-teal-400" />
+                <Keyboard size={16} className="text-brand-400" />
                 {t('settings.shortcuts.title', 'Atajos de Teclado')}
               </h3>
               <p className="text-xs text-slate-400 mb-5">

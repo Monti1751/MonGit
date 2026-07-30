@@ -73,7 +73,7 @@ export default function CommandPalette({ isOpen, onClose, onSelectCommand }) {
       <div className="relative w-full max-w-xl bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden z-10">
         {/* Search Input Bar */}
         <div className="flex items-center gap-3 px-4 py-3.5 border-b border-slate-800 bg-slate-900/90">
-          <Search size={18} className="text-teal-400 flex-shrink-0" />
+          <Search size={18} className="text-brand-400 flex-shrink-0" />
           <input
             autoFocus
             type="text"
@@ -110,12 +110,12 @@ export default function CommandPalette({ isOpen, onClose, onSelectCommand }) {
                   onMouseEnter={() => setSelectedIndex(idx)}
                   className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
                     isSelected
-                      ? 'bg-teal-500/20 text-teal-300 border border-teal-500/30'
+                      ? 'bg-brand-500/20 text-brand-300 border border-brand-500/30'
                       : 'text-slate-300 hover:bg-slate-800/60 border border-transparent'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <Icon size={16} className={isSelected ? 'text-teal-400' : 'text-slate-400'} />
+                    <Icon size={16} className={isSelected ? 'text-brand-400' : 'text-slate-400'} />
                     <span>{cmd.label}</span>
                   </div>
                   {cmd.keys && (

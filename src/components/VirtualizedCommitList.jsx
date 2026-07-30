@@ -38,17 +38,17 @@ export default function VirtualizedCommitList({ commits = [], onSelectCommit, se
                 onClick={() => onSelectCommit?.(commit)}
                 className={`w-full h-full text-left px-3 py-2 rounded-lg border transition-all flex items-center justify-between gap-3 ${
                   isSelected
-                    ? 'bg-teal-500/20 text-white border-teal-500/40 shadow-lg shadow-teal-500/10'
+                    ? 'bg-brand-500/20 text-white border-brand-500/40 shadow-lg shadow-brand-500/10'
                     : 'bg-slate-800/40 text-slate-300 border-slate-700/30 hover:bg-slate-700/50 hover:border-slate-600/50'
                 }`}
               >
                 <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                  <div className={`p-1.5 rounded-lg flex-shrink-0 ${isSelected ? 'bg-teal-500/30 text-teal-300' : 'bg-slate-700/50 text-slate-400'}`}>
+                  <div className={`p-1.5 rounded-lg flex-shrink-0 ${isSelected ? 'bg-brand-500/30 text-brand-300' : 'bg-slate-700/50 text-slate-400'}`}>
                     <GitCommit size={14} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-[11px] text-teal-400 font-semibold">{commit.id ? commit.id.substring(0, 7) : '-------'}</span>
+                      <span className="font-mono text-[11px] text-brand-400 font-semibold">{commit.id ? commit.id.substring(0, 7) : '-------'}</span>
                       <span className="text-xs font-medium text-slate-200 truncate">{commit.message}</span>
                     </div>
                     <div className="flex items-center gap-2 text-[10px] text-slate-400 mt-0.5">

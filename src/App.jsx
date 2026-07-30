@@ -3,7 +3,7 @@ import {
   GitBranch, GitCommit, GitMerge, GitPullRequest,
   Upload, Download, CheckCircle2, Settings,
   Plus, ChevronDown, RotateCcw,
-  Code2, Folder, FolderPlus, X, Check,
+  Code2, Folder, FolderOpen, FolderPlus, X, Check,
   AlertCircle, Clock, Layers,
   RefreshCw, Terminal, Eye, Info, UserPlus, Trash2, Globe, Zap, PieChart, Shield, Command
 } from 'lucide-react'
@@ -571,7 +571,7 @@ export default function App() {
   return (
     <div className="h-screen flex flex-col text-slate-200 overflow-hidden font-sans transition-colors duration-300" style={{ backgroundColor: 'var(--color-bg-base, #080d18)' }}>
       {/* ── TOP BAR ─────────────────────────────────────────────────────────── */}
-      <header className="flex items-center gap-3 px-4 py-2.5 border-b border-slate-700/50 glass z-20 flex-shrink-0">
+      <header className="flex items-center gap-3 px-4 py-2.5 glass z-20 flex-shrink-0 theme-border-surface" style={{ backgroundColor: 'var(--color-bg-surface-40)' }}>
         <div className="flex items-center gap-2 mr-2">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-400 to-indigo-500 flex items-center justify-center shadow-lg">
             <GitBranch size={16} className="text-white" />
@@ -583,6 +583,11 @@ export default function App() {
         <div className="flex items-center gap-2">
           <button
             onClick={handleSelectFolder}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/40 border border-slate-700/40 hover:border-brand-500/50 hover:bg-brand-500/10 hover:text-brand-400 transition-all text-sm text-slate-300 font-medium cursor-pointer"
+            title={t('app.buttons.openFolder')}
+          >
+            <FolderOpen size={14} className="text-brand-400" />
+            <span>{t('app.buttons.openFolder')}</span>
           </button>
           
           <button
@@ -695,7 +700,7 @@ export default function App() {
       {/* ── MAIN LAYOUT ─────────────────────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden">
         {/* ── LEFT PANEL (20%) ─────────────────────────────────────────────── */}
-        <aside className="w-56 flex-shrink-0 flex flex-col border-r border-slate-700/50 bg-[#0a0f1c] overflow-y-auto">
+        <aside className="w-56 flex-shrink-0 flex flex-col border-r border-slate-700/50 overflow-y-auto" style={{ backgroundColor: 'var(--color-bg-surface, #0a0f1c)' }}>
           <div className="p-3 space-y-5">
             <button
               onClick={() => setShowNewBranchModal(true)}
@@ -806,12 +811,12 @@ export default function App() {
           <div className="flex items-center justify-between px-5 py-3 border-b border-slate-700/30 flex-shrink-0">
             {/* Tab Selector */}
             <div className="flex items-center gap-2 overflow-x-auto max-w-full custom-scrollbar">
-              <div className="inline-flex items-center p-0.5 rounded-lg bg-slate-800/60 border border-slate-700/50 flex-shrink-0">
+              <div className="inline-flex items-center p-0.5 rounded-lg flex-shrink-0 theme-border-surface" style={{ backgroundColor: 'var(--color-bg-surface-60)' }}>
                 <button
                   onClick={() => setActiveTab('history')}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${
                     activeTab === 'history'
-                      ? 'bg-slate-700 text-white shadow-lg'
+                      ? 'bg-brand-500 text-white shadow-lg'
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
@@ -822,7 +827,7 @@ export default function App() {
                   onClick={() => setActiveTab('merge')}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${
                     activeTab === 'merge'
-                      ? 'bg-slate-700 text-white shadow-lg'
+                      ? 'bg-brand-500 text-white shadow-lg'
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
@@ -833,7 +838,7 @@ export default function App() {
                   onClick={() => setActiveTab('advanced')}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${
                     activeTab === 'advanced'
-                      ? 'bg-slate-700 text-white shadow-lg'
+                      ? 'bg-brand-500 text-white shadow-lg'
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
@@ -844,7 +849,7 @@ export default function App() {
                   onClick={() => setActiveTab('analysis')}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${
                     activeTab === 'analysis'
-                      ? 'bg-slate-700 text-white shadow-lg'
+                      ? 'bg-brand-500 text-white shadow-lg'
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
@@ -855,7 +860,7 @@ export default function App() {
                   onClick={() => setActiveTab('collaboration')}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${
                     activeTab === 'collaboration'
-                      ? 'bg-slate-700 text-white shadow-lg'
+                      ? 'bg-brand-500 text-white shadow-lg'
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
@@ -866,7 +871,7 @@ export default function App() {
                   onClick={() => setActiveTab('issues')}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${
                     activeTab === 'issues'
-                      ? 'bg-slate-700 text-white shadow-lg'
+                      ? 'bg-brand-500 text-white shadow-lg'
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
@@ -877,7 +882,7 @@ export default function App() {
                   onClick={() => setActiveTab('integrations')}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${
                     activeTab === 'integrations'
-                      ? 'bg-slate-700 text-white shadow-lg'
+                      ? 'bg-brand-500 text-white shadow-lg'
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
@@ -888,7 +893,7 @@ export default function App() {
                   onClick={() => setActiveTab('security')}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${
                     activeTab === 'security'
-                      ? 'bg-slate-700 text-white shadow-lg'
+                      ? 'bg-brand-500 text-white shadow-lg'
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
@@ -899,7 +904,7 @@ export default function App() {
                   onClick={() => setActiveTab('settings')}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${
                     activeTab === 'settings'
-                      ? 'bg-slate-700 text-white shadow-lg'
+                      ? 'bg-brand-500 text-white shadow-lg'
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
@@ -916,12 +921,13 @@ export default function App() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsCommandPaletteOpen(true)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700/60 text-slate-300 hover:text-white hover:border-slate-500 hover:bg-slate-700/60 transition-all text-xs font-medium"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-slate-300 hover:text-white transition-all text-xs font-medium theme-border-surface"
+                style={{ backgroundColor: 'var(--color-bg-surface-60)' }}
                 title="Paleta de Comandos (Ctrl+K)"
               >
-                <Command size={13} className="text-teal-400" />
+                <Command size={13} className="text-brand-400" />
                 <span className="hidden sm:inline">Comandos</span>
-                <kbd className="px-1 py-0.2 bg-slate-900 rounded border border-slate-700 text-[10px] font-mono text-slate-400">Ctrl+K</kbd>
+                <kbd className="px-1 py-0.2 rounded border text-[10px] font-mono theme-border-surface theme-text-muted">Ctrl+K</kbd>
               </button>
 
               {localFolderPath && activeTab === 'history' && (
@@ -1196,7 +1202,7 @@ export default function App() {
             )}
 
             {activeTab === 'settings' && (
-              <div className="h-full p-0">
+              <div className="h-full p-0" style={{ backgroundColor: 'var(--color-bg-surface, #0a0f1c)' }}>
                 <SettingsPanel
                   folderPath={localFolderPath}
                   showToast={showToast}
@@ -1207,7 +1213,7 @@ export default function App() {
         </main>
 
         {/* ── RIGHT PANEL (30%) — Staging Area ─────────────────────────────── */}
-        <aside className="w-96 flex-shrink-0 flex flex-col bg-[#090e1b] overflow-hidden p-3 border-l border-slate-700/50">
+        <aside className="w-96 flex-shrink-0 flex flex-col overflow-hidden p-3 border-l border-slate-700/50" style={{ backgroundColor: 'var(--color-bg-surface, #090e1b)' }}>
           <LocalRepoPanel 
             folderPath={localFolderPath} 
             refreshTrigger={refreshTrigger}
@@ -1220,7 +1226,7 @@ export default function App() {
       </div>
 
       {/* ── STATUS BAR ──────────────────────────────────────────────────────── */}
-      <footer className="flex items-center justify-between px-4 py-1.5 border-t border-slate-700/50 glass-light flex-shrink-0 text-xs">
+      <footer className="flex items-center justify-between px-4 py-1.5 border-t border-slate-700/50 glass-light flex-shrink-0 text-xs" style={{ backgroundColor: 'var(--color-bg-surface, rgba(15, 23, 42, 0.8))' }}>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 text-slate-400">
             <Terminal size={12} className="text-brand-400" />
