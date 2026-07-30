@@ -11,6 +11,19 @@
 - **Accesible**: Multiidioma (español/inglés) con interfaz oscura y moderna
 - **Premium**: Efectos visuales de lujo (glassmorphism, neón glow, animaciones fluidas)
 
+### 🆕 Nuevas funciones y cambios recientes
+- **Operaciones Git avanzadas enriquecidas**: Cherry-pick, revert, gestión de tags y submódulos desde la UI.
+- **Diff Avanzado**: Comparación entre ramas y commits con visores unificado/lateral.
+- **Plantillas de commit**: Uso de plantillas predefinidas y personalizables para mensajes de commit.
+- **Workspace multirepositorio**: Soporte para gestionar múltiples repositorios locales desde una sola interfaz.
+- **Configuración y personalización**: Panel de ajustes con selector de temas, edición de Git hooks y atajos de teclado.
+- **Colaboración integrada**: Administración de Pull Requests/Merge Requests, revisión y estado de CI/CD.
+- **Gestión de Issues**: Tablero Kanban, filtrado por etiquetas y vinculación de issues con commits.
+- **Integraciones externas**: Soporte para webhooks, alertas CI/CD y notificaciones externas.
+- **Seguridad mejorada**: SSH keys, firma GPG, 2FA y escaneo básico de secretos.
+- **Rendimiento optimizado**: Virtualización de listas, caché local inteligente, workers para Git y carga diferida.
+- **Internacionalización más sólida**: Soporte español/inglés con detección automática y persistencia de preferencias.
+
 ---
 
 ## 🛠️ Stack Tecnológico
