@@ -32,7 +32,7 @@ export default function LazyPanel({ title, loader, children, threshold = 0.1 }) 
       {title && <h3 className="font-semibold text-white text-sm mb-3">{title}</h3>}
       {loading && (
         <div className="flex items-center justify-center p-8 text-slate-400 text-xs">
-          <div className="w-4 h-4 rounded-full border-2 border-teal-500/30 border-t-teal-500 animate-spin mr-2" />
+          <div className="w-4 h-4 rounded-full border-2 border-brand-500/30 border-t-brand-500 animate-spin mr-2" />
           Cargando datos...
         </div>
       )}

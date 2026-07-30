@@ -66,14 +66,41 @@ export const THEMES = [
   }
 ]
 
+function hexToRgb(hex) {
+  const normalized = hex.replace('#', '')
+  const bigint = parseInt(normalized, 16)
+  const r = (bigint >> 16) & 255
+  const g = (bigint >> 8) & 255
+  const b = bigint & 255
+  return `${r}, ${g}, ${b}`
+}
+
 export function applyTheme(themeId) {
   const theme = THEMES.find(t => t.id === themeId) || THEMES[0]
   const root = document.documentElement
+  const body = document.body
+
   root.setAttribute('data-theme', theme.id)
-  root.style.setProperty('--color-brand-500', theme.colors.primary)
-  root.style.setProperty('--color-brand-600', theme.colors.primaryHover)
-  root.style.setProperty('--color-brand-400', theme.colors.primaryLight)
-  root.style.setProperty('--color-bg-base', theme.colors.bg)
-  root.style.setProperty('--color-bg-surface', theme.colors.surface)
+  body.setAttribute('data-theme', theme.id)
+
+  const vars = {
+    '--color-brand-500': theme.colors.primary,
+    '--color-brand-600': theme.colors.primaryHover,
+    '--color-brand-400': theme.colors.primaryLight,
+    '--color-brand-300': theme.colors.primaryLight,
+    '--color-bg-base': theme.colors.bg,
+    '--color-bg-surface': theme.colors.surface,
+    '--color-text': theme.colors.text,
+    '--color-brand-rgb': hexToRgb(theme.colors.primary),
+    '--color-bg-base-rgb': hexToRgb(theme.colors.bg),
+    '--color-bg-surface-rgb': hexToRgb(theme.colors.surface),
+    '--color-text-rgb': hexToRgb(theme.colors.text),
+  }
+
+  Object.entries(vars).forEach(([name, value]) => {
+    root.style.setProperty(name, value)
+    body.style.setProperty(name, value)
+  })
+
   localStorage.setItem('mongit-theme', theme.id)
 }

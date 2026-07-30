@@ -5,12 +5,14 @@
 @tailwind utilities;
 
 :root {
+  --Color-brand-500: #14b8a6;
   --color-brand-500: #14b8a6;
   --color-brand-600: #0d9488;
   --color-brand-400: #2dd4bf;
   --color-brand-300: #5eead4;
   --color-bg-base: #080d18;
   --color-bg-surface: #0a0f1c;
+  --color-text: #e2e8f0;
 }
 
 [data-theme='dark-default'] {
@@ -20,6 +22,7 @@
   --color-brand-300: #5eead4;
   --color-bg-base: #080d18;
   --color-bg-surface: #0a0f1c;
+  --color-text: #e2e8f0;
 }
 
 [data-theme='neon-pink'] {
@@ -29,6 +32,7 @@
   --color-brand-300: #fbcfe8;
   --color-bg-base: #0f0a1a;
   --color-bg-surface: #1a1025;
+  --color-text: #f0e6f6;
 }
 
 [data-theme='ocean'] {
@@ -38,6 +42,7 @@
   --color-brand-300: #7dd3fc;
   --color-bg-base: #001a33;
   --color-bg-surface: #002244;
+  --color-text: #e0f2fe;
 }
 
 [data-theme='forest'] {
@@ -47,6 +52,7 @@
   --color-brand-300: #86efac;
   --color-bg-base: #0a1a0a;
   --color-bg-surface: #0f2a0f;
+  --color-text: #dcfce7;
 }
 
 [data-theme='sunset'] {
@@ -56,6 +62,7 @@
   --color-brand-300: #fdba74;
   --color-bg-base: #1a0a00;
   --color-bg-surface: #2a1500;
+  --color-text: #fff7ed;
 }
 
 @layer base {
@@ -69,10 +76,38 @@
   }
   body {
     background-color: var(--color-bg-base, #080d18);
-    color: #e2e8f0;
+    color: var(--color-text, #e2e8f0);
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  :root {
+    --color-bg-surface-20: rgba(var(--color-bg-surface-rgb, 10, 15, 28), 0.2);
+    --color-bg-surface-30: rgba(var(--color-bg-surface-rgb, 10, 15, 28), 0.3);
+    --color-bg-surface-40: rgba(var(--color-bg-surface-rgb, 10, 15, 28), 0.4);
+    --color-bg-surface-60: rgba(var(--color-bg-surface-rgb, 10, 15, 28), 0.6);
+    --color-text-muted: rgba(var(--color-text-rgb, 226, 232, 240), 0.7);
+  }
+
+  .theme-bg-surface-30 {
+    background-color: var(--color-bg-surface-30) !important;
+  }
+
+  .theme-bg-surface-40 {
+    background-color: var(--color-bg-surface-40) !important;
+  }
+
+  .theme-bg-surface-60 {
+    background-color: var(--color-bg-surface-60) !important;
+  }
+
+  .theme-border-surface {
+    border-color: rgba(var(--color-bg-surface-rgb, 10, 15, 28), 0.35) !important;
+  }
+
+  .theme-text-muted {
+    color: var(--color-text-muted) !important;
   }
   ::-webkit-scrollbar {
     width: 4px;
